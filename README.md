@@ -7,3 +7,8 @@ Legajo: 31411
 Alias Slack: Pedro Moyano
 Perfil Git: https://github.com/moyanop
 
+Nombre completo: Franco Javier Portillo Colinas
+Legajo: 31089
+Alias Slack: Franco Portillo
+Perfil Git: https://github.com/FrancoPortillo
+
