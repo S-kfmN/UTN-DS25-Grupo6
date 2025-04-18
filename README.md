@@ -22,6 +22,11 @@ Legajo: 32536
 Alias Slack: Martín Kaufman
 Perfil Git: https://github.com/MartinJK1
 
+Nombre completo: Kaufman Sebastian Leonel
+Legajo: 30616
+Alias Slack: Sebastian Kaufman
+Perfil Git: https://github.com/S-kfmN
+
 #DOCUMENTACION DEL PROYECTO
 1. Información General 
     Nombre del Proyecto: Sistema de Gestión de Turnos para Lubricentro Renault 
