@@ -17,6 +17,11 @@ Legajo: 31303
 Alias Slack: Agustin Gonzalez Blasco
 Perfil Git: https://github.com/Agusgb
 
+Nombre completo: Kaufman Martin Javier
+Legajo: 32536
+Alias Slack: Martín Kaufman
+Perfil Git: https://github.com/MartinJK1
+
 #DOCUMENTACION DEL PROYECTO
 1. Información General 
     Nombre del Proyecto: Sistema de Gestión de Turnos para Lubricentro Renault 
