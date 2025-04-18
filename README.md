@@ -12,3 +12,9 @@ Legajo: 31089
 Alias Slack: Franco Portillo
 Perfil Git: https://github.com/FrancoPortillo
 
+Nombre completo: Axel Agustin Gonzalez Blasco
+Legajo: 31303
+Alias Slack: Agustin Gonzalez Blasco
+Perfil Git: https://github.com/Agusgb
+
+
