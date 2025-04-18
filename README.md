@@ -7,8 +7,6 @@ Legajo: 31411
 Alias Slack: Pedro Moyano
 Perfil Git: https://github.com/moyanop
 
-
-
 Nombre completo: Franco Javier Portillo Colinas
 Legajo: 31089
 Alias Slack: Franco Portillo
@@ -18,8 +16,6 @@ Nombre completo: Axel Agustin Gonzalez Blasco
 Legajo: 31303
 Alias Slack: Agustin Gonzalez Blasco
 Perfil Git: https://github.com/Agusgb
-
-
 
 #DOCUMENTACION DEL PROYECTO
 1. Información General 
