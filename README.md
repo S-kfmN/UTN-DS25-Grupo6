@@ -44,26 +44,14 @@ Perfil Git: https://github.com/S-kfmN
    administrador organizar los horarios y mantener un historial completo de mantenimiento
    de cada vehículo.
 
-3. Oportunidad de Negocio
-   Problema que se resuelve:
-   Actualmente, la gestión de turnos en el lubricentro se realiza a través de llamadas
-   telefónicas o agendas manuales, lo que provoca errores en la asignación de horarios,
-   pérdida de información sobre mantenimientos anteriores y una alta carga administrativa.
-   Además, no se conserva un historial accesible y completo de los servicios realizados a
-   cada vehículo, ni se automatizan los recordatorios de las citas.
-
 Impacto del problema:
 Los clientes deben llamar o acercarse para pedir un turno, lo que genera demoras,
 confusión y mala experiencia de usuario.
-
-    El personal administrativo dedica gran parte del tiempo a coordinar turnos
-    manualmente, lo cual reduce la eficiencia.
-
-    Los mecánicos no cuentan con un historial previo para preparar adecuadamente los
-    trabajos.
-
-    El dueño del lubricentro sufre pérdidas de productividad, insatisfacción del cliente y
-    menor capacidad de atención organizada.
+El personal administrativo dedica gran parte del tiempo a coordinar turnos
+manualmente, lo cual reduce la eficiencia.
+Los mecánicos no cuentan con un historial previo para preparar adecuadamente los trabajos.
+El dueño del lubricentro sufre pérdidas de productividad, insatisfacción del cliente y
+menor capacidad de atención organizada.
 
 Soluciones actuales y sus limitaciones:
 Actualmente, algunas herramientas como agendas digitales o llamadas telefónicas
@@ -92,3 +80,65 @@ realizados, beneficiando la organización interna del taller y la experiencia de
 
 Usuarios principales:  
  Clientes del lubricentro, personal administrativo, y mecánicos encargados de los servicios.
+
+5. Objetivos del Proyecto
+
+Objetivo principal:  
+ Desarrollar un sistema integral que permita la gestión eficiente y digitalizada de turnos y
+mantenimientos en un lubricentro Renault.
+
+Objetivos específicos:
+Permitir a los clientes reservar turnos en línea.
+Gestionar disponibilidad según horarios, tipo de servicio y modelo de vehículo.
+Notificar automáticamente a los clientes sobre sus citas.
+Llevar un historial detallado por vehículo.
+Ofrecer una interfaz intuitiva para usuarios y administradores.
+
+Métricas de éxito:
+Reducción de llamadas para reservar turnos en un 80%.
+Al menos un 90% de los clientes utilizan el sistema online.
+Aumento en la puntualidad y cumplimiento de turnos.
+Mejora en la satisfacción del cliente según encuestas internas
+
+6. Alcance del Producto
+
+Dentro del Alcance:
+Registro de usuarios y vehículos.
+Reserva de turnos en función de horarios y tipo de servicio.
+Gestión de disponibilidad por parte del administrador.
+Notificaciones automáticas por correo electrónico.
+Historial de mantenimiento por vehículo.
+Panel de control para el personal del lubricentro
+
+Fuera del Alcance:
+Aplicación móvil (solo versión web en esta fase).
+Integración con sistemas externos de facturación.
+Registro de pagos en línea.
+Reportes analíticos avanzados.
+
+7. Supuestos y Restricciones
+
+Supuestos:
+Los clientes cuentan con acceso a internet.
+El personal del lubricentro está capacitado para usar el sistema.
+Restricciones:
+Tiempo de desarrollo limitado a 7 meses.
+Presupuesto acotado.
+Infraestructura del servidor limitada a recursos internos.
+
+8. Stakeholders Clave
+
+   Cliente/Patrocinador: Dueño del Lubricentro Renault.
+   Usuarios finales:  
+   Clientes: acceden desde la web para agendar turnos, consultar disponibilidad y recibir recordatorios.
+   Personal administrativo: gestionan horarios, y acceden al historial de vehículos.
+   Mecánicos: consultan el tipo de servicio requerido y el historial técnico del vehículo a intervenir.
+   Otros interesados: Técnicos/mecánicos, proveedores de servicios TI.
+
+9. Riesgos Iniciales (Tabla)
+
+| Riesgo                                   | Probabilidad | Impacto | Estrategia de Mitigación                                 |
+| ---------------------------------------- | ------------ | ------- | -------------------------------------------------------- |
+| Falta de adopción por parte del personal | Media        | Alta    | Capacitación inicial y soporte durante el uso.           |
+| Fallos en el servidor o hosting          | Baja         | Alta    | Uso de servidores confiables y backups frecuentes.       |
+| Cambios en requerimientos                | Alta         | Medio   | Reuniones regulares con el cliente para validar avances. |
