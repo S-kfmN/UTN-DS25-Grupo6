@@ -96,8 +96,8 @@ Usuarios principales:
 Objetivo principal:  
 	Desarrollar un sistema integral que permita la gestión eficiente y digitalizada de turnos y 
 	mantenimientos en un lubricentro Renault. 
-Objetivos específicos: 
-	
+
+Objetivos específicos: 	
 	 Permitir a los clientes reservar turnos en línea. 
 	
 	 Gestionar disponibilidad según horarios, tipo de servicio y modelo de vehículo. 
@@ -107,6 +107,7 @@ Objetivos específicos:
 	 Llevar un historial detallado por vehículo. 
 	
 	 Ofrecer una interfaz intuitiva para usuarios y administradores. 
+
 Métricas de éxito: 
 	
 	 Reducción de llamadas para reservar turnos en un 80%. 
@@ -117,9 +118,11 @@ Métricas de éxito:
 	
 	 Mejora en la satisfacción del cliente según encuestas internas
 
+
 6. Alcance del Producto 
  
-6.1 Dentro del Alcance: 
+Dentro del Alcance:
+ 
 	Registro de usuarios y vehículos. 
  
 	Reserva de turnos en función de horarios y tipo de servicio. 
@@ -132,7 +135,7 @@ Métricas de éxito:
 	
 	Panel de control para el personal del lubricentro
 
-6.2 Fuera del Alcance: 
+Fuera del Alcance: 
 
 	Aplicación móvil (solo versión web en esta fase). 
 
