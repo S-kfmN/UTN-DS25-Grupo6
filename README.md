@@ -97,13 +97,65 @@ Objetivo principal:
 	Desarrollar un sistema integral que permita la gestión eficiente y digitalizada de turnos y 
 	mantenimientos en un lubricentro Renault. 
 Objetivos específicos: 
-	- Permitir a los clientes reservar turnos en línea. 
-	- Gestionar disponibilidad según horarios, tipo de servicio y modelo de vehículo. 
-	- Notificar automáticamente a los clientes sobre sus citas. 
-	- Llevar un historial detallado por vehículo. 
-	- Ofrecer una interfaz intuitiva para usuarios y administradores. 
+	
+	 Permitir a los clientes reservar turnos en línea. 
+	
+	 Gestionar disponibilidad según horarios, tipo de servicio y modelo de vehículo. 
+	
+	 Notificar automáticamente a los clientes sobre sus citas. 
+	
+	 Llevar un historial detallado por vehículo. 
+	
+	 Ofrecer una interfaz intuitiva para usuarios y administradores. 
 Métricas de éxito: 
-	- Reducción de llamadas para reservar turnos en un 80%. 
-	- Al menos un 90% de los clientes utilizan el sistema online. 
-	- Aumento en la puntualidad y cumplimiento de turnos. 
-	- Mejora en la satisfacción del cliente según encuestas internas
+	
+	 Reducción de llamadas para reservar turnos en un 80%. 
+	
+	 Al menos un 90% de los clientes utilizan el sistema online. 
+	
+	 Aumento en la puntualidad y cumplimiento de turnos. 
+	
+	 Mejora en la satisfacción del cliente según encuestas internas
+
+6. Alcance del Producto 
+ 
+6.1 Dentro del Alcance: 
+	Registro de usuarios y vehículos. 
+ 
+	Reserva de turnos en función de horarios y tipo de servicio. 
+ 
+	Gestión de disponibilidad por parte del administrador. 
+ 
+	Notificaciones automáticas por correo electrónico. 
+ 	
+	Historial de mantenimiento por vehículo. 
+	
+	Panel de control para el personal del lubricentro
+
+6.2 Fuera del Alcance: 
+
+	Aplicación móvil (solo versión web en esta fase). 
+
+	Integración con sistemas externos de facturación. 
+	
+	Registro de pagos en línea. 
+	
+	Reportes analíticos avanzados.
+
+7. Supuestos y Restricciones 
+ 
+Supuestos: 
+	Los clientes cuentan con acceso a internet. 
+	El personal del lubricentro está capacitado para usar el sistema. 
+Restricciones: 
+	Tiempo de desarrollo limitado a 7 meses. 
+	Presupuesto acotado. 
+	Infraestructura del servidor limitada a recursos internos. 
+8. Stakeholders Clave 
+ 
+	Cliente/Patrocinador: Dueño del Lubricentro Renault. 
+	Usuarios finales:  
+	Clientes: acceden desde la web para agendar turnos, consultar disponibilidad y recibir recordatorios. 
+	Personal administrativo: gestionan horarios, y acceden al historial de vehículos. 
+	Mecánicos: consultan el tipo de servicio requerido y el historial técnico del vehículo a intervenir. 
+	Otros interesados: Técnicos/mecánicos, proveedores de servicios TI.
