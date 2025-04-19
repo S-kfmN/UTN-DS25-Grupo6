@@ -53,13 +53,9 @@ Problema que se resuelve:
 Impacto del problema: 
     Los clientes deben llamar o acercarse para pedir un turno, lo que genera demoras, 
     confusión y mala experiencia de usuario. 
-
     El personal administrativo dedica gran parte del tiempo a coordinar turnos 
     manualmente, lo cual reduce la eficiencia. 
-
-    Los mecánicos no cuentan con un historial previo para preparar adecuadamente los 
-    trabajos. 
-
+    Los mecánicos no cuentan con un historial previo para preparar adecuadamente los trabajos. 
     El dueño del lubricentro sufre pérdidas de productividad, insatisfacción del cliente y 
     menor capacidad de atención organizada.
 
