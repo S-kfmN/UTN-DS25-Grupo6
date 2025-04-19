@@ -151,6 +151,7 @@ Restricciones:
 	Tiempo de desarrollo limitado a 7 meses. 
 	Presupuesto acotado. 
 	Infraestructura del servidor limitada a recursos internos. 
+
 8. Stakeholders Clave 
  
 	Cliente/Patrocinador: Dueño del Lubricentro Renault. 
