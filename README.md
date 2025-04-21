@@ -2,7 +2,9 @@
 
 Sistema de Gestión de Turnos para Lubricentro Renault
 
-Miembros del Equipo:
+## Miembros del Equipo:
+
+
 Nombre completo: Pedro Moyano
 
 Legajo: 31411
@@ -10,6 +12,8 @@ Legajo: 31411
 Alias Slack: Pedro Moyano
 
 Perfil Git: https://github.com/moyanop
+
+---
 
 Nombre completo: Franco Javier Portillo Colinas
 
@@ -19,6 +23,8 @@ Alias Slack: Franco Portillo
 
 Perfil Git: https://github.com/FrancoPortillo
 
+---
+
 Nombre completo: Axel Agustin Gonzalez Blasco
 
 Legajo: 31303
@@ -26,6 +32,8 @@ Legajo: 31303
 Alias Slack: Agustin Gonzalez Blasco
 
 Perfil Git: https://github.com/Agusgb
+
+---
 
 Nombre completo: Kaufman Martin Javier
 Legajo: 32536
@@ -35,6 +43,8 @@ Alias Slack: Martín Kaufman
 
 Perfil Git: https://github.com/MartinJK1
 
+---
+
 Nombre completo: Kaufman Sebastian Leonel
 
 Legajo: 30616
@@ -42,6 +52,7 @@ Legajo: 30616
 Alias Slack: Sebastian Kaufman
 
 Perfil Git: https://github.com/S-kfmN
+
 
 #DOCUMENTACION DEL PROYECTO
 
