@@ -10,7 +10,7 @@ Legajo: 31411
 
 Alias Slack: Pedro Moyano
 
-Perfil Git: [moyanop]https://github.com/moyanop
+Perfil Git: [moyanop](https://github.com/moyanop)
 
 ---
 
@@ -20,7 +20,7 @@ Legajo: 31089
 
 Alias Slack: Franco Portillo
 
-Perfil Git: [FrancoPortillo]https://github.com/FrancoPortillo
+Perfil Git: [FrancoPortillo](https://github.com/FrancoPortillo)
 
 ---
 
@@ -30,7 +30,7 @@ Legajo: 31303
 
 Alias Slack: Agustin Gonzalez Blasco
 
-Perfil Git: [Agusgb]https://github.com/Agusgb
+Perfil Git: [Agusgb](https://github.com/Agusgb)
 
 ---
 
@@ -40,7 +40,7 @@ Legajo: 32536
 
 Alias Slack: Martín Kaufman
 
-Perfil Git: [MartinJK1]https://github.com/MartinJK1
+Perfil Git: [MartinJK1](https://github.com/MartinJK1)
 
 ---
 
@@ -50,7 +50,7 @@ Legajo: 30616
 
 Alias Slack: Sebastian Kaufman
 
-Perfil Git: [S-kfmN]https://github.com/S-kfmN
+Perfil Git: [S-kfmN](https://github.com/S-kfmN)
 
 ---
 
