@@ -60,7 +60,7 @@ Legajo: 31780
 
 Alias Slack: Elias Caracas
 
-Perfil Git: ecaracasdev
+Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
 
 # **DOCUMENTACION DEL PROYECTO**
 
