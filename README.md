@@ -47,6 +47,7 @@ Elias Caracas
 # **DOCUMENTACION DEL PROYECTO**
 
    **Resumen Ejecutivo**
+   
    El proyecto consiste en el desarrollo de una plataforma digital que permita a los clientes
    de un lubricentro Renault reservar turnos de manera online, según la disponibilidad,
    modelo de vehículo y tipo de servicio requerido. El sistema también permitirá al
