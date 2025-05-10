@@ -5,80 +5,55 @@ Sistema de Gestión de Turnos para Lubricentro Renault
 ## **Miembros del Equipo:**
 
 Nombre completo: Pedro Moyano
-
 Legajo: 31411
-
 Alias Slack: Pedro Moyano
-
 Perfil Git: [moyanop](https://github.com/moyanop)
 
 ---
 
 Nombre completo: Franco Javier Portillo Colinas
-
 Legajo: 31089
-
 Alias Slack: Franco Portillo
-
 Perfil Git: [FrancoPortillo](https://github.com/FrancoPortillo)
 
 ---
 
 Nombre completo: Axel Agustin Gonzalez Blasco
-
 Legajo: 31303
-
 Alias Slack: Agustin Gonzalez Blasco
-
 Perfil Git: [Agusgb](https://github.com/Agusgb)
 
 ---
 
 Nombre completo: Kaufman Martin Javier
-
 Legajo: 32536
-
 Alias Slack: Martín Kaufman
-
 Perfil Git: [MartinJK1](https://github.com/MartinJK1)
 
 ---
 
 Nombre completo: Kaufman Sebastian Leonel
-
 Legajo: 30616
-
 Alias Slack: Sebastian Kaufman
-
 Perfil Git: [S-kfmN](https://github.com/S-kfmN)
 
 ---
 
 Nombre completo: Elias Caracas
-
 Legajo: 31780
-
 Alias Slack: Elias Caracas
-
 Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
 
 # **DOCUMENTACION DEL PROYECTO**
 
-1. **Información General**
-   Nombre del Proyecto: Sistema de Gestión de Turnos para Lubricentro Renault
-   Grupo 6: Gonzalez Blasco, Agustin – Portillo Franco – Moyano Amaya Pedro –
-   Kaufman, Martin – Kaufman Sebastian – Caracas Elias
-   Fecha: 10/04/25
-   Versión: v1.0
-
-2. **Resumen Ejecutivo**
+   **Resumen Ejecutivo**
    El proyecto consiste en el desarrollo de una plataforma digital que permita a los clientes
    de un lubricentro Renault reservar turnos de manera online, según la disponibilidad,
    modelo de vehículo y tipo de servicio requerido. El sistema también permitirá al
    administrador organizar los horarios y mantener un historial completo de mantenimiento
    de cada vehículo.
 
-3. **Oportunidad de Negocio**
+   **Oportunidad de Negocio**
 
    - Problema que se resuelve:
 
@@ -108,7 +83,7 @@ Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
    estimada o modelo del auto. Esto limita la eficiencia del proceso y genera una mayor
    carga operativa.
 
-4. **Visión del Producto**
+   **Visión del Producto**
 
    - Descripción general:
 
@@ -130,7 +105,7 @@ Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
    - Usuarios principales:  
      Clientes del lubricentro, personal administrativo, y mecánicos encargados de los servicios.
 
-5. **Objetivos del Proyecto**
+   **Objetivos del Proyecto**
 
    - Objetivo principal:
 
@@ -152,7 +127,7 @@ Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
    Aumento en la puntualidad y cumplimiento de turnos.
    Mejora en la satisfacción del cliente según encuestas internas
 
-6. **Alcance del Producto**
+   **Alcance del Producto**
 
    - Dentro del Alcance:
 
@@ -170,7 +145,7 @@ Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
    Registro de pagos en línea.
    Reportes analíticos avanzados.
 
-7. **Supuestos y Restricciones**
+   **Supuestos y Restricciones**
 
    - Supuestos:
 
@@ -181,7 +156,7 @@ Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
    Presupuesto acotado.
    Infraestructura del servidor limitada a recursos internos.
 
-8. **Stakeholders Clave**
+   **Stakeholders Clave**
 
    Cliente/Patrocinador:
 
@@ -197,10 +172,3 @@ Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
 
    Otros interesados: Técnicos/mecánicos, proveedores de servicios TI.
 
-9. **Riesgos Iniciales (Tabla)**
-
-| Riesgo                                   | Probabilidad | Impacto | Estrategia de Mitigación                                 |
-| ---------------------------------------- | ------------ | ------- | -------------------------------------------------------- |
-| Falta de adopción por parte del personal | Media        | Alta    | Capacitación inicial y soporte durante el uso.           |
-| Fallos en el servidor o hosting          | Baja         | Alta    | Uso de servidores confiables y backups frecuentes.       |
-| Cambios en requerimientos                | Alta         | Medio   | Reuniones regulares con el cliente para validar avances. |
