@@ -5,4 +5,4 @@
 - 02 - [Modelado de domino](./02%20-%20Modelado%20de%20Dominio/)
 - 03 - [Elaboración del Product Backlog](./03%20-%20Elaboraci%C3%B3n%20del%20Product%20Backlog/)
 - 04 - [Validacion y Trazabilidad](./04%20-%20Validacion%20y%20Trazabilidad/)
-- 06 - [UX-UI](./06%20-%20UX%20-%20UI/)
+- 06 - [UX-UI](./06%20-%20UX-UI/)
