@@ -4,49 +4,50 @@ Sistema de Gestión de Turnos para Lubricentro Renault
 
 ## **Miembros del Equipo:**
 
-Nombre completo: Pedro Moyano
-Legajo: 31411
-Alias Slack: Pedro Moyano
-Perfil Git: [moyanop](https://github.com/moyanop)
+Pedro Moyano
+- Legajo: 31411
+- Alias Slack: Pedro Moyano
+- Perfil Git: [moyanop](https://github.com/moyanop)
 
 ---
 
-Nombre completo: Franco Javier Portillo Colinas
-Legajo: 31089
-Alias Slack: Franco Portillo
-Perfil Git: [FrancoPortillo](https://github.com/FrancoPortillo)
+Franco Javier Portillo Colinas
+- Legajo: 31089
+- Alias Slack: Franco Portillo
+- Perfil Git: [FrancoPortillo](https://github.com/FrancoPortillo)
 
 ---
 
-Nombre completo: Axel Agustin Gonzalez Blasco
-Legajo: 31303
-Alias Slack: Agustin Gonzalez Blasco
-Perfil Git: [Agusgb](https://github.com/Agusgb)
+Axel Agustin Gonzalez Blasco
+- Legajo: 31303
+- Alias Slack: Agustin Gonzalez Blasco
+- Perfil Git: [Agusgb](https://github.com/Agusgb)
 
 ---
 
-Nombre completo: Kaufman Martin Javier
-Legajo: 32536
-Alias Slack: Martín Kaufman
-Perfil Git: [MartinJK1](https://github.com/MartinJK1)
+Kaufman Martin Javier
+- Legajo: 32536
+- Alias Slack: Martín Kaufman
+- Perfil Git: [MartinJK1](https://github.com/MartinJK1)
 
 ---
 
-Nombre completo: Kaufman Sebastian Leonel
-Legajo: 30616
-Alias Slack: Sebastian Kaufman
-Perfil Git: [S-kfmN](https://github.com/S-kfmN)
+Kaufman Sebastian Leonel
+- Legajo: 30616
+- Alias Slack: Sebastian Kaufman
+- Perfil Git: [S-kfmN](https://github.com/S-kfmN)
 
 ---
 
-Nombre completo: Elias Caracas
-Legajo: 31780
-Alias Slack: Elias Caracas
-Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
+Elias Caracas
+- Legajo: 31780
+- Alias Slack: Elias Caracas
+- Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
 
 # **DOCUMENTACION DEL PROYECTO**
 
    **Resumen Ejecutivo**
+   
    El proyecto consiste en el desarrollo de una plataforma digital que permita a los clientes
    de un lubricentro Renault reservar turnos de manera online, según la disponibilidad,
    modelo de vehículo y tipo de servicio requerido. El sistema también permitirá al
