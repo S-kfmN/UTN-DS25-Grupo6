@@ -1,9 +1,10 @@
  - Maquetación
-   - Index.html
+   - Index.html 
    - Productos.html
    - Reserva.html
    - Servicios.html
-   - Style.html
+   - Style.css
    - Script.js
-   - Fondo-lubricentro.jpg
-   - Renault-logo.png
+   - Images
+      - Fondo-lubricentro.jpg
+      - Renault-logo.png
