@@ -5,7 +5,7 @@ export default function Reservas() {
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   
-  // Estado para las reservas (simulamos datos más completos)
+  // Estado para las reservas (simulamos datos mas completos)
   const [reservas, setReservas] = useState([
     {
       id: 1,
@@ -76,7 +76,7 @@ export default function Reservas() {
 
   // ===== FUNCIONES AUXILIARES =====
   
-  // Función para obtener las próximas fechas
+  // Funcion para obtener las proximas fechas
   const obtenerProximasFechas = () => {
     const fechas = [];
     const hoy = new Date();
@@ -90,7 +90,7 @@ export default function Reservas() {
     return fechas;
   };
 
-  // Función para filtrar reservas
+  // Funcion para filtrar reservas
   const reservasFiltradas = reservas.filter(reserva => {
     const cumpleFiltroFecha = !filtroFecha || reserva.fecha === filtroFecha;
     const cumpleFiltroEstado = filtroEstado === 'todos' || reserva.estado === filtroEstado;
@@ -98,7 +98,7 @@ export default function Reservas() {
     return cumpleFiltroFecha && cumpleFiltroEstado;
   });
 
-  // Función para agrupar reservas por fecha
+  // Funcion para agrupar reservas por fecha
   const agruparReservasPorFecha = (reservas) => {
     const agrupadas = {};
     
@@ -112,7 +112,7 @@ export default function Reservas() {
     return agrupadas;
   };
 
-  // Función para cambiar estado de reserva
+  // Funcion para cambiar estado de reserva
   const cambiarEstadoReserva = (id, nuevoEstado) => {
     setReservas(prev => prev.map(reserva => 
       reserva.id === id ? { ...reserva, estado: nuevoEstado } : reserva
@@ -126,7 +126,7 @@ export default function Reservas() {
     }
   };
 
-  // Función para obtener el color del estado
+  // Funcion para obtener el color del estado
   const obtenerColorEstado = (estado) => {
     switch (estado) {
       case 'confirmado': return 'success';
@@ -136,7 +136,7 @@ export default function Reservas() {
     }
   };
 
-  // Función para formatear fecha
+  // Funcion para formatear fecha
   const formatearFecha = (fecha) => {
     const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(fecha).toLocaleDateString('es-ES', opciones);
@@ -148,7 +148,7 @@ export default function Reservas() {
 
   return (
     <div className="contenedor-admin-reservas">
-      {/* ===== TÍTULO Y FILTROS ===== */}
+      {/* ===== TITULO Y FILTROS ===== */}
       <div className="header-admin-reservas">
         <h1>Panel de Administración - Reservas</h1>
         <p>Gestiona todas las reservas del sistema</p>
@@ -187,7 +187,7 @@ export default function Reservas() {
         </div>
       </div>
 
-      {/* ===== ESTADÍSTICAS RÁPIDAS ===== */}
+      {/* ===== ESTADISTICAS RAPIDAS ===== */}
       <div className="estadisticas-rapidas">
         <div className="stat-card">
           <h3>Total Reservas</h3>

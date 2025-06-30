@@ -92,8 +92,8 @@ export default function Registro() {
     setEstaEnviando(true);
 
     try {
-      // Aquí irá la lógica del backend cuando lo implementemos
-      // Por ahora simulamos un delay
+      // logica del backend cuando lo implementemos
+      // simulamos un delay
       await new Promise(resolver => setTimeout(resolver, 1000));
       
       setMostrarExito(true);
@@ -106,7 +106,7 @@ export default function Registro() {
         confirmarContraseña: ''
       });
       
-      // Ocultar mensaje de éxito después de 3 segundos
+      // Ocultar mensaje de exito despues de 3 segundos
       setTimeout(() => setMostrarExito(false), 3000);
       
     } catch (error) {

@@ -50,11 +50,11 @@ export default function RecuperarContraseña() {
     setEstaEnviando(true);
 
     try {
-      // Aquí irá la lógica del backend cuando lo implementemos
-      // Por ahora simulamos un delay
+      // logica del backend cuando se implemente
+      // simulamos un delay
       await new Promise(resolver => setTimeout(resolver, 1500));
       
-      // Simulamos éxito (esto se cambiará cuando implementemos el backend)
+      // Simulamos exito (esto cambia cuando implementemos el backend)
       setMostrarExito(true);
       setEmail('');
       
@@ -188,7 +188,7 @@ export default function RecuperarContraseña() {
           </div>
         </Form>
 
-        {/* Información adicional */}
+        {/* Informacion adicional */}
         <div className="mt-4 p-3" style={{
           backgroundColor: 'rgba(255, 204, 0, 0.1)',
           border: '1px solid rgba(255, 204, 0, 0.3)',

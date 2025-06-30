@@ -71,7 +71,7 @@ export default function Reservar() {
     }
   ]);
 
-  // Cargar vehículos activos del usuario
+  // Cargar vehiculos activos del usuario
   useEffect(() => {
     if (usuario) {
       const vehiculos = obtenerVehiculosActivos();
@@ -102,12 +102,12 @@ export default function Reservar() {
     
     const dias = [];
     
-    // Agregar días vacíos al inicio
+    // Agregar dias vacios al inicio
     for (let i = 0; i < diaSemanaInicio; i++) {
       dias.push(null);
     }
     
-    // Agregar todos los días del mes
+    // Agregar todos los dias del mes
     for (let i = 1; i <= diasEnMes; i++) {
       dias.push(i);
     }
@@ -298,7 +298,7 @@ export default function Reservar() {
         
         setFechaSeleccionada(null);
         
-        // Ocultar mensaje de éxito después de 5 segundos
+        // Oculta mensaje de exito despues de 5 segundos
         setTimeout(() => setMostrarExito(false), 5000);
       }
     } catch (error) {
@@ -335,13 +335,13 @@ export default function Reservar() {
 
   return (
     <div className="contenedor-reservas">
-      {/* ===== TÍTULO DE LA PÁGINA ===== */}
+      {/* ===== TITULO DE LA PAGINA ===== */}
       <div className="titulo-reservas">
         <h1>Reservar Turno</h1>
         <p>Selecciona una fecha en el calendario y completa tu reserva</p>
       </div>
 
-      {/* Mensaje de éxito */}
+      {/* Mensaje de exito */}
       {mostrarExito && (
         <Alert variant="success" className="mb-4" style={{
           backgroundColor: 'rgba(40, 167, 69, 0.1)',
@@ -360,7 +360,7 @@ export default function Reservar() {
         <div className="columna-calendario">
           <h2>Calendario de Turnos</h2>
           
-          {/* ===== ENCABEZADO DEL CALENDARIO CON NAVEGACIÓN ===== */}
+          {/* ===== ENCABEZADO DEL CALENDARIO CON NAVEGACION ===== */}
           <div className="encabezado-calendario" style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -408,7 +408,7 @@ export default function Reservar() {
             </Button>
           </div>
           
-          {/* ===== DÍAS DE LA SEMANA ===== */}
+          {/* ===== DIAS DE LA SEMANA ===== */}
           <div className="dias-semana">
             {nombresDias.map(dia => (
               <div key={dia} className="dia-semana">
@@ -544,7 +544,7 @@ export default function Reservar() {
               </Row>
             </div>
 
-            {/* Información del Vehículo */}
+            {/* Informacion del Vehiculo */}
             <div className="seccion-formulario">
               <h3>Información del Vehículo</h3>
               
@@ -635,7 +635,7 @@ export default function Reservar() {
               </Row>
             </div>
 
-            {/* Información del Servicio */}
+            {/* Informacion del Servicio */}
             <div className="seccion-formulario">
               <h3>Detalles del Servicio</h3>
               
@@ -723,7 +723,7 @@ export default function Reservar() {
               </Form.Group>
             </div>
 
-            {/* Botón de envío */}
+            {/* Boton de envio */}
             <div className="d-grid gap-2">
               <Button 
                 type="submit" 
