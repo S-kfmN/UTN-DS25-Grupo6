@@ -11,7 +11,11 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--fuente-principal, 'Arial', sans-serif);
-  background-color: var(--color-fondo, #000);
+  background-image: url('/fondo-lubricentro.jpg'); /* Asegurate que esté en /public */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--color-texto, #fff);
 }
 
@@ -314,14 +318,12 @@ form label {
   z-index: 1;
   position: relative;
 }
-
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .contenido-principal {
-  min-height: 70vh; /* más equilibrado */
-  padding-bottom: 2rem;
+  flex: 2;
 }

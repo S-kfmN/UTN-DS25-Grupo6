@@ -1,56 +1,103 @@
 import { Link } from "react-router-dom";
-import TarjetaProducto from "../components/TarjetaProducto";
-import Testimonios from "../components/Testimonios";
-import ServicioItem from "../components/ServicioItem";
+
 export default function HomePage() {
+  // Función para hacer scroll suave a testimonios
+  const scrollToTestimonios = () => {
+    const seccion = document.getElementById("testimonios");
+    seccion?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <section className="hero">
-      <h1>Bienvenido a Lubricentro Renault</h1>
-      <p>Gestiona tus turnos de manera fácil y rápida.</p>
+    <div>
+      {/* Sección Principal con imagen de fondo */}
+      <section className="seccion-principal">
+        <h1>Bienvenido a Lubricentro Renault</h1>
+        <p>Gestiona tus turnos de manera fácil y rápida.</p>
+        
+        <Link to="/reservar" className="boton-principal">
+          Reservar Ahora
+        </Link>
 
-      <Link to="/reservar" className="btn-principal">Reservar Ahora</Link>
-
-      <div className="botones-secundarios">
-        <Link to="/productos" className="btn-secundario">Ofertas</Link>
-        <Link to="/servicios" className="btn-secundario">Servicios</Link>
-        <button
-          className="btn-secundario"
-          onClick={() => {
-            const seccion = document.getElementById("testimonios");
-            seccion?.scrollIntoView({ behavior: "smooth" });
-          }}
-        >
-          Testimonios
-        </button>
-      </div>
+        <div className="contenedor-botones-secundarios">
+          <Link to="/productos" className="boton-secundario">
+            Ofertas
+          </Link>
+          <Link to="/servicios" className="boton-secundario">
+            Servicios
+          </Link>
+          <button className="boton-secundario" onClick={scrollToTestimonios}>
+            Testimonios
+          </button>
+        </div>
+      </section>
 
       {/* Sección Productos */}
-      <section className="productos">
+      <section className="seccion-contenido">
         <h2>Nuestros Productos</h2>
-        <div className="grid-productos">
-          <TarjetaProducto titulo="Aceite Sintético" descripcion="Alta calidad para motores Renault." />
-          <TarjetaProducto titulo="Filtro de Aceite" descripcion="Filtrado eficiente y duradero." />
-          <TarjetaProducto titulo="Bujías de Encendido" descripcion="Mejora la combustión del motor." />
+        <div className="contenedor-grid">
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-titulo">Aceite Sintético</div>
+            </div>
+          </div>
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-titulo">Filtro de Aceite</div>
+            </div>
+          </div>
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-titulo">Bujías de Encendido</div>
+            </div>
+          </div>
         </div>
-        <Link to="/productos" className="btn-principal">Ver Más</Link>
+        <Link to="/productos" className="boton-principal">Ver Más</Link>
       </section>
-
-
 
       {/* Sección Servicios */}
-      <section className="servicios">
+      <section className="seccion-contenido">
         <h2>Servicios Ofrecidos</h2>
-          <div className="grid-servicios">
-            <ServicioItem titulo="Cambio de Aceite" descripcion="Servicio rápido y seguro con aceites de calidad." />
-            <ServicioItem titulo="Limpieza de Filtro" descripcion="Elimina impurezas del sistema de lubricación." />
-            <ServicioItem titulo="Revisión de Niveles" descripcion="Chequeo completo de fluidos esenciales." />
-          </div>        
-        <Link to="/servicios" className="btn-principal">Consultar</Link>
+        <div className="contenedor-grid">
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-titulo">Cambio de Aceite</div>
+            </div>
+          </div>
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-titulo">Limpieza de Filtro</div>
+            </div>
+          </div>
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-titulo">Revisión de Niveles</div>
+            </div>
+          </div>
+        </div>
+        <Link to="/servicios" className="boton-principal">Consultar</Link>
       </section>
 
-      <section className="testimonios" id="testimonios">
-        <Testimonios />
+      {/* Sección Testimonios */}
+      <section className="seccion-contenido" id="testimonios">
+        <h2>Testimonios de Clientes</h2>
+        <div className="contenedor-grid">
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-texto">"Excelente atención y rapidez"</div>
+            </div>
+          </div>
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-texto">"Muy profesional, lo recomiendo"</div>
+            </div>
+          </div>
+          <div className="tarjeta">
+            <div className="tarjeta-contenido">
+              <div className="tarjeta-texto">"Volveré sin dudas"</div>
+            </div>
+          </div>
+        </div>
       </section>
-    </section>
+    </div>
   );
 }
