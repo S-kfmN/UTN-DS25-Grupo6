@@ -29,7 +29,7 @@ export default function DevTools() {
           boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
         }}
       >
-        ⚙️
+        
       </Button>
 
       {/* Panel de herramientas */}
@@ -50,7 +50,7 @@ export default function DevTools() {
             fontWeight: 'bold',
             textAlign: 'center'
           }}>
-            🛠️ Herramientas de Desarrollo
+             Herramientas de Desarrollo
           </Card.Header>
           
           <Card.Body>
@@ -99,11 +99,11 @@ export default function DevTools() {
               <div className="mt-2">
                 {esAdmin() ? (
                   <div style={{ color: '#28a745', fontSize: '0.9rem' }}>
-                    ✅ Panel de administración disponible
+                     Panel de administración disponible
                   </div>
                 ) : (
                   <div style={{ color: '#6c757d', fontSize: '0.9rem' }}>
-                    ❌ Solo funciones de cliente
+                     Solo funciones de cliente
                   </div>
                 )}
               </div>
