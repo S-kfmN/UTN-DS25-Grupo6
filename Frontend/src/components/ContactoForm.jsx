@@ -1,44 +1,32 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
-
 export default function ContactoForm() {
   return (
-    <Box
-      component="form"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        maxWidth: 600,
-        margin: "2rem auto",
-        backgroundColor: "white",
-        color: "black",
-        padding: 4,
-        borderRadius: 2,
-      }}
-    >
-      <Typography variant="h5" gutterBottom>
-        Formulario de Contacto
-      </Typography>
+    <div className="formulario-contenedor">
+      <h2>Formulario de Contacto</h2>
+      <form className="formulario">
+        <div className="grupo-campos">
+          <label>Nombre</label>
+          <input type="text" required />
+        </div>
 
-      <TextField label="Nombre" variant="filled" required fullWidth />
-      <TextField label="Email" type="email" variant="filled" required fullWidth />
-      <TextField label="Asunto" variant="filled" required fullWidth />
-      <TextField
-        label="Mensaje"
-        multiline
-        rows={4}
-        variant="filled"
-        required
-        fullWidth
-      />
+        <div className="grupo-campos">
+          <label>Email</label>
+          <input type="email" required />
+        </div>
 
-      <Button
-        type="submit"
-        variant="contained"
-        sx={{ backgroundColor: "#ffcc00", color: "#000", fontWeight: "bold" }}
-      >
-        Enviar mensaje
-      </Button>
-    </Box>
+        <div className="grupo-campos">
+          <label>Asunto</label>
+          <input type="text" required />
+        </div>
+
+        <div className="grupo-campos">
+          <label>Mensaje</label>
+          <textarea rows="4" required></textarea>
+        </div>
+
+        <button type="submit" className="boton-principal">
+          Enviar mensaje
+        </button>
+      </form>
+    </div>
   );
 }
