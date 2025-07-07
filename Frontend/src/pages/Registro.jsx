@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Container, Form, Button, Alert, Row, Col } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { usarAuth } from '../context/AuthContext';
 
 export default function Registro() {
+  const { registrarUsuario } = usarAuth();
+  const navigate = useNavigate();
+  
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
     apellido: '',
@@ -15,6 +19,7 @@ export default function Registro() {
   const [errores, setErrores] = useState({});
   const [estaEnviando, setEstaEnviando] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
+  const [mostrarError, setMostrarError] = useState(false);
 
   const manejarCambio = (evento) => {
     const { name, value } = evento.target;
@@ -23,7 +28,7 @@ export default function Registro() {
       [name]: value
     }));
     
-    // Limpiar error del campo cuando el usuario empiece a escribir
+
     if (errores[name]) {
       setErrores(previo => ({
         ...previo,
@@ -35,21 +40,21 @@ export default function Registro() {
   const validarFormulario = () => {
     const nuevosErrores = {};
 
-    // Validar nombre
+
     if (!datosFormulario.nombre.trim()) {
       nuevosErrores.nombre = 'El nombre es requerido';
     } else if (datosFormulario.nombre.length < 2) {
       nuevosErrores.nombre = 'El nombre debe tener al menos 2 caracteres';
     }
 
-    // Validar apellido
+
     if (!datosFormulario.apellido.trim()) {
       nuevosErrores.apellido = 'El apellido es requerido';
     } else if (datosFormulario.apellido.length < 2) {
       nuevosErrores.apellido = 'El apellido debe tener al menos 2 caracteres';
     }
 
-    // Validar email
+
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!datosFormulario.email) {
       nuevosErrores.email = 'El email es requerido';
@@ -57,21 +62,21 @@ export default function Registro() {
       nuevosErrores.email = 'Ingrese un email válido';
     }
 
-    // Validar teléfono
+
     if (!datosFormulario.telefono) {
       nuevosErrores.telefono = 'El teléfono es requerido';
     } else if (!/^\d{10}$/.test(datosFormulario.telefono.replace(/\D/g, ''))) {
       nuevosErrores.telefono = 'Ingrese un teléfono válido (10 dígitos)';
     }
 
-    // Validar contraseña
+
     if (!datosFormulario.contraseña) {
       nuevosErrores.contraseña = 'La contraseña es requerida';
     } else if (datosFormulario.contraseña.length < 6) {
       nuevosErrores.contraseña = 'La contraseña debe tener al menos 6 caracteres';
     }
 
-    // Validar confirmación de contraseña
+
     if (!datosFormulario.confirmarContraseña) {
       nuevosErrores.confirmarContraseña = 'Confirme su contraseña';
     } else if (datosFormulario.contraseña !== datosFormulario.confirmarContraseña) {
@@ -90,27 +95,50 @@ export default function Registro() {
     }
 
     setEstaEnviando(true);
+    setMostrarError(false);
 
     try {
-      // logica del backend cuando lo implementemos
-      // simulamos un delay
-      await new Promise(resolver => setTimeout(resolver, 1000));
       
-      setMostrarExito(true);
-      setDatosFormulario({
-        nombre: '',
-        apellido: '',
-        email: '',
-        telefono: '',
-        contraseña: '',
-        confirmarContraseña: ''
-      });
+      const datosUsuario = {
+        nombre: datosFormulario.nombre,
+        apellido: datosFormulario.apellido,
+        email: datosFormulario.email,
+        telefono: datosFormulario.telefono,
+        contraseña: datosFormulario.contraseña
+      };
       
-      // Ocultar mensaje de exito despues de 3 segundos
-      setTimeout(() => setMostrarExito(false), 3000);
+      const resultado = await registrarUsuario(datosUsuario);
+      
+      if (resultado.exito) {
+        setMostrarExito(true);
+        setDatosFormulario({
+          nombre: '',
+          apellido: '',
+          email: '',
+          telefono: '',
+          contraseña: '',
+          confirmarContraseña: ''
+        });
+        
+        
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else {
+        setMostrarError(true);
+        setErrores(prev => ({
+          ...prev,
+          general: resultado.error || 'Error al registrar usuario'
+        }));
+      }
       
     } catch (error) {
       console.error('Error al registrar:', error);
+      setMostrarError(true);
+      setErrores(prev => ({
+        ...prev,
+        general: 'Error de conexión. Intente nuevamente.'
+      }));
     } finally {
       setEstaEnviando(false);
     }
@@ -141,6 +169,17 @@ export default function Registro() {
           }}>
             <i className="bi bi-check-circle-fill me-2"></i>
             ¡Registro exitoso! Tu cuenta ha sido creada correctamente.
+          </Alert>
+        )}
+
+        {mostrarError && (
+          <Alert variant="danger" className="mb-4" style={{
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            border: '1px solid #dc3545',
+            color: '#dc3545'
+          }}>
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            {errores.general || 'Error al registrar usuario. Por favor, intente nuevamente.'}
           </Alert>
         )}
 

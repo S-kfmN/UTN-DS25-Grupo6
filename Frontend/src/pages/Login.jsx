@@ -65,6 +65,7 @@ export default function Login() {
     }
 
     setEstaEnviando(true);
+    setMostrarError(false);
 
     try {
       const resultado = await iniciarSesion(datosFormulario);
@@ -73,11 +74,20 @@ export default function Login() {
         // Redirigir al usuario después del login exitoso
         navigate('/mis-vehiculos');
       } else {
+        // Mostrar error específico
+        setErrores(prev => ({
+          ...prev,
+          general: resultado.error || 'Error al iniciar sesión'
+        }));
         setMostrarError(true);
       }
       
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
+      setErrores(prev => ({
+        ...prev,
+        general: 'Error de conexión. Intente nuevamente.'
+      }));
       setMostrarError(true);
     } finally {
       setEstaEnviando(false);
@@ -108,7 +118,7 @@ export default function Login() {
             color: '#dc3545'
           }}>
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
-            Email o contraseña incorrectos. Por favor, verifica tus credenciales.
+            {errores.general || errores.email || errores.contraseña || 'Email o contraseña incorrectos. Por favor, verifica tus credenciales.'}
           </Alert>
         )}
 

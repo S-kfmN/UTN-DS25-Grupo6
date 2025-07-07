@@ -6,7 +6,8 @@ export default function DevTools() {
   const { usuario, cambiarRol, esAdmin } = usarAuth();
   const [mostrar, setMostrar] = useState(false);
 
-  if (!usuario) return null;
+  // Solo mostrar DevTools si el usuario está autenticado Y es administrador
+  if (!usuario || !esAdmin()) return null;
 
   return (
     <div style={{
@@ -29,7 +30,7 @@ export default function DevTools() {
           boxShadow: '0 4px 8px rgba(0,0,0,0.3)'
         }}
       >
-        
+        <i className="bi bi-gear"></i>
       </Button>
 
       {/* Panel de herramientas */}
@@ -50,7 +51,7 @@ export default function DevTools() {
             fontWeight: 'bold',
             textAlign: 'center'
           }}>
-             Herramientas de Desarrollo
+            <i className="bi bi-tools me-2"></i>Herramientas de Desarrollo
           </Card.Header>
           
           <Card.Body>
@@ -99,13 +100,64 @@ export default function DevTools() {
               <div className="mt-2">
                 {esAdmin() ? (
                   <div style={{ color: '#28a745', fontSize: '0.9rem' }}>
-                     Panel de administración disponible
+                    <i className="bi bi-check-circle me-1"></i>Panel de administración disponible
                   </div>
                 ) : (
                   <div style={{ color: '#6c757d', fontSize: '0.9rem' }}>
-                     Solo funciones de cliente
+                    <i className="bi bi-x-circle me-1"></i>Solo funciones de cliente
                   </div>
                 )}
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <strong style={{ color: 'var(--color-acento)' }}>Herramientas de Datos:</strong>
+              <div className="mt-2">
+                <Button
+                  onClick={() => {
+                    localStorage.clear();
+                    alert('localStorage limpiado. Recarga la página para ver los cambios.');
+                  }}
+                  variant="danger"
+                  size="sm"
+                  className="w-100 mb-2"
+                >
+                  <i className="bi bi-trash me-1"></i>Limpiar localStorage
+                </Button>
+                <Button
+                  onClick={() => {
+
+                  }}
+                  variant="info"
+                  size="sm"
+                  className="w-100 mb-2"
+                >
+                  <i className="bi bi-graph-up me-1"></i>Ver localStorage
+                </Button>
+                <Button
+                  onClick={() => {
+                    const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+
+                    alert(`Usuarios disponibles: ${usuarios.length}\n\n${usuarios.map(u => `${u.email} (${u.rol})`).join('\n')}`);
+                  }}
+                  variant="secondary"
+                  size="sm"
+                  className="w-100 mb-2"
+                >
+                  <i className="bi bi-people me-1"></i>Ver Usuarios
+                </Button>
+                <Button
+                  onClick={() => {
+                    const vehiculos = JSON.parse(localStorage.getItem('vehiculos') || '{}');
+
+                    alert(`Vehículos almacenados:\n\n${Object.entries(vehiculos).map(([userId, vehs]) => `Usuario ${userId}: ${vehs.length} vehículos`).join('\n')}`);
+                  }}
+                  variant="warning"
+                  size="sm"
+                  className="w-100"
+                >
+                  <i className="bi bi-car-front me-1"></i>Ver Vehículos
+                </Button>
               </div>
             </div>
 

@@ -13,9 +13,13 @@ import MisVehiculos from './pages/MisVehiculos';
 import MiPerfil from './pages/MiPerfil';
 import MisReservas from './pages/MisReservas';
 import AdminPanel from './pages/AdminPanel';
+import BuscarUsuarios from './pages/BuscarUsuarios';
+import HistorialVehiculo from "./pages/HistorialVehiculo";
+import RegistrarServicio from './pages/RegistrarServicio';
 import { AuthProvider } from './context/AuthContext';
 
-import './App.css';
+import GestionReservas from  './pages/GestionReservas';
+import GestionVehiculos from './pages/GestionVehiculos';
 
 export default function App() {
   return (
@@ -36,6 +40,12 @@ export default function App() {
             <Route path="/mi-perfil" element={<MiPerfil />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/buscar-usuarios" element={<BuscarUsuarios />} />
+            <Route path="/historial-vehiculo" element={<HistorialVehiculo />} />
+            <Route path="/registrar-servicio" element={<RegistrarServicio />} />
+
+            <Route path="/gestion-reservas" element={<GestionReservas />} />
+            <Route path="/gestion-vehiculos" element={<GestionVehiculos />} />
           </Routes>
         </Layout>
       </BrowserRouter>

@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
+import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
+import { crearFecha, formatearFechaParaMostrar, esFechaPasada } from '../utils/dateUtils';
 
 export default function Reservar() {
-  const { usuario, crearReserva, obtenerVehiculosActivos } = usarAuth();
+  const { usuario, crearReserva, obtenerVehiculosActivos, refrescarUsuario } = usarAuth();
   
-  // ===== ESTADOS (VARIABLES QUE CAMBIAN) =====
+
+  useLocalStorageSync();
+  
+
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [vehiculosActivos, setVehiculosActivos] = useState([]);
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
   
-  // Estado para el mes actual del calendario
+
   const [mesActual, setMesActual] = useState(() => {
     const fecha = new Date();
     return {
@@ -19,7 +24,7 @@ export default function Reservar() {
     };
   });
   
-  // Estado para los datos del formulario de reserva
+
   const [datosReserva, setDatosReserva] = useState({
     nombre: usuario?.nombre || '',
     apellido: usuario?.apellido || '',
@@ -35,49 +40,22 @@ export default function Reservar() {
     observaciones: ''
   });
   
-  // Estados para el formulario
+
   const [errores, setErrores] = useState({});
   const [estaEnviando, setEstaEnviando] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   
-  // Estado para las reservas existentes (simulamos datos)
-  const [reservasExistentes, setReservasExistentes] = useState([
-    {
-      id: 1,
-      nombre: 'Juan Pérez',
-      apellido: 'García',
-      patente: 'ABC123',
-      modelo: 'Renault Clio',
-      fecha: '2025-01-15',
-      hora: '10:00'
-    },
-    {
-      id: 2,
-      nombre: 'María López',
-      apellido: 'Rodríguez',
-      patente: 'XYZ789',
-      modelo: 'Renault Megane',
-      fecha: '2025-01-15',
-      hora: '14:30'
-    },
-    {
-      id: 3,
-      nombre: 'Carlos Silva',
-      apellido: 'Martínez',
-      patente: 'DEF456',
-      modelo: 'Renault Captur',
-      fecha: '2025-01-20',
-      hora: '09:00'
-    }
-  ]);
 
-  // Cargar vehiculos activos del usuario
+  const [reservasExistentes, setReservasExistentes] = useState([]);
+
+
   useEffect(() => {
     if (usuario) {
       const vehiculos = obtenerVehiculosActivos();
+
       setVehiculosActivos(vehiculos);
       
-      // Si el usuario tiene vehículos activos, seleccionar el primero por defecto
+
       if (vehiculos.length > 0) {
         setVehiculoSeleccionado(vehiculos[0]);
         setDatosReserva(prev => ({
@@ -88,12 +66,28 @@ export default function Reservar() {
           año: vehiculos[0].año
         }));
       }
-    }
-  }, [usuario, obtenerVehiculosActivos]);
+      
 
-  // ===== FUNCIONES AUXILIARES =====
+      const reservasGuardadas = localStorage.getItem('reservas');
+      if (reservasGuardadas) {
+        setReservasExistentes(JSON.parse(reservasGuardadas));
+      }
+    }
+  }, [usuario, obtenerVehiculosActivos, usuario?.vehiculos]);
+
+
+  useEffect(() => {
+    const reservasGuardadas = localStorage.getItem('reservas');
+    if (reservasGuardadas) {
+      setReservasExistentes(JSON.parse(reservasGuardadas));
+    }
+  }, []);
+
+
+
+
   
-  // Función para generar los días del mes
+
   const generarDiasDelMes = (año, mes) => {
     const primerDia = new Date(año, mes, 1);
     const ultimoDia = new Date(año, mes + 1, 0);
@@ -102,12 +96,12 @@ export default function Reservar() {
     
     const dias = [];
     
-    // Agregar dias vacios al inicio
+
     for (let i = 0; i < diaSemanaInicio; i++) {
       dias.push(null);
     }
     
-    // Agregar todos los dias del mes
+
     for (let i = 1; i <= diasEnMes; i++) {
       dias.push(i);
     }
@@ -115,45 +109,44 @@ export default function Reservar() {
     return dias;
   };
 
-  // Función para verificar si un día tiene reservas
+
   const diaTieneReservas = (dia) => {
     if (!dia) return false;
     
-    const fechaCompleta = `${mesActual.año}-${String(mesActual.mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+    const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
     
     return reservasExistentes.some(reserva => reserva.fecha === fechaCompleta);
   };
 
-  // Función para obtener las reservas de un día específico
+
   const obtenerReservasDelDia = (dia) => {
     if (!dia) return [];
     
-    const fechaCompleta = `${mesActual.año}-${String(mesActual.mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+    const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
     
     return reservasExistentes.filter(reserva => reserva.fecha === fechaCompleta);
   };
 
-  // Función para verificar si un día es pasado
+
   const esDiaPasado = (dia) => {
     if (!dia) return false;
     
-    const fechaCompleta = new Date(mesActual.año, mesActual.mes, dia);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    return fechaCompleta < hoy;
+    const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
+    return esFechaPasada(fechaCompleta);
   };
 
-  // Función para manejar el clic en un día del calendario
+
   const seleccionarDia = (dia) => {
     if (!dia || esDiaPasado(dia)) return;
     
-    const fechaCompleta = `${mesActual.año}-${String(mesActual.mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+    
+    const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
+
     setFechaSeleccionada(fechaCompleta);
     setDatosReserva(prev => ({ ...prev, fecha: fechaCompleta }));
   };
 
-  // Función para navegar al mes anterior
+
   const mesAnterior = () => {
     setMesActual(prev => {
       if (prev.mes === 0) {
@@ -164,7 +157,7 @@ export default function Reservar() {
     });
   };
 
-  // Función para navegar al mes siguiente
+
   const mesSiguiente = () => {
     setMesActual(prev => {
       if (prev.mes === 11) {
@@ -175,21 +168,16 @@ export default function Reservar() {
     });
   };
 
-  // Función para formatear fecha para mostrar
-  const formatearFechaMostrar = (fecha) => {
-    if (!fecha) return '';
-    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(fecha).toLocaleDateString('es-ES', opciones);
-  };
 
-  // Función para manejar cambios en el formulario
+
+
   const manejarCambioFormulario = (campo, valor) => {
     setDatosReserva(prev => ({
       ...prev,
       [campo]: valor
     }));
     
-    // Limpiar error del campo cuando el usuario escriba
+    
     if (errores[campo]) {
       setErrores(previo => ({
         ...previo,
@@ -198,7 +186,7 @@ export default function Reservar() {
     }
   };
 
-  // Función para manejar cambio de vehículo seleccionado
+
   const manejarCambioVehiculo = (vehiculoId) => {
     const vehiculo = vehiculosActivos.find(v => v.id === parseInt(vehiculoId));
     if (vehiculo) {
@@ -213,7 +201,7 @@ export default function Reservar() {
     }
   };
 
-  // Función para validar el formulario
+
   const validarFormulario = () => {
     const nuevosErrores = {};
 
@@ -253,7 +241,7 @@ export default function Reservar() {
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  // Función para enviar el formulario
+
   const enviarReserva = async (e) => {
     e.preventDefault();
     
@@ -264,7 +252,7 @@ export default function Reservar() {
     setEstaEnviando(true);
 
     try {
-      // Preparar datos de la reserva
+      
       const datosCompletos = {
         ...datosReserva,
         vehiculo: {
@@ -277,10 +265,21 @@ export default function Reservar() {
 
       const resultado = await crearReserva(datosCompletos);
       
+
+      
       if (resultado.exito) {
         setMostrarExito(true);
         
-        // Limpiar el formulario
+
+        setReservasExistentes(prev => [...prev, resultado.reserva]);
+        
+        
+        refrescarUsuario();
+        
+        
+        
+        
+        
         setDatosReserva({
           nombre: usuario?.nombre || '',
           apellido: usuario?.apellido || '',
@@ -298,7 +297,7 @@ export default function Reservar() {
         
         setFechaSeleccionada(null);
         
-        // Oculta mensaje de exito despues de 5 segundos
+
         setTimeout(() => setMostrarExito(false), 5000);
       }
     } catch (error) {
@@ -308,7 +307,7 @@ export default function Reservar() {
     }
   };
 
-  // ===== VARIABLES PARA EL CALENDARIO =====
+
   const dias = generarDiasDelMes(mesActual.año, mesActual.mes);
   const nombresMeses = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -316,13 +315,13 @@ export default function Reservar() {
   ];
   const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Juv', 'Vie', 'Sáb'];
 
-  // Horarios disponibles
+
   const horariosDisponibles = [
     '08:00', '09:00', '10:00', '11:00', '12:00', 
     '14:00', '15:00', '16:00', '17:00', '18:00'
   ];
 
-  // Servicios disponibles
+
   const serviciosDisponibles = [
     'Cambio de Aceite',
     'Limpieza de Filtro',
@@ -334,14 +333,21 @@ export default function Reservar() {
   ];
 
   return (
-    <div className="contenedor-reservas">
-      {/* ===== TITULO DE LA PAGINA ===== */}
+    <div className="contenedor-reservas" style={{
+      backgroundImage: 'url("/fondo-lubricentro.jpg")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      minHeight: '100vh',
+      padding: '2rem'
+    }}>
+      {/* ===== TÍTULO DE LA PÁGINA ===== */}
       <div className="titulo-reservas">
         <h1>Reservar Turno</h1>
         <p>Selecciona una fecha en el calendario y completa tu reserva</p>
       </div>
 
-      {/* Mensaje de exito */}
+      {/* Mensaje de éxito */}
       {mostrarExito && (
         <Alert variant="success" className="mb-4" style={{
           backgroundColor: 'rgba(40, 167, 69, 0.1)',
@@ -360,7 +366,7 @@ export default function Reservar() {
         <div className="columna-calendario">
           <h2>Calendario de Turnos</h2>
           
-          {/* ===== ENCABEZADO DEL CALENDARIO CON NAVEGACION ===== */}
+          {/* ===== ENCABEZADO DEL CALENDARIO CON NAVEGACIÓN ===== */}
           <div className="encabezado-calendario" style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -408,7 +414,7 @@ export default function Reservar() {
             </Button>
           </div>
           
-          {/* ===== DIAS DE LA SEMANA ===== */}
+          {/* ===== DÍAS DE LA SEMANA ===== */}
           <div className="dias-semana">
             {nombresDias.map(dia => (
               <div key={dia} className="dia-semana">
@@ -429,7 +435,7 @@ export default function Reservar() {
                 } ${
                   dia && !esDiaPasado(dia) && diaTieneReservas(dia) ? 'dia-con-reservas' : ''
                 } ${
-                  dia && !esDiaPasado(dia) && fechaSeleccionada === `${mesActual.año}-${String(mesActual.mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}` ? 'dia-seleccionado' : ''
+                  dia && !esDiaPasado(dia) && fechaSeleccionada === crearFecha(mesActual.año, mesActual.mes + 1, dia) ? 'dia-seleccionado' : ''
                 }`}
                 onClick={() => seleccionarDia(dia)}
                 style={{
@@ -544,9 +550,13 @@ export default function Reservar() {
               </Row>
             </div>
 
-            {/* Informacion del Vehiculo */}
+            {/* Información del Vehículo */}
             <div className="seccion-formulario">
               <h3>Información del Vehículo</h3>
+              
+              <div className="mb-3">
+                <span>Vehículos disponibles: {vehiculosActivos.length}</span>
+              </div>
               
               {vehiculosActivos.length > 0 ? (
                 <Form.Group className="mb-3">
@@ -635,7 +645,7 @@ export default function Reservar() {
               </Row>
             </div>
 
-            {/* Informacion del Servicio */}
+            {/* Información del Servicio */}
             <div className="seccion-formulario">
               <h3>Detalles del Servicio</h3>
               
@@ -667,7 +677,7 @@ export default function Reservar() {
                     <Form.Label>Fecha Seleccionada *</Form.Label>
                     <Form.Control
                       type="text"
-                      value={formatearFechaMostrar(datosReserva.fecha)}
+                      value={formatearFechaParaMostrar(datosReserva.fecha)}
                       isInvalid={!!errores.fecha}
                       placeholder="Selecciona una fecha en el calendario"
                       className="form-control-custom"
@@ -723,7 +733,7 @@ export default function Reservar() {
               </Form.Group>
             </div>
 
-            {/* Boton de envio */}
+            {/* Botón de envío */}
             <div className="d-grid gap-2">
               <Button 
                 type="submit" 

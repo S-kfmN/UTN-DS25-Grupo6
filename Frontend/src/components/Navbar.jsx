@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navbar, Container, Nav, Button, Dropdown } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 
 export default function NavbarComponent() {
   const { usuario, cerrarSesion, estaAutenticado, esAdmin } = usarAuth();
+  const navigate = useNavigate();
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="py-3">
@@ -47,7 +48,7 @@ export default function NavbarComponent() {
                     }}
                   >
                     <i className="bi bi-gear me-1"></i>
-                    Admin
+                    Panel
                   </Nav.Link>
                 )}
                 
@@ -113,7 +114,43 @@ export default function NavbarComponent() {
                           className="dropdown-item-custom"
                         >
                           <i className="bi bi-gear me-2"></i>
-                          Panel de Administración
+                          Panel de Control
+                        </Dropdown.Item>
+                        <Dropdown.Item 
+                          as={Link} 
+                          to="/reservas"
+                          style={{ color: 'var(--color-acento)' }}
+                          className="dropdown-item-custom"
+                        >
+                          <i className="bi bi-calendar-event me-2"></i>
+                          Turnos de Hoy
+                        </Dropdown.Item>
+                        <Dropdown.Item 
+                          as={Link} 
+                          to="/gestion-reservas"
+                          style={{ color: 'var(--color-acento)' }}
+                          className="dropdown-item-custom"
+                        >
+                          <i className="bi bi-funnel me-2"></i>
+                          Gestión de Reservas
+                        </Dropdown.Item>
+                        <Dropdown.Item 
+                          as={Link} 
+                          to="/gestion-vehiculos"
+                          style={{ color: 'var(--color-acento)' }}
+                          className="dropdown-item-custom"
+                        >
+                          <i className="bi bi-car-front me-2"></i>
+                          Gestión de Vehículos
+                        </Dropdown.Item>
+                        <Dropdown.Item 
+                          as={Link} 
+                          to="/buscar-usuarios"
+                          style={{ color: 'var(--color-acento)' }}
+                          className="dropdown-item-custom"
+                        >
+                          <i className="bi bi-people me-2"></i>
+                          Buscar Usuarios
                         </Dropdown.Item>
                       </>
                     )}
@@ -121,7 +158,10 @@ export default function NavbarComponent() {
                     <Dropdown.Divider style={{ borderColor: 'var(--color-acento)' }} />
                     
                     <Dropdown.Item 
-                      onClick={cerrarSesion}
+                      onClick={() => {
+                        cerrarSesion();
+                        navigate('/login');
+                      }}
                       style={{ color: '#dc3545' }}
                       className="dropdown-item-custom"
                     >
@@ -141,6 +181,14 @@ export default function NavbarComponent() {
                     variant="outline-light" 
                     size="sm"
                     className="me-2"
+                    style={{
+                      width: '120px',
+                      height: '40px',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}
                   >
                     Registrarse
                   </Button>

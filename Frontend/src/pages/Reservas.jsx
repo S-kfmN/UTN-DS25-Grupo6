@@ -1,96 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usarAuth } from '../context/AuthContext';
+import { useReservasSync } from '../hooks/useReservasSync';
+import { obtenerProximasFechas, formatearFechaParaMostrar } from '../utils/dateUtils';
+import { Collapse, Button } from 'react-bootstrap';
 
 export default function Reservas() {
-  // ===== ESTADOS PARA LA VISTA DE ADMINISTRADOR =====
+  const navigate = useNavigate();
+  
+
+  
+
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   
-  // Estado para las reservas (simulamos datos mas completos)
-  const [reservas, setReservas] = useState([
-    {
-      id: 1,
-      nombre: 'Juan Pérez',
-      apellido: 'García',
-      telefono: '123-456-7890',
-      patente: 'ABC123',
-      modelo: 'Renault Clio',
-      fecha: '2025-01-15',
-      hora: '10:00',
-      servicio: 'Cambio de Aceite',
-      estado: 'confirmado',
-      observaciones: 'Cliente frecuente'
-    },
-    {
-      id: 2,
-      nombre: 'María López',
-      apellido: 'Rodríguez',
-      telefono: '098-765-4321',
-      patente: 'XYZ789',
-      modelo: 'Renault Megane',
-      fecha: '2025-01-15',
-      hora: '14:30',
-      servicio: 'Limpieza de Filtro',
-      estado: 'pendiente',
-      observaciones: 'Primera vez'
-    },
-    {
-      id: 3,
-      nombre: 'Carlos Silva',
-      apellido: 'Martínez',
-      telefono: '555-123-4567',
-      patente: 'DEF456',
-      modelo: 'Renault Captur',
-      fecha: '2025-01-20',
-      hora: '09:00',
-      servicio: 'Revisión de Niveles',
-      estado: 'confirmado',
-      observaciones: ''
-    },
-    {
-      id: 4,
-      nombre: 'Ana González',
-      apellido: 'Fernández',
-      telefono: '777-888-9999',
-      patente: 'GHI789',
-      modelo: 'Renault Duster',
-      fecha: '2025-01-16',
-      hora: '11:00',
-      servicio: 'Cambio de Aceite',
-      estado: 'cancelado',
-      observaciones: 'Cliente canceló por enfermedad'
-    },
-    {
-      id: 5,
-      nombre: 'Roberto Díaz',
-      apellido: 'Herrera',
-      telefono: '444-555-6666',
-      patente: 'JKL012',
-      modelo: 'Renault Logan',
-      fecha: '2025-01-17',
-      hora: '15:00',
-      servicio: 'Limpieza de Filtro',
-      estado: 'confirmado',
-      observaciones: 'Urgente'
-    }
-  ]);
 
-  // ===== FUNCIONES AUXILIARES =====
+  const { 
+    usuario, 
+    reservas, 
+    cancelarReserva,
+    refrescarUsuario 
+  } = usarAuth();
   
-  // Funcion para obtener las proximas fechas
-  const obtenerProximasFechas = () => {
-    const fechas = [];
-    const hoy = new Date();
-    
-    for (let i = 0; i < 7; i++) {
-      const fecha = new Date(hoy);
-      fecha.setDate(hoy.getDate() + i);
-      fechas.push(fecha.toISOString().split('T')[0]);
-    }
-    
-    return fechas;
-  };
 
-  // Funcion para filtrar reservas
+  const { sincronizarReservas } = useReservasSync();
+  
+
+  const [loadingReservas, setLoadingReservas] = useState(false);
+  const [errorReservas, setErrorReservas] = useState(null);
+
+  const [mostrarConfirmadas, setMostrarConfirmadas] = useState(false);
+  const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
+
+
+  useEffect(() => {
+
+  }, [reservas]);
+
+
+  
+
+
+
   const reservasFiltradas = reservas.filter(reserva => {
     const cumpleFiltroFecha = !filtroFecha || reserva.fecha === filtroFecha;
     const cumpleFiltroEstado = filtroEstado === 'todos' || reserva.estado === filtroEstado;
@@ -98,7 +49,7 @@ export default function Reservas() {
     return cumpleFiltroFecha && cumpleFiltroEstado;
   });
 
-  // Funcion para agrupar reservas por fecha
+
   const agruparReservasPorFecha = (reservas) => {
     const agrupadas = {};
     
@@ -112,90 +63,84 @@ export default function Reservas() {
     return agrupadas;
   };
 
-  // Funcion para cambiar estado de reserva
-  const cambiarEstadoReserva = (id, nuevoEstado) => {
-    setReservas(prev => prev.map(reserva => 
-      reserva.id === id ? { ...reserva, estado: nuevoEstado } : reserva
-    ));
-  };
 
-  // Función para eliminar reserva
-  const eliminarReserva = (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
-      setReservas(prev => prev.filter(reserva => reserva.id !== id));
+  const cambiarEstadoReserva = async (id, nuevoEstado) => {
+    if (nuevoEstado === 'cancelado') {
+      const resultado = await cancelarReserva(id);
+      if (resultado.exito) {
+
+
+        refrescarUsuario();
+      }
     }
   };
 
-  // Funcion para obtener el color del estado
+
+  const irARegistrarServicio = (reserva) => {
+    
+    navigate('/registrar-servicio', { state: { reserva: reserva } });
+  };
+
+
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  const reservasPendientesHoy = reservas.filter(r => r.estado === 'pendiente' && r.fecha === hoy);
+  const reservasCompletadas = reservas.filter(r => r.estado === 'completado');
+  const reservasCanceladas = reservas.filter(r => r.estado === 'cancelado');
+
+
+  const eliminarReserva = async (id) => {
+    const credencial = window.prompt('Ingrese credencial de ADMIN para eliminar la reserva:');
+    if (credencial && credencial.toLowerCase() === 'admin123') {
+      const resultado = await cancelarReserva(id);
+      if (resultado.exito) {
+        refrescarUsuario();
+      }
+    } else {
+      alert('Credencial incorrecta. Solo el admin puede eliminar reservas.');
+    }
+  };
+
+
   const obtenerColorEstado = (estado) => {
     switch (estado) {
-      case 'confirmado': return 'success';
+      case 'completado': return 'success';
       case 'pendiente': return 'warning';
       case 'cancelado': return 'danger';
       default: return 'secondary';
     }
   };
 
-  // Funcion para formatear fecha
-  const formatearFecha = (fecha) => {
-    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(fecha).toLocaleDateString('es-ES', opciones);
-  };
 
-  // ===== VARIABLES =====
-  const proximasFechas = obtenerProximasFechas();
-  const reservasAgrupadas = agruparReservasPorFecha(reservasFiltradas);
+
+
+  const proximasFechas = obtenerProximasFechas(7);
+
+  const reservasPendientes = reservas.filter(r => r.estado === 'pendiente');
+  const reservasAgrupadas = agruparReservasPorFecha(reservasPendientes);
 
   return (
     <div className="contenedor-admin-reservas">
-      {/* ===== TITULO Y FILTROS ===== */}
+      {/* ===== TÍTULO Y FILTROS ===== */}
       <div className="header-admin-reservas">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
         <h1>Panel de Administración - Reservas</h1>
         <p>Gestiona todas las reservas del sistema</p>
-        
-        {/* ===== FILTROS ===== */}
-        <div className="filtros-admin">
-          <div className="filtro-grupo">
-            <label>Filtrar por fecha:</label>
-            <select 
-              value={filtroFecha} 
-              onChange={(e) => setFiltroFecha(e.target.value)}
-              className="form-select"
-            >
-              <option value="">Todas las fechas</option>
-              {proximasFechas.map(fecha => (
-                <option key={fecha} value={fecha}>
-                  {formatearFecha(fecha)}
-                </option>
-              ))}
-            </select>
           </div>
-          
-          <div className="filtro-grupo">
-            <label>Filtrar por estado:</label>
-            <select 
-              value={filtroEstado} 
-              onChange={(e) => setFiltroEstado(e.target.value)}
-              className="form-select"
-            >
-              <option value="todos">Todos los estados</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-          </div>
+
         </div>
       </div>
 
-      {/* ===== ESTADISTICAS RAPIDAS ===== */}
+      {/* ===== ESTADÍSTICAS RÁPIDAS ===== */}
       <div className="estadisticas-rapidas">
         <div className="stat-card">
           <h3>Total Reservas</h3>
           <p className="stat-numero">{reservas.length}</p>
         </div>
         <div className="stat-card">
-          <h3>Confirmadas</h3>
-          <p className="stat-numero confirmado">{reservas.filter(r => r.estado === 'confirmado').length}</p>
+          <h3>Completadas</h3>
+          <p className="stat-numero completada">{reservas.filter(r => r.estado === 'completado').length}</p>
         </div>
         <div className="stat-card">
           <h3>Pendientes</h3>
@@ -209,10 +154,22 @@ export default function Reservas() {
 
       {/* ===== LISTA DE RESERVAS ===== */}
       <div className="lista-reservas-admin">
-        {Object.keys(reservasAgrupadas).length > 0 ? (
+        {loadingReservas ? (
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Cargando...</span>
+            </div>
+            <p className="mt-2">Cargando reservas...</p>
+          </div>
+        ) : errorReservas ? (
+          <div className="alert alert-danger">
+            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+            Error al cargar reservas: {errorReservas}
+          </div>
+        ) : Object.keys(reservasAgrupadas).length > 0 ? (
           Object.entries(reservasAgrupadas).map(([fecha, reservasDelDia]) => (
             <div key={fecha} className="grupo-fecha">
-              <h2 className="fecha-titulo">{formatearFecha(fecha)}</h2>
+              <h2 className="fecha-titulo">{formatearFechaParaMostrar(fecha)}</h2>
               
               <div className="reservas-del-dia">
                 {reservasDelDia
@@ -249,15 +206,16 @@ export default function Reservas() {
                       </div>
                       
                       <div className="reserva-acciones">
-                        <select 
-                          value={reserva.estado}
-                          onChange={(e) => cambiarEstadoReserva(reserva.id, e.target.value)}
-                          className="form-select form-select-sm"
-                        >
-                          <option value="pendiente">Pendiente</option>
-                          <option value="confirmado">Confirmado</option>
-                          <option value="cancelado">Cancelado</option>
-                        </select>
+                        {reserva.estado === 'pendiente' && (
+                          <Button 
+                            variant="success"
+                            size="sm"
+                            onClick={() => irARegistrarServicio(reserva)}
+                            style={{ fontWeight: 'bold', padding: '0.5rem 1rem', borderRadius: '5px', fontSize: '0.8rem' }}
+                          >
+                            Registrar Servicio
+                          </Button>
+                        )}
                         
                         <button 
                           onClick={() => eliminarReserva(reserva.id)}
@@ -274,8 +232,170 @@ export default function Reservas() {
         ) : (
           <div className="sin-reservas">
             <p>No hay reservas que coincidan con los filtros seleccionados</p>
+            {reservas?.length === 0 && (
+              <div className="alert alert-info mt-3">
+                <i className="bi bi-info-circle me-2"></i>
+                No hay reservas registradas en el sistema. Las reservas creadas aparecerán aquí automáticamente.
+              </div>
+            )}
           </div>
         )}
+        {/* Lista de reservas pendientes del día */}
+        <div className="grupo-fecha">
+          <h2 className="fecha-titulo">Pendientes de Hoy</h2>
+          <div className="reservas-del-dia">
+            {reservasPendientesHoy.length === 0 ? (
+              <p>No hay reservas pendientes para hoy.</p>
+            ) : (
+              reservasPendientesHoy.map(reserva => (
+                <div key={reserva.id} className="reserva-card">
+                  <div className="reserva-header">
+                    <div className="reserva-hora">
+                      <strong>{reserva.hora}</strong>
+                    </div>
+                    <div className="reserva-estado">
+                      <span className={`badge bg-warning`}>Pendiente</span>
+                    </div>
+                  </div>
+                  <div className="reserva-info">
+                    <div className="cliente-info">
+                      <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
+                      <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
+                      <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                    </div>
+                    {reserva.observaciones && (
+                      <div className="observaciones">
+                        <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="reserva-acciones">
+                    {reserva.estado === 'pendiente' && (
+                      <Button 
+                        variant="success"
+                        size="sm"
+                        onClick={() => irARegistrarServicio(reserva)}
+                        style={{ fontWeight: 'bold', padding: '0.5rem 1rem', borderRadius: '5px', fontSize: '0.8rem' }}
+                      >
+                        Registrar Servicio
+                      </Button>
+                    )}
+                    <Button 
+                      variant="danger"
+                      size="sm"
+                      onClick={() => eliminarReserva(reserva.id)}
+                      style={{ fontWeight: 'bold', padding: '0.5rem 1rem', borderRadius: '5px', fontSize: '0.8rem' }}
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        
+        </div>
+        
+        {/* Sección colapsable de Completadas */}
+        <div className="mt-1">
+          <Button
+            variant="outline-primary"
+            onClick={() => setMostrarConfirmadas(v => !v)}
+            aria-controls="reservas-completadas"
+            aria-expanded={mostrarConfirmadas}
+            className="mb-2"
+            style={{ fontWeight: 'bold' }}
+          >
+            {mostrarConfirmadas ? 'Ocultar' : 'Mostrar'} Reservas Completadas ({reservasCompletadas.length})
+          </Button>
+          <Collapse in={mostrarConfirmadas}>
+            <div id="reservas-completadas">
+              <div className="grupo-fecha">
+                <h2 className="fecha-titulo">Reservas Completadas</h2>
+                <div className="reservas-del-dia">
+                  {reservasCompletadas.length === 0 ? (
+                    <p>No hay reservas completadas.</p>
+                  ) : (
+                    reservasCompletadas.map(reserva => (
+                      <div key={reserva.id} className="reserva-card" style={{ opacity: 0.8 }}>
+                        <div className="reserva-header">
+                          <div className="reserva-hora">
+                            <strong>{reserva.hora}</strong>
+                          </div>
+                          <div className="reserva-estado">
+                            <span className={`badge bg-success`}>Completada</span>
+                          </div>
+                        </div>
+                        <div className="reserva-info">
+                          <div className="cliente-info">
+                            <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
+                            <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
+                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                          </div>
+                          {reserva.observaciones && (
+                            <div className="observaciones">
+                              <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </Collapse>
+        </div>
+        {/* Sección colapsable de Canceladas */}
+        <div className="mt-1">
+          <Button
+            variant="outline-warning"
+            onClick={() => setMostrarCanceladas(v => !v)}
+            aria-controls="reservas-canceladas"
+            aria-expanded={mostrarCanceladas}
+            className="mb-2"
+            style={{ fontWeight: 'bold' }}
+          >
+            {mostrarCanceladas ? 'Ocultar' : 'Mostrar'} Reservas Canceladas ({reservasCanceladas.length})
+          </Button>
+          <Collapse in={mostrarCanceladas}>
+            <div id="reservas-canceladas">
+              <div className="grupo-fecha">
+                <h2 className="fecha-titulo">Reservas Canceladas</h2>
+                <div className="reservas-del-dia">
+                  {reservasCanceladas.length === 0 ? (
+                    <p>No hay reservas canceladas.</p>
+                  ) : (
+                    reservasCanceladas.map(reserva => (
+                      <div key={reserva.id} className="reserva-card" style={{ opacity: 0.7 }}>
+                        <div className="reserva-header">
+                          <div className="reserva-hora">
+                            <strong>{reserva.hora}</strong>
+                          </div>
+                          <div className="reserva-estado">
+                            <span className={`badge bg-danger`}>Cancelada</span>
+                          </div>
+                        </div>
+                        <div className="reserva-info">
+                          <div className="cliente-info">
+                            <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
+                            <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
+                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                          </div>
+                          {reserva.observaciones && (
+                            <div className="observaciones">
+                              <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </Collapse>
+        </div>
       </div>
     </div>
   );
