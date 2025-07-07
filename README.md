@@ -39,11 +39,6 @@ Kaufman Sebastian Leonel
 
 ---
 
-Elias Caracas
-- Legajo: 31780
-- Alias Slack: Elias Caracas
-- Perfil Git: [ecaracasdev](https://github.com/ecaracasdev)
-
 # **DOCUMENTACION DEL PROYECTO**
 
    **Resumen Ejecutivo**
