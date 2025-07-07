@@ -1,4 +1,4 @@
-/* Variables CSS que coinciden con el diseño original */
+/* Variables CSS del diseño */
 :root {
   --color-fondo: #000;         /* fondo negro */
   --color-texto: #fff;         /* letras blancas */
@@ -21,9 +21,9 @@ body {
   color: var(--color-texto, #fff);
 }
 
-/* Personalización de Bootstrap para mantener el diseño original */
+/* Personalizacion de Bootstrap */
 
-/* Navbar personalizado */
+/* Navbar */
 .navbar {
   background-color: var(--color-fondo) !important;
   border-bottom: 1px solid var(--color-acento) !important;
@@ -55,7 +55,7 @@ body {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 204, 0, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
 }
 
-/* Botón de inicio de sesión */
+/* Boton de login */
 .btn-outline-light {
   background-color: var(--color-acento) !important;
   color: var(--color-fondo) !important;
@@ -69,7 +69,7 @@ body {
   color: var(--color-fondo) !important;
 }
 
-/* ===== COMPONENTE HEADER ===== */
+/* ===== HEADER ===== */
 .header-component {
   background: var(--color-fondo);
   color: var(--color-texto);
@@ -83,7 +83,7 @@ body {
   margin: 0;
 }
 
-/* ===== SECCIÓN PRINCIPAL (HERO) ===== */
+/* ===== SECCION PRINCIPAL ===== */
 .seccion-principal {
   position: relative;
   text-align: center;
@@ -94,9 +94,8 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: var(--color-texto);
-  box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.6);
   overflow: hidden;
-  min-height: 100vh;
+  min-height: 70vh;
 }
 
 .seccion-principal h1 {
@@ -192,7 +191,7 @@ body {
   line-height: 1.4 !important;
 }
 
-/* Tarjetas para productos y servicios */
+/* Tarjetas de productos y servicios */
 .tarjeta-producto,
 .tarjeta-servicio {
   background-color: var(--color-gris) !important;
@@ -255,6 +254,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .formulario-reserva {
@@ -281,7 +283,7 @@ body {
 .formulario-reserva label {
   text-align: left;
   font-weight: bold;
-  color: #333;
+  color: #c9c9c9;
   font-size: 0.9rem;
 }
 
@@ -307,7 +309,32 @@ body {
   border: none;
 }
 
-/* ===== PIE DE PÁGINA ===== */
+/* Estilos especificos para el formulario de contacto */
+.formulario .boton-principal {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  display: block;
+  padding: 0.4rem 1.0rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-acento);
+  color: var(--color-fondo);
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.formulario .boton-principal:hover {
+  transform: scale(1.05);
+  background-color: #e6b800;
+  color: var(--color-fondo);
+  text-decoration: none;
+}
+
+/* ===== PIE DE PAGINA ===== */
 .pie-pagina {
   background-color: #111 !important;
   color: var(--color-texto) !important;
@@ -329,9 +356,8 @@ body {
 /* ===== SECCIONES DE CONTENIDO ===== */
 
 .seccion-contenido {
-  min-height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); 
-  padding: 4rem 1rem;
+  min-height: 60vh;
+  padding: 1rem 1rem;
   text-align: center;
   color: var(--color-texto);
 }
@@ -376,7 +402,7 @@ body {
   padding: 0 1rem;
 }
 
-/* ===== PÁGINA DE RESERVAS ===== */
+/* ===== PAGINA DE RESERVAS ===== */
 .contenedor-reservas {
   padding: 2rem;
   background-color: var(--color-fondo);
@@ -615,7 +641,7 @@ body {
   box-shadow: 0 4px 8px rgba(255, 204, 0, 0.3);
 }
 
-/* ===== SECCIÓN DE RESERVAS DEL DÍA ===== */
+/* ===== SECCION DE RESERVAS DEL DIA ===== */
 .seccion-reservas-dia {
   background-color: var(--color-gris);
   padding: 2rem;
@@ -707,7 +733,7 @@ body {
     flex-direction: column;
   }
 
-  /* Responsive para la página de reservas */
+  /* Responsive para reservas */
   .contenedor-principal-reservas {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -739,11 +765,14 @@ body {
   }
 }
 
-/* ===== VISTA DE ADMINISTRADOR - RESERVAS ===== */
+/* ===== VISTA DE ADMIN - RESERVAS ===== */
 .contenedor-admin-reservas {
   padding: 2rem;
   max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .header-admin-reservas {
@@ -780,8 +809,8 @@ body {
 
 /* ===== ESTILOS PARA DROPDOWN ===== */
 .dropdown-item-custom:hover {
-  background-color: rgba(255, 204, 0, 0.1) !important;
-  color: var(--color-acento) !important;
+  background-color: var(--color-acento) !important;
+  color: #222 !important;
 }
 
 .dropdown-item-custom:active {
@@ -823,7 +852,7 @@ body {
   border-color: var(--color-acento);
 }
 
-/* ===== ESTADÍSTICAS RÁPIDAS ===== */
+/* ===== ESTADISTICAS RAPIDAS ===== */
 .estadisticas-rapidas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -903,9 +932,10 @@ body {
 .reserva-card {
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 0.75rem;
   border: 1px solid rgba(255, 204, 0, 0.3);
   transition: all 0.3s;
+  margin-bottom: 0.001rem;
 }
 
 .reserva-card:hover {
@@ -917,8 +947,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
   border-bottom: 1px solid rgba(255, 204, 0, 0.3);
 }
 
@@ -935,7 +965,7 @@ body {
 }
 
 .reserva-info {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .cliente-info h4 {
@@ -969,9 +999,6 @@ body {
   gap: 1rem;
   align-items: center;
   justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 204, 0, 0.2);
 }
 
 .reserva-acciones .form-select {
@@ -1039,21 +1066,313 @@ body {
   }
 }
 
+/* ===== ESTILOS PARA BUSQUEDA DE USUARIOS ===== */
+.busqueda-usuarios {
+  background-color: var(--color-gris);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--color-acento);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.resultados-usuarios {
+  width: 100%;
+  min-height: 400px;
+  box-sizing: border-box;
+}
+
+.busqueda-formulario {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+}
+
+.busqueda-input {
+  flex: 1;
+}
+
+.busqueda-botones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.usuario-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem 0.4rem 0.8rem;
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  transition: all 0.3s;
+  margin-bottom: 0.2rem;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.usuario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.1rem;
+  /* border-bottom: 1px solid rgba(255, 204, 0, 0.3); */
+}
+
+.usuario-nombre {
+  font-size: 1.08rem;
+  color: var(--color-acento);
+  font-weight: bold;
+}
+
+.usuario-rol {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 12px;
+}
+
+.usuario-info {
+  margin-bottom: 0.2rem;
+  flex: 1;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.usuario-info p {
+  color: var(--color-texto);
+  margin-bottom: 0.08rem;
+  font-size: 0.95rem;
+}
+
+.cliente-info p {
+  color: var(--color-texto);
+  margin-bottom: 0.05rem;
+  font-size: 0.92rem;
+  line-height: 1.1;
+}
+
+.cliente-info strong {
+  color: var(--color-acento);
+  font-size: 0.92rem;
+}
+
+.usuario-acciones {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.1rem;
+  /* border-top: 1px solid rgba(255, 204, 0, 0.2); */
+  /* Eliminar la línea amarilla */
+}
+
+.usuario-acciones .btn {
+  padding: 0.38rem 1.1rem;
+  border-radius: 5px;
+  font-size: 0.98rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
 @media (max-width: 480px) {
-  .estadisticas-rapidas {
-    grid-template-columns: 1fr;
+  .usuario-card {
+    padding: 0.2rem 0.4rem 0.2rem 0.4rem;
+    min-height: 60px;
   }
-  
-  .stat-card {
-    padding: 1rem;
+  .usuario-info {
+    min-height: 30px;
   }
-  
-  .stat-numero {
-    font-size: 2rem;
+  .usuario-acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .usuario-acciones .btn {
+    width: 100%;
+    margin-bottom: 0.15rem;
   }
 }
+
 input::placeholder,
 .form-control::placeholder {
   color: rgb(185, 182, 182);
   opacity: 1;
+}
+
+/* Fondo global con logo Renault */
+.layout-fondo {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-image: url('/fondo-lubricentro.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+.layout-overlay {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.contenido-principal {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.pie-pagina {
+  margin-top: auto;
+  width: 100%;
+  background: var(--color-gris);
+  color: var(--color-texto);
+  padding: 1rem 0;
+  border-top: 1px solid var(--color-acento);
+}
+
+/* Ajuste para que el footer quede abajo en todas las páginas */
+.layout-fondo, .layout-overlay {
+  height: 100vh;
+}
+
+.navbar-user-minimal:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nav-user-menu-minimal {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: var(--color-gris);
+  border: 1.5px solid var(--color-acento);
+  border-radius: 10px;
+  min-width: 170px;
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 0.3rem 0.2rem;
+  margin-top: 0.2rem;
+}
+
+.nav-user-menu-item {
+  padding: 0.6rem 1.1rem 0.6rem 0.9rem;
+  cursor: pointer;
+  color: var(--color-texto);
+  font-size: 1rem;
+  border-radius: 7px;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.nav-user-menu-item:hover {
+  background: var(--color-acento);
+  color: #222;
+}
+
+.nav-user-btn:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.text-muted-light {
+  color: #919191 !important;
+}
+
+/* === Gestión de Reservas === */
+.tabla-gestion-reservas-wrapper {
+  overflow-x: auto;
+  margin-top: 1.5rem;
+}
+.tabla-gestion-reservas {
+  width: 100%;
+  border-collapse: collapse;
+  background: #222;
+  color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.tabla-gestion-reservas th, .tabla-gestion-reservas td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #444;
+  text-align: left;
+}
+.tabla-gestion-reservas th {
+  background: #353535;
+  color: #ffc107;
+  font-weight: bold;
+}
+.tabla-gestion-reservas tr:last-child td {
+  border-bottom: none;
+}
+.tabla-gestion-reservas tr:hover {
+  background: #2a2a2a;
+}
+.contenedor-gestion-reservas {
+  background: #353535;
+  color: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  max-width: 1200px;
+  margin: 2rem auto;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.header-gestion-reservas {
+  border-bottom: 1px solid #ffc107;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+.filtros-gestion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+.filtro-grupo label {
+  font-weight: bold;
+  color: #ffc107;
+  margin-bottom: 0.3rem;
+}
+.form-control, .form-select {
+  background: #222;
+  color: #fff;
+  border: 1px solid #ffc107;
+  border-radius: 5px;
+  padding: 0.4rem 0.7rem;
+}
+.resultados-gestion {
+  margin-top: 2rem;
+}
+
+/* Fondo gris oscuro para la tabla de gestión de reservas */
+.tabla-gestion-reservas,
+.tabla-gestion-reservas th,
+.tabla-gestion-reservas td {
+  background-color: #2a2a2a !important;
+  color: #fff !important;
+}
+
+.tabla-gestion-reservas th {
+  background-color: #353535 !important;
+  color: #ffc107 !important;
+}
+
+/* ===== ESTILO PARA BOTON TURNOS DEL DIA ===== */
+a:has(.boton-turnos-dia-principal) {
+  text-decoration: none !important;
 }

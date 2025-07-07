@@ -1,9 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert, Row, Col, Card, Badge } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { usarAuth } from '../context/AuthContext';
+import { useFetch } from '../hooks/useFetch';
+import { useReservasSync } from '../hooks/useReservasSync';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { formatearFechaParaMostrar } from '../utils/dateUtils';
 
 export default function AdminPanel() {
-  const { usuario, esAdmin, reservas } = usarAuth();
+  const { usuario, esAdmin, reservas, usuarios, refrescarUsuario, limpiarReservas } = usarAuth();
+  
+  // Usar el hook de sincronización de reservas
+  const { sincronizarReservas } = useReservasSync();
+  
+  // Manejo de errores
+  if (!usuario) {
+    return (
+      <div className="contenedor-admin-reservas">
+        <div className="header-admin-reservas">
+          <h1>Cargando...</h1>
+          <p>Inicializando panel de administración</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Sincronizar datos del localStorage y monitorear cambios
+  useEffect(() => {
+    try {
+      refrescarUsuario();
+    } catch (error) {
+      console.error('Error al refrescar usuario:', error);
+    }
+  }, [refrescarUsuario]);
+  
+
+
+  // El hook useReservasSync maneja toda la sincronización automática
+
+
+  
   const [estadisticas, setEstadisticas] = useState({
     totalReservas: 0,
     reservasPendientes: 0,
@@ -12,20 +48,34 @@ export default function AdminPanel() {
     totalUsuarios: 0
   });
 
+  const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
+
+  // Usar useFetch para obtener datos adicionales del sistema
+  const { data: datosSistema, loading: loadingSistema, error: errorSistema } = useFetch(
+    'https://jsonplaceholder.typicode.com/posts/1',
+    {},
+    []
+  );
+
   useEffect(() => {
+    try {
     // Calcular estadísticas
     const stats = {
-      totalReservas: reservas.length,
-      reservasPendientes: reservas.filter(r => r.estado === 'pendiente').length,
-      reservasConfirmadas: reservas.filter(r => r.estado === 'confirmado').length,
-      reservasCanceladas: reservas.filter(r => r.estado === 'cancelado').length,
-      totalUsuarios: 1 // Simulado por ahora
+        totalReservas: reservas?.length || 0,
+        reservasPendientes: reservas?.filter(r => r.estado === 'pendiente').length || 0,
+        reservasConfirmadas: reservas?.filter(r => r.estado === 'confirmado').length || 0,
+        reservasCanceladas: reservas?.filter(r => r.estado === 'cancelado').length || 0,
+        totalUsuarios: usuarios?.length || 0
     };
     setEstadisticas(stats);
-  }, [reservas]);
+      setUltimaActualizacion(new Date());
+    } catch (error) {
+      console.error('Error al calcular estadísticas:', error);
+    }
+  }, [reservas, usuarios]);
 
   // Verificar si el usuario es admin
-  if (!esAdmin()) {
+  if (!usuario || !esAdmin()) {
     return (
       <div className="contenedor-admin-reservas">
         <div className="header-admin-reservas">
@@ -41,11 +91,17 @@ export default function AdminPanel() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="contenedor-admin-reservas">
       {/* Header */}
       <div className="header-admin-reservas">
-        <h1>Panel de Administración</h1>
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+        <h1>Panel de Control</h1>
         <p>Gestiona el sistema del lubricentro</p>
+          </div>
+                      
+        </div>
       </div>
 
       {/* Información del administrador */}
@@ -100,6 +156,46 @@ export default function AdminPanel() {
           Acciones Rápidas
         </h3>
         <Row>
+        <Col md={3}>
+            <Card style={{
+              backgroundColor: 'var(--color-gris)',
+              border: '1px solid var(--color-acento)',
+              borderRadius: '10px',
+              textAlign: 'center',
+              padding: '1rem'
+            }}>
+              <i className="bi bi-calendar-event" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
+              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Turnos del Día</h5>
+              <Link to="/reservas">
+                <Button 
+                  variant="warning" 
+                  size="lg" 
+                  className="mt-2 boton-turnos-dia-principal"
+                  style={{ 
+                    width: '100%',
+                    fontWeight: 'bold', 
+                    fontSize: '1.25rem', 
+                    color: '#222', 
+                    backgroundColor: '#ffc107', 
+                    border: 'none', 
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 16px rgba(255,204,0,0.25)',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                    padding: '1.1rem 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.7rem'
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,204,0,0.35)'; }}
+                  onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,204,0,0.25)'; }}
+                >
+                  <i className="bi bi-lightning" style={{ fontSize: '2rem', color: '#222' }}></i>
+                  Turnos del Día
+                </Button>
+              </Link>
+            </Card>
+          </Col>
           <Col md={3}>
             <Card style={{
               backgroundColor: 'var(--color-gris)',
@@ -110,9 +206,11 @@ export default function AdminPanel() {
             }}>
               <i className="bi bi-calendar-check" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
               <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Reservas</h5>
-              <Button variant="outline-warning" size="sm" className="mt-2">
-                Ver Todas
-              </Button>
+              <Link to="/gestion-reservas">
+                <Button variant="outline-warning" size="sm" className="mt-2" style={{ width: '100%' }}>
+                  Ver Todas
+                </Button>
+              </Link>
             </Card>
           </Col>
           <Col md={3}>
@@ -125,9 +223,11 @@ export default function AdminPanel() {
             }}>
               <i className="bi bi-people" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
               <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Usuarios</h5>
-              <Button variant="outline-warning" size="sm" className="mt-2">
-                Ver Usuarios
-              </Button>
+              <Link to="/buscar-usuarios">
+                <Button variant="outline-warning" size="sm" className="mt-2" style={{ width: '100%' }}>
+                  Buscar Usuarios
+                </Button>
+              </Link>
             </Card>
           </Col>
           <Col md={3}>
@@ -138,44 +238,62 @@ export default function AdminPanel() {
               textAlign: 'center',
               padding: '1rem'
             }}>
-              <i className="bi bi-car-front" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Vehículos</h5>
-              <Button variant="outline-warning" size="sm" className="mt-2">
-                Ver Vehículos
-              </Button>
+              <i className="bi bi-people" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
+              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Vehiculos</h5>
+              <Link to="/gestion-vehiculos">
+                <Button variant="outline-warning" size="sm" className="mt-2" style={{ width: '100%' }}>
+                  Buscar Vehiculos
+                </Button>
+              </Link>
             </Card>
           </Col>
-          <Col md={3}>
-            <Card style={{
-              backgroundColor: 'var(--color-gris)',
-              border: '1px solid var(--color-acento)',
-              borderRadius: '10px',
-              textAlign: 'center',
-              padding: '1rem'
-            }}>
-              <i className="bi bi-gear" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Configuración</h5>
-              <Button variant="outline-warning" size="sm" className="mt-2">
-                Configurar
-              </Button>
-            </Card>
-          </Col>
+
+          {/* ===== BOTON DE CONFIGURACION ===== */}
+          {/*
+            <Col md={3}>
+              <Card style={{
+                backgroundColor: 'var(--color-gris)',
+                border: '1px solid var(--color-acento)',
+                borderRadius: '10px',
+                textAlign: 'center',
+                padding: '1rem',
+                marginTop: '1rem'
+              }}>
+                <i className="bi bi-gear" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
+                <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Configuración</h5>
+                <Button variant="outline-warning" size="sm" className="mt-2">
+                  Configurar
+                </Button>
+              </Card>
+            </Col>
+          */}
         </Row>
       </div>
 
       {/* Últimas reservas */}
       <div>
-        <h3 style={{ color: 'var(--color-acento)', marginBottom: '1.5rem' }}>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h3 style={{ color: 'var(--color-acento)', marginBottom: 0 }}>
           <i className="bi bi-clock-history me-2"></i>
-          Últimas Reservas
+            Últimas Reservas ({reservas?.length || 0} total)
         </h3>
-        {reservas.length > 0 ? (
+
+        </div>
+        
+
+        
+
+        
+        {reservas && reservas.length > 0 ? (
           <div className="lista-reservas-admin">
-            {reservas.slice(0, 5).map(reserva => (
+            {reservas
+              .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) // Ordenar por fecha más reciente
+              .slice(0, 5)
+              .map(reserva => (
               <div key={reserva.id} className="reserva-card">
                 <div className="reserva-header">
                   <div className="reserva-hora">
-                    <strong>{new Date(reserva.fecha).toLocaleDateString('es-ES')} - {reserva.hora}</strong>
+                    <strong>{formatearFechaParaMostrar(reserva.fecha)} - {reserva.hora}</strong>
                   </div>
                   <div className="reserva-estado">
                     <Badge bg={
@@ -191,7 +309,10 @@ export default function AdminPanel() {
                   <div className="cliente-info">
                     <h4>{reserva.servicio}</h4>
                     <p><strong>Cliente:</strong> {reserva.nombre} {reserva.apellido}</p>
-                    <p><strong>Vehículo:</strong> {reserva.vehiculo?.patente} - {reserva.vehiculo?.marca} {reserva.vehiculo?.modelo}</p>
+                      <p><strong>Vehículo:</strong> {reserva.patente} - {reserva.marca} {reserva.modelo}</p>
+                      {reserva.observaciones && (
+                        <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
+                      )}
                   </div>
                 </div>
               </div>
@@ -230,8 +351,12 @@ export default function AdminPanel() {
           <li>Última actualización: {new Date().toLocaleDateString('es-ES')}</li>
           <li>Estado del sistema: Operativo</li>
           <li>Modo: Desarrollo</li>
+          {loadingSistema && <li>Estado API: Cargando...</li>}
+          {errorSistema && <li>Estado API: Error - {errorSistema}</li>}
+          {datosSistema && <li>Estado API: Conectado (ID: {datosSistema.id})</li>}
         </ul>
       </div>
     </div>
+    </ErrorBoundary>
   );
 } 
