@@ -46,8 +46,7 @@ export const useVehiculos = (userId) => {
         // Simular delay de red para desarrollo
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Por ahora, siempre usar datos simulados
-        // Cuando tengas una API real, puedes descomentar el código de abajo
+        // Por ahora usar datos simulados
         setVehiculos(vehiculosSimulados);
         
         /*
