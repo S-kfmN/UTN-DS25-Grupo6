@@ -31,7 +31,7 @@ export default function Reservar() {
     telefono: usuario?.telefono || '',
     email: usuario?.email || '',
     patente: '',
-    marca: '',
+    marca: 'RENAULT',
     modelo: '',
     año: '',
     servicio: '',
@@ -286,7 +286,7 @@ export default function Reservar() {
           telefono: usuario?.telefono || '',
           email: usuario?.email || '',
           patente: vehiculoSeleccionado?.patente || '',
-          marca: vehiculoSeleccionado?.marca || '',
+          marca: 'RENAULT', // Siempre RENAULT
           modelo: vehiculoSeleccionado?.modelo || '',
           año: vehiculoSeleccionado?.año || '',
           servicio: '',
@@ -605,10 +605,10 @@ export default function Reservar() {
                     <Form.Control
                       type="text"
                       value={datosReserva.marca}
-                      onChange={(e) => manejarCambioFormulario('marca', e.target.value)}
-                      placeholder="Renault"
+                      placeholder="RENAULT"
                       className="form-control-custom"
-                      readOnly={vehiculosActivos.length > 0}
+                      readOnly={true}
+                      style={{ opacity: 0.7 }}
                     />
                   </Form.Group>
                 </Col>

@@ -1,6 +1,7 @@
 import { Vehicle, CreateVehicleRequest, UpdateVehicleRequest } from '../types/vehicle';
-import { PrismaClient, VehicleStatus } from '@prisma/client';
+import { PrismaClient, VehicleStatus } from '../generated/prisma';
 
+// Crear una nueva instancia de Prisma para este modelo
 const prisma = new PrismaClient();
 
 class VehicleModel {
@@ -13,7 +14,7 @@ class VehicleModel {
     //   id: this.nextId++,
     //   ...vehicleData,
     //   userId,                    // Asociar al usuario
-    //   status: 'active',          // Por defecto activo
+    //   status: 'ACTIVO',          // Por defecto activo
     //   createdAt: new Date().toISOString(),
     //   updatedAt: new Date().toISOString()
     // };
@@ -24,7 +25,7 @@ class VehicleModel {
       data: {
         ...vehicleData,
         userId,
-        status: VehicleStatus.ACTIVE, // Cambiado de 'active' a VehicleStatus.ACTIVE
+        status: VehicleStatus.ACTIVO, // Cambiado de 'ACTIVO' a VehicleStatus.ACTIVO
       },
     });
     return newVehicle;

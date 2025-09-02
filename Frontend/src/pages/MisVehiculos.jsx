@@ -5,16 +5,41 @@ import { useNavigate } from 'react-router-dom';
 import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
 
 export default function MisVehiculos() {
-  const { usuario, agregarVehiculo, actualizarVehiculo, eliminarVehiculo, refrescarUsuario } = usarAuth();
+  const { usuario, agregarVehiculo, actualizarVehiculo, eliminarVehiculo, cargarVehiculosUsuario } = usarAuth();
   const navigate = useNavigate();
   
-  // Sincronizar datos del localStorage
-  useLocalStorageSync();
+  // Estado para los vehículos del backend
+  const [vehiculos, setVehiculos] = useState([]);
+  const [cargando, setCargando] = useState(true);
   
-  // Refrescar usuario autenticado desde localStorage cada vez que se renderiza la página
+  // Cargar vehículos desde la API al montar el componente
   useEffect(() => {
-    refrescarUsuario();
-  }, []);
+    const cargarDatos = async () => {
+      console.log('🔄 Iniciando carga de vehículos...');
+      console.log('👤 Usuario:', usuario);
+      
+      if (usuario?.id) {
+        setCargando(true);
+        try {
+          console.log('📡 Llamando a cargarVehiculosUsuario...');
+          const vehiculosDelBackend = await cargarVehiculosUsuario();
+          console.log('🚗 Vehículos recibidos del backend:', vehiculosDelBackend);
+          setVehiculos(vehiculosDelBackend || []);
+        } catch (error) {
+          console.error('❌ Error al cargar vehículos:', error);
+          setVehiculos([]);
+        } finally {
+          console.log('✅ Finalizando carga de vehículos');
+          setCargando(false);
+        }
+      } else {
+        console.log('⚠️ No hay usuario.id, no se cargan vehículos');
+        setCargando(false);
+      }
+    };
+    
+    cargarDatos();
+  }, [usuario?.id]);
   
   const [mostrarModal, setMostrarModal] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -25,16 +50,13 @@ export default function MisVehiculos() {
   const [vehiculoAEditar, setVehiculoAEditar] = useState(null);
   const [nuevoVehiculo, setNuevoVehiculo] = useState({
     patente: '',
-    marca: '',
+    marca: 'RENAULT',
     modelo: '',
     año: '',
     color: ''
   });
 
   const [errores, setErrores] = useState({});
-
-  // Obtener vehículos del usuario desde el contexto
-  const vehiculos = usuario?.vehiculos || [];
 
   // Filtrar vehículos por búsqueda
   const vehiculosFiltrados = vehiculos.filter(vehiculo =>
@@ -66,9 +88,7 @@ export default function MisVehiculos() {
       nuevosErrores.patente = 'La patente es requerida';
     }
 
-    if (!nuevoVehiculo.marca.trim()) {
-      nuevosErrores.marca = 'La marca es requerida';
-    }
+    // La marca siempre es RENAULT, no necesita validación
 
     if (!nuevoVehiculo.modelo.trim()) {
       nuevosErrores.modelo = 'El modelo es requerido';
@@ -88,23 +108,33 @@ export default function MisVehiculos() {
     evento.preventDefault();
     if (!validarFormulario()) return;
 
-    if (modoEdicion && vehiculoAEditar) {
-      // Editar vehículo existente
-      const resultado = await actualizarVehiculo(vehiculoAEditar.id, nuevoVehiculo);
-      if (resultado.exito) {
-        setMostrarExito(true);
-        setTimeout(() => setMostrarExito(false), 3000);
+    try {
+      if (modoEdicion && vehiculoAEditar) {
+        // Editar vehículo existente
+        const resultado = await actualizarVehiculo(vehiculoAEditar.id, nuevoVehiculo);
+        if (resultado.exito) {
+          setMostrarExito(true);
+          setTimeout(() => setMostrarExito(false), 3000);
+          // Recargar vehículos desde el backend
+          const vehiculosActualizados = await cargarVehiculosUsuario();
+          setVehiculos(vehiculosActualizados || []);
+        }
+      } else {
+        // Agregar nuevo vehículo
+        const resultado = await agregarVehiculo(nuevoVehiculo);
+        if (resultado.exito) {
+          setMostrarExito(true);
+          setTimeout(() => setMostrarExito(false), 3000);
+          // Recargar vehículos desde el backend
+          const vehiculosActualizados = await cargarVehiculosUsuario();
+          setVehiculos(vehiculosActualizados || []);
+        }
       }
-    } else {
-      // Agregar nuevo vehículo usando el contexto
-      const resultado = await agregarVehiculo(nuevoVehiculo);
-      if (resultado.exito) {
-        setMostrarExito(true);
-        setTimeout(() => setMostrarExito(false), 3000);
-      }
+    } catch (error) {
+      console.error('Error al guardar vehículo:', error);
     }
 
-    setNuevoVehiculo({ patente: '', marca: '', modelo: '', año: '', color: '' });
+    setNuevoVehiculo({ patente: '', marca: 'RENAULT', modelo: '', año: '', color: '' });
     setModoEdicion(false);
     setVehiculoAEditar(null);
     setMostrarModal(false);
@@ -117,36 +147,39 @@ export default function MisVehiculos() {
 
   const confirmarEliminacion = async () => {
     if (vehiculoAEliminar) {
-      const resultado = await eliminarVehiculo(vehiculoAEliminar.id);
-      if (resultado.exito) {
-      setMostrarConfirmacion(false);
-      setVehiculoAEliminar(null);
+      try {
+        const resultado = await eliminarVehiculo(vehiculoAEliminar.id);
+        if (resultado.exito) {
+          setMostrarConfirmacion(false);
+          setVehiculoAEliminar(null);
+          // Recargar vehículos desde el backend
+          const vehiculosActualizados = await cargarVehiculosUsuario();
+          setVehiculos(vehiculosActualizados || []);
+        }
+      } catch (error) {
+        console.error('Error al eliminar vehículo:', error);
       }
     }
   };
   const manejarEditarVehiculo = (vehiculo) => {
-    setNuevoVehiculo({ ...vehiculo });
+    setNuevoVehiculo({ ...vehiculo, marca: 'RENAULT' }); // Siempre forzar marca RENAULT
     setVehiculoAEditar(vehiculo);
     setModoEdicion(true);
     setMostrarModal(true);
   };
   const obtenerColorEstado = (estado) => {
-    switch (estado) {
+    switch (estado?.toLowerCase()) {
       case 'activo': return 'success';
-      case 'en_servicio': return 'warning';
       case 'inactivo': return 'danger';
-      case 'registrado': return 'info';
       default: return 'secondary';
     }
   };
 
   const obtenerTextoEstado = (estado) => {
-    switch (estado) {
+    switch (estado?.toLowerCase()) {
       case 'activo': return 'Activo';
-      case 'en_servicio': return 'En Servicio';
       case 'inactivo': return 'Inactivo';
-      case 'registrado': return 'Registrado';
-      default: return estado;
+      default: return estado || 'Desconocido';
     }
   };
 
@@ -191,7 +224,14 @@ export default function MisVehiculos() {
 
           {/* Lista de vehículos */}
     <div className="lista-reservas-admin">
-        {vehiculos.length > 0 ? (
+        {cargando ? (
+          <div className="text-center py-4">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Cargando vehículos...</span>
+            </div>
+            <p className="mt-2">Cargando vehículos desde el servidor...</p>
+          </div>
+        ) : vehiculos.length > 0 ? (
         <div className="grupo-fecha">
           <h2 className="fecha-titulo">Vehículos Registrados</h2>
 
@@ -242,7 +282,16 @@ export default function MisVehiculos() {
                   <div className="mb-2">
                     <select 
                       value={vehiculo.estado}
-                      onChange={(e) => actualizarVehiculo(vehiculo.id, { estado: e.target.value })}
+                      onChange={async (e) => {
+                        try {
+                          await actualizarVehiculo(vehiculo.id, { estado: e.target.value });
+                          // Recargar vehículos desde el backend
+                          const vehiculosActualizados = await cargarVehiculosUsuario();
+                          setVehiculos(vehiculosActualizados || []);
+                        } catch (error) {
+                          console.error('Error al actualizar estado:', error);
+                        }
+                      }}
                       className="form-select form-select-sm"
                       style={{
                         backgroundColor: 'var(--color-gris)',
@@ -253,10 +302,8 @@ export default function MisVehiculos() {
                         minWidth: '120px'
                       }}
                     >
-                      <option value="registrado">Registrado</option>
-                      <option value="activo">Activo</option>
-                      <option value="en_servicio">En Servicio</option>
-                      <option value="inactivo">Inactivo</option>
+                      <option value="ACTIVO">Activo</option>
+                      <option value="INACTIVO">Inactivo</option>
                     </select>
                   </div>
 
@@ -371,15 +418,14 @@ export default function MisVehiculos() {
                     type="text"
                     name="marca"
                     value={nuevoVehiculo.marca}
-                    onChange={manejarCambio}
-                    isInvalid={!!errores.marca}
-                    placeholder="Renault"
+                    readOnly
                     style={{
                       backgroundColor: 'var(--color-gris)',
                       border: '1px solid var(--color-acento)',
                       color: 'var(--color-texto)',
                       padding: '0.75rem',
-                      borderRadius: '5px'
+                      borderRadius: '5px',
+                      opacity: 0.7
                     }}
                     className="form-control-custom"
                   />

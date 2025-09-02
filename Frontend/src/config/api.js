@@ -46,7 +46,7 @@ export const API_ENDPOINTS = {
     CREATE: '/vehicles',
     UPDATE: (id) => `/vehicles/${id}`,
     DELETE: (id) => `/vehicles/${id}`,
-    BY_USER: (userId) => `/users/${userId}/vehicles`
+    BY_USER: (userId) => '/vehicles' // El backend obtiene vehículos del usuario autenticado
   },
   
   // Reservas

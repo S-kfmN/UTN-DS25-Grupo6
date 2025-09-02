@@ -1,5 +1,5 @@
 import { User, RegisterRequest } from '../types/user';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole } from '../generated/prisma';
 
 // Usar la instancia global de Prisma que se configura en app.ts
 declare global {

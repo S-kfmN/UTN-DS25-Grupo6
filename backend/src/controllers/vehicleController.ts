@@ -53,8 +53,10 @@ export const createVehicle = async (req: Request, res: Response) => {
 export const getUserVehicles = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
+    console.log('🔍 getUserVehicles - userId:', userId);
 
     const vehicles = await VehicleModel.findByUserId(userId);
+    console.log('🚗 getUserVehicles - vehicles found:', vehicles.length);
 
     res.json({
       success: true,
@@ -62,6 +64,7 @@ export const getUserVehicles = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    console.error('❌ Error en getUserVehicles:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'

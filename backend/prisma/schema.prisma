@@ -15,8 +15,8 @@ datasource db {
 }
 
 enum VehicleStatus {
-  ACTIVE
-  INACTIVE
+  ACTIVO
+  INACTIVO
 }
 
 enum ServiceCategory {
@@ -28,16 +28,16 @@ enum ServiceCategory {
 }
 
 enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
+  PENDIENTE
+  CONFIRMADA
+  COMPLETADA
+  CANCELADA
 }
 
 enum UserRole {
   USER
   ADMIN
-  MECHANIC
+  MECANICO
 }
 
 // Modelo de Usuario
@@ -63,7 +63,7 @@ model Vehicle {
   model        String
   year         Int
   color        String
-  status       VehicleStatus @default(ACTIVE) // Cambiado a VehicleStatus
+  status       VehicleStatus @default(ACTIVO) // Cambiado a VehicleStatus
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   userId       Int
@@ -90,7 +90,7 @@ model Reservation {
   id          Int              @id @default(autoincrement())
   date        String           // Fecha de la reserva (YYYY-MM-DD)
   time        String           // Hora de la reserva (HH:MM)
-  status      ReservationStatus @default(PENDING) // Cambiado a ReservationStatus
+  status      ReservationStatus @default(PENDIENTE) // Cambiado a ReservationStatus
   notes       String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
