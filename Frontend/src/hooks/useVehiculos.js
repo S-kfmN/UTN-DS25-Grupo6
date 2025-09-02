@@ -9,32 +9,10 @@ export const useVehiculos = (userId) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // URL base para la API de vehículos (usando JSONPlaceholder como ejemplo)
-  const baseUrl = 'https://jsonplaceholder.typicode.com';
+  // URL base para la API de vehículos
+  const baseUrl = 'http://localhost:3000';
   
-  // Datos simulados de vehículos cuando la API no está disponible
-  const vehiculosSimulados = [
-    {
-      id: 1,
-      patente: 'ABC123',
-      marca: 'Renault',
-      modelo: 'Clio',
-      año: 2020,
-      color: 'Blanco',
-      estado: 'activo',
-      userId: userId || 1
-    },
-    {
-      id: 2,
-      patente: 'XYZ789',
-      marca: 'Renault',
-      modelo: 'Megane',
-      año: 2019,
-      color: 'Gris',
-      estado: 'registrado',
-      userId: userId || 1
-    }
-  ];
+
 
   // Cargar vehículos usando useEffect
   useEffect(() => {
@@ -43,37 +21,21 @@ export const useVehiculos = (userId) => {
         setLoading(true);
         setError(null);
         
-        // Simular delay de red para desarrollo
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Por ahora, siempre usar datos simulados
-        // Cuando tengas una API real, puedes descomentar el código de abajo
-        setVehiculos(vehiculosSimulados);
-        
-        /*
-        // Código para cuando tengas una API real:
         if (userId) {
-          try {
-            const response = await fetch(`${baseUrl}/users/${userId}/vehiculos`);
-            if (response.ok) {
-              const data = await response.json();
-              setVehiculos(data);
-              return;
-            }
-          } catch (apiError) {
-            console.log('API no disponible, usando datos simulados');
+          const response = await fetch(`${baseUrl}/api/vehicles?userId=${userId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setVehiculos(data);
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
+        } else {
+          setVehiculos([]);
         }
-        
-        // Usar datos simulados como fallback
-        setVehiculos(vehiculosSimulados);
-        */
         
       } catch (err) {
         setError(err.message);
         console.error('Error en useVehiculos:', err);
-        // En caso de error, usar datos simulados
-        setVehiculos(vehiculosSimulados);
       } finally {
         setLoading(false);
       }
@@ -82,10 +44,28 @@ export const useVehiculos = (userId) => {
     cargarVehiculos();
   }, [userId]);
 
-  const refetch = () => {
-    setLoading(true);
-    setVehiculos(vehiculosSimulados);
-    setLoading(false);
+  const refetch = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (userId) {
+        const response = await fetch(`${baseUrl}/api/vehicles?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVehiculos(data);
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } else {
+        setVehiculos([]);
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error en refetch:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   /**

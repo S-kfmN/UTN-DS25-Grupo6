@@ -17,20 +17,6 @@ export const useFetch = (url, options = {}, dependencies = []) => {
       setLoading(true);
       setError(null);
       
-      // Simular delay de red para desarrollo
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Por ahora, simular datos en lugar de hacer llamadas reales
-      // Cuando tengas una API real, puedes descomentar el código de abajo
-      const datosSimulados = {
-        id: 1,
-        title: 'Datos simulados del sistema',
-        body: 'Información del sistema cargada correctamente'
-      };
-      setData(datosSimulados);
-      
-      /*
-      // Código para cuando tengas una API real:
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +31,6 @@ export const useFetch = (url, options = {}, dependencies = []) => {
 
       const result = await response.json();
       setData(result);
-      */
       
     } catch (err) {
       setError(err.message);

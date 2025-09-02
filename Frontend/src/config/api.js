@@ -2,7 +2,7 @@
 const API_CONFIG = {
   // URLs base para diferentes entornos
   development: {
-    baseURL: 'http://localhost:3001/api',
+    baseURL: 'http://localhost:3000/api',
     timeout: 5000
   },
   production: {
