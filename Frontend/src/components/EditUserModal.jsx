@@ -186,7 +186,7 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
                 <Form.Label>Rol</Form.Label>
                 <Form.Control
                   type="text"
-                  value={usuario?.rol === 'admin' ? 'Administrador' : 'Cliente'}
+                  value={usuario?.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
                   disabled
                   style={{ backgroundColor: 'var(--color-gris)' }}
                 />

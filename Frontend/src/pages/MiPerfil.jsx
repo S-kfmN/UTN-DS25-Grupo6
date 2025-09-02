@@ -112,7 +112,7 @@ export default function MiPerfil() {
           <Row>
             <Col md={6}>
               <p><strong style={{ color: 'var(--color-acento)' }}>ID de Usuario:</strong> {usuario?.id}</p>
-              <p><strong style={{ color: 'var(--color-acento)' }}>Rol:</strong> {usuario?.rol === 'admin' ? 'Administrador' : 'Cliente'}</p>
+              <p><strong style={{ color: 'var(--color-acento)' }}>Rol:</strong> {usuario?.role === 'ADMIN' ? 'Administrador' : 'Cliente'}</p>
             </Col>
             <Col md={6}>
               <p><strong style={{ color: 'var(--color-acento)' }}>Vehículos Registrados:</strong> {usuario?.vehiculos?.length || 0}</p>

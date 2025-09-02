@@ -1,7 +1,13 @@
 import { User, RegisterRequest } from '../types/user';
 import { PrismaClient, UserRole } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// Usar la instancia global de Prisma que se configura en app.ts
+declare global {
+  var __prisma: PrismaClient | undefined;
+}
+
+const prisma = globalThis.__prisma || new PrismaClient();
+if (process.env.NODE_ENV !== 'production') globalThis.__prisma = prisma;
 
 // Por ahora usaremos un array en memoria, después lo conectaremos a una base de datos
 class UserModel {

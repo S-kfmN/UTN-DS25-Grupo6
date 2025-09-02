@@ -204,8 +204,8 @@ export default function BuscarUsuarios() {
                     <strong>{usuario.nombre} {usuario.apellido}</strong>
                   </div>
                   <div className="usuario-rol">
-                    <Badge bg={usuario.rol === 'admin' ? 'danger' : 'success'}>
-                      {usuario.rol === 'admin' ? 'Administrador' : 'Cliente'}
+                    <Badge bg={usuario.role === 'ADMIN' ? 'danger' : 'success'}>
+                      {usuario.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
                     </Badge>
                   </div>
                 </div>
@@ -247,7 +247,7 @@ export default function BuscarUsuarios() {
                             <i className="bi bi-calendar me-1"></i>
                             Ver Reservas
                           </Button>
-                          {usuario.rol === 'cliente' && (
+                          {usuario.role === 'USER' && (
                             <Button 
                               variant="outline-danger" 
                               size="sm"

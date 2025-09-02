@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import apiService from '../services/apiService';
 
 // Crear el contexto
 const AuthContext = createContext();
@@ -69,13 +70,26 @@ export const AuthProvider = ({ children }) => {
       setCargando(true);
       setError(null);
       
+      // Transformar datos para que coincidan con el backend
+      const credencialesParaBackend = {
+        email: credenciales.email,
+        password: credenciales.contraseña
+      };
+      
       // Login con API real
-      const response = await apiService.login(credenciales);
+      const response = await apiService.login(credencialesParaBackend);
+      
+      // Transformar datos del usuario para el frontend
+      const usuarioTransformado = {
+        ...response.data.user,
+        nombre: response.data.user.name, // Mapear name -> nombre
+        rol: response.data.user.role     // Mapear role -> rol para compatibilidad
+      };
       
       // Guardar token y datos del usuario
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('usuario', JSON.stringify(response.user));
-      setUsuario(response.user);
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('usuario', JSON.stringify(usuarioTransformado));
+      setUsuario(usuarioTransformado);
       
       return { exito: true };
     } catch (error) {
@@ -93,9 +107,25 @@ export const AuthProvider = ({ children }) => {
       setCargando(true);
       setError(null);
       
+      // Transformar datos para que coincidan con el backend
+      const datosParaBackend = {
+        name: `${datosUsuario.nombre} ${datosUsuario.apellido}`.trim(),
+        email: datosUsuario.email,
+        password: datosUsuario.contraseña,
+        phone: datosUsuario.telefono
+      };
+      
       // Registro con API real
-      const response = await apiService.register(datosUsuario);
-      return { exito: true, usuario: response.user };
+      const response = await apiService.register(datosParaBackend);
+      
+      // Transformar datos del usuario para el frontend
+      const usuarioTransformado = {
+        ...response.data.user,
+        nombre: response.data.user.name, // Mapear name -> nombre
+        rol: response.data.user.role     // Mapear role -> rol para compatibilidad
+      };
+      
+      return { exito: true, usuario: usuarioTransformado };
     } catch (error) {
       console.error('Error al registrar usuario:', error);
       setError('Error al registrar usuario');
@@ -342,7 +372,7 @@ export const AuthProvider = ({ children }) => {
 
   // Función para verificar si es admin
   const esAdmin = useCallback(() => {
-    return usuario?.rol === 'admin';
+    return usuario?.role === 'ADMIN' || usuario?.rol === 'ADMIN';
   }, [usuario]);
 
   // Función para verificar si está autenticado

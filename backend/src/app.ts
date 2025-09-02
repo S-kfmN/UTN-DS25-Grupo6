@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
 
 // Importar rutas
 import authRoutes from './routes/auth';
@@ -15,6 +16,9 @@ import adminRoutes from './routes/admin';
 // Cargar variables de entorno
 dotenv.config();
 
+// Inicializar Prisma Client
+const prisma = new PrismaClient();
+
 // Crear la aplicación Express
 const app = express();
 
@@ -26,6 +30,12 @@ app.use(helmet());        // Seguridad básica (headers de seguridad)
 app.use(cors());          // Permite peticiones desde el frontend
 app.use(morgan('dev'));   // Logs de peticiones HTTP (para debugging)
 app.use(express.json());  // Permite recibir JSON en el body de las peticiones
+
+// Middleware para hacer Prisma disponible en todas las rutas
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+});
 
 // RUTAS DE LA API
 app.use('/api/auth', authRoutes);           // /api/auth/register, /api/auth/login
@@ -61,8 +71,19 @@ app.use('*', (req, res) => {
   });
 });
 
+// Función para probar la conexión a la base de datos
+async function testDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log('✅ Conexión a la base de datos establecida correctamente');
+  } catch (error) {
+    console.error('❌ Error al conectar con la base de datos:', error);
+    process.exit(1);
+  }
+}
+
 // INICIAR EL SERVIDOR
-app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📱 API disponible en: http://localhost:${PORT}`);
   console.log(`🔐 Endpoints de autenticación: http://localhost:${PORT}/api/auth`);
@@ -71,6 +92,28 @@ app.listen(PORT, () => {
   console.log(`📅 Endpoints de reservas: http://localhost:${PORT}/api/reservations`);
   console.log(`🛠️ Endpoints de servicios: http://localhost:${PORT}/api/services`);
   console.log(`🏢 Panel de administración: http://localhost:${PORT}/api/admin`);
+  
+  // Probar conexión a la base de datos
+  await testDatabaseConnection();
+});
+
+// Manejo graceful de cierre
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await prisma.$disconnect();
+  server.close(() => {
+    console.log('✅ Servidor cerrado correctamente');
+    process.exit(0);
+  });
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await prisma.$disconnect();
+  server.close(() => {
+    console.log('✅ Servidor cerrado correctamente');
+    process.exit(0);
+  });
 });
 
 export default app;
