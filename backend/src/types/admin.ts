@@ -1,3 +1,5 @@
+import { UserRole, VehicleStatus, ReservationStatus, ServiceCategory } from '@prisma/client';
+
 // Interfaces para el CRUD de Administración del Sistema
 // Permite gestionar usuarios, vehículos, reservas y servicios desde un panel central
 
@@ -10,9 +12,9 @@ export interface AdminUserSummary {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'mechanic' | 'user';
+  role: UserRole; // Cambiado a UserRole
   isActive: boolean;
-  createdAt: string;
+  createdAt: Date; // Cambiado a Date
   vehicleCount: number;        // Número de vehículos del usuario
   reservationCount: number;    // Número de reservas del usuario
 }
@@ -22,11 +24,11 @@ export interface AdminUserDetails {
   id: number;
   name: string;
   email: string;
-  phone: string;
-  role: 'admin' | 'mechanic' | 'user';
+  phone: string | null; // Cambiado a string | null
+  role: UserRole; // Cambiado a UserRole
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date; // Cambiado a Date
+  updatedAt: Date; // Cambiado a Date
   // Datos relacionados
   vehicles: AdminVehicleSummary[];
   reservations: AdminReservationSummary[];
@@ -36,8 +38,8 @@ export interface AdminUserDetails {
 export interface AdminUpdateUserRequest {
   name?: string;
   email?: string;
-  phone?: string;
-  role?: 'admin' | 'mechanic' | 'user';
+  phone?: string | null; // Cambiado a string | null
+  role?: UserRole; // Cambiado a UserRole
   isActive?: boolean;
 }
 
@@ -54,7 +56,7 @@ export interface AdminVehicleSummary {
   year: number;
   color: string;
   isActive: boolean;
-  createdAt: string;
+  createdAt: Date; // Cambiado a Date
   // Datos del propietario
   ownerName: string;
   ownerEmail: string;
@@ -70,14 +72,14 @@ export interface AdminVehicleDetails {
   year: number;
   color: string;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date; // Cambiado a Date
+  updatedAt: Date; // Cambiado a Date
   // Datos del propietario
   owner: {
     id: number;
     name: string;
     email: string;
-    phone: string;
+    phone: string | null; // Cambiado a string | null
   };
   // Reservas del vehículo
   reservations: AdminReservationSummary[];
@@ -92,10 +94,10 @@ export interface AdminReservationSummary {
   id: number;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  serviceType: string;
+  status: ReservationStatus; // Cambiado a ReservationStatus
+  serviceType: string; // Mantener como string por ahora, se llenará con el nombre del servicio
   price: number;
-  createdAt: string;
+  createdAt: Date; // Cambiado a Date
   // Datos del cliente
   customerName: string;
   customerEmail: string;
@@ -110,18 +112,18 @@ export interface AdminReservationDetails {
   id: number;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  serviceType: string;
+  status: ReservationStatus; // Cambiado a ReservationStatus
+  serviceType: string; // Mantener como string por ahora
   price: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  notes?: string | null; // Cambiado a string | null
+  createdAt: Date; // Cambiado a Date
+  updatedAt: Date; // Cambiado a Date
   // Datos del cliente
   customer: {
     id: number;
     name: string;
     email: string;
-    phone: string;
+    phone: string | null; // Cambiado a string | null
   };
   // Datos del vehículo
   vehicle: {
@@ -136,10 +138,10 @@ export interface AdminReservationDetails {
 
 // Interface para actualizar reserva desde admin
 export interface AdminUpdateReservationRequest {
-  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status?: ReservationStatus; // Cambiado a ReservationStatus
   date?: string;
   time?: string;
-  notes?: string;
+  notes?: string | null; // Cambiado a string | null
 }
 
 // ========================================
@@ -150,12 +152,12 @@ export interface AdminUpdateReservationRequest {
 export interface AdminServiceSummary {
   id: number;
   name: string;
-  category: string;
+  category: ServiceCategory; // Cambiado a ServiceCategory
   price: number;
   duration: number;
   isActive: boolean;
   reservationCount: number;    // Número de reservas para este servicio
-  createdAt: string;
+  createdAt: Date; // Cambiado a Date
 }
 
 // Interface para detalles completos de servicio (admin)
@@ -163,12 +165,12 @@ export interface AdminServiceDetails {
   id: number;
   name: string;
   description: string;
-  category: string;
+  category: ServiceCategory; // Cambiado a ServiceCategory
   price: number;
   duration: number;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date; // Cambiado a Date
+  updatedAt: Date; // Cambiado a Date
   // Estadísticas del servicio
   totalReservations: number;
   totalRevenue: number;        // Ingresos totales por este servicio
@@ -184,11 +186,7 @@ export interface SystemStats {
   // Usuarios
   totalUsers: number;
   activeUsers: number;
-  usersByRole: {
-    admin: number;
-    mechanic: number;
-    user: number;
-  };
+  usersByRole: Record<UserRole, number>; // Cambiado a Record<UserRole, number>
   
   // Vehículos
   totalVehicles: number;
@@ -196,12 +194,7 @@ export interface SystemStats {
   
   // Reservas
   totalReservations: number;
-  reservationsByStatus: {
-    pending: number;
-    confirmed: number;
-    completed: number;
-    cancelled: number;
-  };
+  reservationsByStatus: Record<ReservationStatus, number>; // Cambiado a Record<ReservationStatus, number>
   reservationsByMonth: Array<{
     month: string;
     count: number;
@@ -255,14 +248,14 @@ export interface AdminSearchFilters {
   endDate?: string;
   
   // Filtros de estado
-  status?: string;
+  status?: ReservationStatus; // Cambiado a ReservationStatus
   isActive?: boolean;
   
   // Filtros de rol
-  role?: string;
+  role?: UserRole; // Cambiado a UserRole
   
   // Filtros de categoría
-  category?: string;
+  category?: ServiceCategory; // Cambiado a ServiceCategory
   
   // Filtros de precio
   minPrice?: number;

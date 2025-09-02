@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import ReservationModel from '../models/Reservation';
 import VehicleModel from '../models/Vehicle';
 import { CreateReservationRequest, UpdateReservationRequest } from '../types/reservation';
+import { ReservationStatus } from '@prisma/client'; // Importar el enum de Prisma
 
 // CREATE - Crear reserva
 export const createReservation = async (req: Request, res: Response) => {
@@ -10,10 +11,10 @@ export const createReservation = async (req: Request, res: Response) => {
     const reservationData: CreateReservationRequest = req.body;
 
     // Validaciones básicas
-    if (!reservationData.vehicleId || !reservationData.serviceType || !reservationData.date || !reservationData.time) {
+    if (!reservationData.vehicleId || !reservationData.serviceId || !reservationData.date || !reservationData.time) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos'
+        message: 'Todos los campos son requeridos (vehicleId, serviceId, date, time)'
       });
     }
 
@@ -170,7 +171,7 @@ export const updateReservation = async (req: Request, res: Response) => {
     }
 
     // Si se está cambiando fecha/hora, validar disponibilidad
-    if ((updateData.date || updateData.time) && existingReservation.status !== 'pending') {
+    if ((updateData.date || updateData.time) && existingReservation.status !== ReservationStatus.PENDING) {
       return res.status(400).json({
         success: false,
         message: 'Solo se pueden modificar reservas pendientes'
@@ -240,7 +241,7 @@ export const cancelReservation = async (req: Request, res: Response) => {
     }
 
     // Solo se pueden cancelar reservas pendientes o confirmadas
-    if (existingReservation.status === 'completed') {
+    if (existingReservation.status === ReservationStatus.COMPLETED) {
       return res.status(400).json({
         success: false,
         message: 'No se pueden cancelar reservas completadas'
@@ -248,7 +249,7 @@ export const cancelReservation = async (req: Request, res: Response) => {
     }
 
     // Cambiar estado a cancelada
-    const updatedReservation = await ReservationModel.updateStatus(reservationId, 'cancelled');
+    const updatedReservation = await ReservationModel.updateStatus(reservationId, ReservationStatus.CANCELLED);
 
     res.json({
       success: true,

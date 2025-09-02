@@ -54,6 +54,7 @@ export const register = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    console.error('Error en el registro de usuario:', error); // Modificado para imprimir el error completo
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'

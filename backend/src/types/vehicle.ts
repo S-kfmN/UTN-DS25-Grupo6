@@ -1,3 +1,5 @@
+import { VehicleStatus } from "@prisma/client";
+
 // Interfaces de Vehículo
 export interface Vehicle {
   id: number;
@@ -7,9 +9,9 @@ export interface Vehicle {
   year: number;           // Año de fabricación
   color: string;          // Color del vehículo
   userId: number;         // ID del usuario propietario
-  status: 'active' | 'inactive';  // Estado del vehículo
-  createdAt: string;
-  updatedAt: string;
+  status: VehicleStatus;  // Estado del vehículo (cambiado a VehicleStatus)
+  createdAt: Date; // Cambiado de string a Date
+  updatedAt: Date; // Cambiado de string a Date
 }
 
 export interface CreateVehicleRequest {
@@ -26,7 +28,7 @@ export interface UpdateVehicleRequest {
   model?: string;
   year?: number;
   color?: string;
-  status?: 'active' | 'inactive';
+  status?: VehicleStatus;  // Estado del vehículo (cambiado a VehicleStatus)
 }
 
 export interface VehicleResponse {

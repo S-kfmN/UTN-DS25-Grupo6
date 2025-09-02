@@ -3,12 +3,8 @@ import UserModel from '../models/User';
 import VehicleModel from '../models/Vehicle';
 import ReservationModel from '../models/Reservation';
 import ServiceModel from '../models/Service';
-import { 
-  AdminUpdateUserRequest, 
-  AdminUpdateReservationRequest,
-  AdminSearchFilters,
-  SystemStats 
-} from '../types/admin';
+import { AdminUserSummary, AdminVehicleSummary, AdminReservationSummary, AdminServiceSummary, AdminUpdateUserRequest, SystemStats, AdminSearchFilters, PaginatedResponse, AdminUpdateReservationRequest } from '../types/admin'; // Agregado AdminUpdateReservationRequest
+import { UserRole, VehicleStatus, ServiceCategory, ReservationStatus } from '@prisma/client'; // Importar enums de Prisma
 
 // Controlador para el CRUD de Administración del Sistema
 // Maneja todas las operaciones administrativas: usuarios, vehículos, reservas, servicios
@@ -31,7 +27,10 @@ export const getUsersList = async (req: Request, res: Response) => {
     
     // Filtrar por rol si se especifica
     if (role && typeof role === 'string') {
-      filteredUsers = filteredUsers.filter(user => user.role === role);
+      const roleFilter = role.toUpperCase() as UserRole;
+      if (Object.values(UserRole).includes(roleFilter)) {
+        filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
+      }
     }
     
     // Filtrar por estado activo si se especifica
@@ -46,7 +45,7 @@ export const getUsersList = async (req: Request, res: Response) => {
     const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
     
     // Enriquecer datos con conteos
-    const enrichedUsers = await Promise.all(
+    const enrichedUsers: AdminUserSummary[] = await Promise.all(
       paginatedUsers.map(async (user) => {
         // Contar vehículos del usuario
         const userVehicles = await VehicleModel.findByUserId(user.id);
@@ -60,7 +59,7 @@ export const getUsersList = async (req: Request, res: Response) => {
           email: user.email,
           role: user.role,
           isActive: user.isActive,
-          createdAt: user.createdAt,
+          createdAt: user.createdAt, // No usar toISOString()
           vehicleCount: userVehicles.length,
           reservationCount: userReservations.length
         };
@@ -129,8 +128,8 @@ export const getUserDetails = async (req: Request, res: Response) => {
       phone: user.phone,
       role: user.role,
       isActive: user.isActive,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      createdAt: user.createdAt, // No usar toISOString()
+      updatedAt: user.updatedAt, // No usar toISOString()
       vehicles: userVehicles.map(vehicle => ({
         id: vehicle.id,
         license: vehicle.license,
@@ -138,16 +137,17 @@ export const getUserDetails = async (req: Request, res: Response) => {
         model: vehicle.model,
         year: vehicle.year,
         color: vehicle.color,
-        isActive: vehicle.isActive,
-        createdAt: vehicle.createdAt
+        isActive: vehicle.status === VehicleStatus.ACTIVE, // Mapear estado a isActive booleano
+        createdAt: vehicle.createdAt // No usar toISOString()
       })),
       reservations: userReservations.map(reservation => ({
         id: reservation.id,
         date: reservation.date,
         time: reservation.time,
         status: reservation.status,
-        serviceType: reservation.serviceType,
-        createdAt: reservation.createdAt
+        serviceId: reservation.serviceId, // Usar serviceId
+        // TODO: Cargar el nombre del servicio para mostrar serviceType
+        createdAt: reservation.createdAt // No usar toISOString()
       }))
     };
     
@@ -192,10 +192,10 @@ export const updateUser = async (req: Request, res: Response) => {
     }
     
     // Validar rol si se proporciona
-    if (updateData.role && !['admin', 'mechanic', 'user'].includes(updateData.role)) {
+    if (updateData.role && !Object.values(UserRole).includes(updateData.role)) {
       return res.status(400).json({
         success: false,
-        message: 'Rol inválido. Use: admin, mechanic, user'
+        message: `Rol inválido. Use: ${Object.values(UserRole).join(', ')}`
       });
     }
     
@@ -253,8 +253,8 @@ export const deactivateUser = async (req: Request, res: Response) => {
     }
     
     // No permitir desactivar al último admin
-    if (existingUser.role === 'admin') {
-      const allAdmins = (await UserModel.findAll()).filter(u => u.role === 'admin' && u.isActive);
+    if (existingUser.role === UserRole.ADMIN) {
+      const allAdmins = (await UserModel.findAll()).filter(u => u.role === UserRole.ADMIN && u.isActive);
       if (allAdmins.length === 1) {
         return res.status(400).json({
           success: false,
@@ -309,8 +309,11 @@ export const getVehiclesList = async (req: Request, res: Response) => {
     
     // Filtrar por estado activo si se especifica
     if (isActive !== undefined) {
-      const activeFilter = isActive === 'true';
-      filteredVehicles = filteredVehicles.filter(vehicle => vehicle.isActive === activeFilter);
+      const activeFilter = isActive === 'true'; // Query param es string
+      filteredVehicles = filteredVehicles.filter(vehicle => 
+        (activeFilter && vehicle.status === VehicleStatus.ACTIVE) ||
+        (!activeFilter && vehicle.status === VehicleStatus.INACTIVE)
+      );
     }
     
     // Aplicar paginación
@@ -319,7 +322,7 @@ export const getVehiclesList = async (req: Request, res: Response) => {
     const paginatedVehicles = filteredVehicles.slice(startIndex, endIndex);
     
     // Enriquecer datos con información del propietario y conteos
-    const enrichedVehicles = await Promise.all(
+    const enrichedVehicles: AdminVehicleSummary[] = await Promise.all(
       paginatedVehicles.map(async (vehicle) => {
         // Obtener información del propietario
         const owner = await UserModel.findById(vehicle.userId);
@@ -337,8 +340,8 @@ export const getVehiclesList = async (req: Request, res: Response) => {
           model: vehicle.model,
           year: vehicle.year,
           color: vehicle.color,
-          isActive: vehicle.isActive,
-          createdAt: vehicle.createdAt,
+          isActive: vehicle.status === VehicleStatus.ACTIVE, // Mapear estado a isActive booleano
+          createdAt: vehicle.createdAt, // No usar toISOString()
           ownerName: owner?.name || 'Usuario no encontrado',
           ownerEmail: owner?.email || 'Email no disponible',
           reservationCount: vehicleReservationCount
@@ -387,9 +390,12 @@ export const getReservationsList = async (req: Request, res: Response) => {
     
     // Filtrar por estado si se especifica
     if (status && typeof status === 'string') {
-      filteredReservations = filteredReservations.filter(reservation => 
-        reservation.status === status
-      );
+      const statusFilter = status.toUpperCase() as ReservationStatus;
+      if (Object.values(ReservationStatus).includes(statusFilter)) {
+        filteredReservations = filteredReservations.filter(reservation => 
+          reservation.status === statusFilter
+        );
+      }
     }
     
     // Filtrar por fecha si se especifica
@@ -405,7 +411,7 @@ export const getReservationsList = async (req: Request, res: Response) => {
     const paginatedReservations = filteredReservations.slice(startIndex, endIndex);
     
     // Enriquecer datos con información del cliente y vehículo
-    const enrichedReservations = await Promise.all(
+    const enrichedReservations: AdminReservationSummary[] = await Promise.all(
       paginatedReservations.map(async (reservation) => {
         // Obtener información del cliente
         const customer = await UserModel.findById(reservation.userId);
@@ -413,14 +419,17 @@ export const getReservationsList = async (req: Request, res: Response) => {
         // Obtener información del vehículo
         const vehicle = await VehicleModel.findById(reservation.vehicleId);
         
+        // TODO: Obtener información del servicio para mostrar serviceType y price
+        const service = await ServiceModel.findById(reservation.serviceId);
+        
         return {
           id: reservation.id,
           date: reservation.date,
           time: reservation.time,
           status: reservation.status,
-          serviceType: reservation.serviceType,
-          price: 0, // Por ahora 0, se puede calcular desde el servicio
-          createdAt: reservation.createdAt,
+          serviceType: service?.name || 'Servicio no encontrado', // Usar el nombre del servicio
+          price: service?.price || 0, // Usar el precio del servicio
+          createdAt: reservation.createdAt, // No usar toISOString()
           customerName: customer?.name || 'Usuario no encontrado',
           customerEmail: customer?.email || 'Email no disponible',
           vehicleLicense: vehicle?.license || 'Placa no disponible',
@@ -476,6 +485,14 @@ export const updateReservation = async (req: Request, res: Response) => {
       });
     }
     
+    // Validar estado si se proporciona
+    if (updateData.status && !Object.values(ReservationStatus).includes(updateData.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Estado inválido. Use: ${Object.values(ReservationStatus).join(', ')}`
+      });
+    }
+    
     // Buscar la reserva existente
     const existingReservation = await ReservationModel.findById(reservationId);
     if (!existingReservation) {
@@ -524,9 +541,12 @@ export const getServicesList = async (req: Request, res: Response) => {
     
     // Filtrar por categoría si se especifica
     if (category && typeof category === 'string') {
-      filteredServices = filteredServices.filter(service => 
-        service.category === category
-      );
+      const categoryFilter = category.toUpperCase() as ServiceCategory;
+      if (Object.values(ServiceCategory).includes(categoryFilter)) {
+        filteredServices = filteredServices.filter(service => 
+          service.category === categoryFilter
+        );
+      }
     }
     
     // Filtrar por estado activo si se especifica
@@ -541,10 +561,10 @@ export const getServicesList = async (req: Request, res: Response) => {
     const paginatedServices = filteredServices.slice(startIndex, endIndex);
     
     // Enriquecer datos con conteo de reservas
-    const enrichedServices = await Promise.all(
+    const enrichedServices: AdminServiceSummary[] = await Promise.all(
       paginatedServices.map(async (service) => {
         // Por ahora el conteo es 0, se puede implementar en el futuro
-        const reservationCount = 0;
+        const reservationCount = 0; // TODO: Implementar conteo de reservas para el servicio
         
         return {
           id: service.id,
@@ -554,7 +574,7 @@ export const getServicesList = async (req: Request, res: Response) => {
           duration: service.duration,
           isActive: service.isActive,
           reservationCount,
-          createdAt: service.createdAt
+          createdAt: service.createdAt // No usar toISOString()
         };
       })
     );
@@ -598,23 +618,22 @@ export const getSystemStats = async (req: Request, res: Response) => {
     // Calcular estadísticas de usuarios
     const totalUsers = allUsers.length;
     const activeUsers = allUsers.filter(user => user.isActive).length;
-    const usersByRole = {
-      admin: allUsers.filter(user => user.role === 'admin').length,
-      mechanic: allUsers.filter(user => user.role === 'mechanic').length,
-      user: allUsers.filter(user => user.role === 'user').length
-    };
+    const usersByRole: Record<UserRole, number> = { [UserRole.ADMIN]: 0, [UserRole.MECHANIC]: 0, [UserRole.USER]: 0 };
+    allUsers.forEach(user => {
+      usersByRole[user.role]++;
+    });
     
     // Calcular estadísticas de vehículos
     const totalVehicles = allVehicles.length;
-    const activeVehicles = allVehicles.filter(vehicle => vehicle.isActive).length;
+    const activeVehicles = allVehicles.filter(vehicle => vehicle.status === VehicleStatus.ACTIVE).length;
     
     // Calcular estadísticas de reservas
     const totalReservations = allReservations.length;
-    const reservationsByStatus = {
-      pending: allReservations.filter(r => r.status === 'pending').length,
-      confirmed: allReservations.filter(r => r.status === 'confirmed').length,
-      completed: allReservations.filter(r => r.status === 'completed').length,
-      cancelled: allReservations.filter(r => r.status === 'cancelled').length
+    const reservationsByStatus: Record<ReservationStatus, number> = {
+      [ReservationStatus.PENDING]: allReservations.filter(r => r.status === ReservationStatus.PENDING).length,
+      [ReservationStatus.CONFIRMED]: allReservations.filter(r => r.status === ReservationStatus.CONFIRMED).length,
+      [ReservationStatus.COMPLETED]: allReservations.filter(r => r.status === ReservationStatus.COMPLETED).length,
+      [ReservationStatus.CANCELLED]: allReservations.filter(r => r.status === ReservationStatus.CANCELLED).length
     };
     
     // Calcular estadísticas de servicios

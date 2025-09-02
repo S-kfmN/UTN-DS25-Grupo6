@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import ServiceModel from '../models/Service';
 import { CreateServiceRequest, UpdateServiceRequest } from '../types/service';
+import { ServiceCategory } from '@prisma/client'; // Importar el enum de Prisma
 
 // Controlador para el CRUD de Servicios
 // Maneja la lógica de negocio y validaciones para servicios
@@ -41,11 +42,10 @@ export const createService = async (req: Request, res: Response) => {
     }
 
     // Validar que la categoría sea válida
-    const validCategories = ['mantenimiento', 'reparacion', 'diagnostico', 'limpieza', 'otros'];
-    if (!validCategories.includes(serviceData.category)) {
+    if (!Object.values(ServiceCategory).includes(serviceData.category)) {
       return res.status(400).json({
         success: false,
-        message: `Categoría inválida. Use una de: ${validCategories.join(', ')}`
+        message: `Categoría inválida. Use una de: ${Object.values(ServiceCategory).join(', ')}`
       });
     }
 
@@ -158,9 +158,17 @@ export const getServicesByCategory = async (req: Request, res: Response) => {
         message: 'Categoría requerida'
       });
     }
+
+    const categoryFilter = category.toUpperCase() as ServiceCategory;
+    if (!Object.values(ServiceCategory).includes(categoryFilter)) {
+      return res.status(400).json({
+        success: false,
+        message: `Categoría inválida. Use una de: ${Object.values(ServiceCategory).join(', ')}`
+      });
+    }
     
     // Obtener servicios por categoría
-    const services = await ServiceModel.findByCategory(category);
+    const services = await ServiceModel.findByCategory(categoryFilter);
     
     // Respuesta exitosa
     res.json({
@@ -266,11 +274,10 @@ export const updateService = async (req: Request, res: Response) => {
     
     // Validar categoría si se proporciona
     if (updateData.category) {
-      const validCategories = ['mantenimiento', 'reparacion', 'diagnostico', 'limpieza', 'otros'];
-      if (!validCategories.includes(updateData.category)) {
+      if (!Object.values(ServiceCategory).includes(updateData.category)) {
         return res.status(400).json({
           success: false,
-          message: `Categoría inválida. Use una de: ${validCategories.join(', ')}`
+          message: `Categoría inválida. Use una de: ${Object.values(ServiceCategory).join(', ')}`
         });
       }
     }

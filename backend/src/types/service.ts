@@ -1,3 +1,5 @@
+import { ServiceCategory as PrismaServiceCategory } from '@prisma/client';
+
 // Interfaces para el CRUD de Servicios del Lubricentro
 // Define los tipos para gestionar los servicios ofrecidos
 
@@ -10,16 +12,16 @@ export interface Service {
   id: number;
   name: string;
   description: string;
-  category: ServiceCategory;
+  category: PrismaServiceCategory; // Cambiado a PrismaServiceCategory
   price: number;
   duration: number;        // Duración en minutos
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// Categorías de servicios disponibles
-export type ServiceCategory = 'mantenimiento' | 'reparacion' | 'diagnostico' | 'limpieza' | 'otros';
+// Categorías de servicios disponibles (Ahora usamos el enum de Prisma directamente o lo mapeamos si es necesario)
+// export type ServiceCategory = 'mantenimiento' | 'reparacion' | 'diagnostico' | 'limpieza' | 'otros';
 
 // ========================================
 // INTERFACES PARA REQUEST/RESPONSE
@@ -29,7 +31,7 @@ export type ServiceCategory = 'mantenimiento' | 'reparacion' | 'diagnostico' | '
 export interface CreateServiceRequest {
   name: string;
   description: string;
-  category: ServiceCategory;
+  category: PrismaServiceCategory; // Cambiado a PrismaServiceCategory
   price: number;
   duration: number;
 }
@@ -38,7 +40,7 @@ export interface CreateServiceRequest {
 export interface UpdateServiceRequest {
   name?: string;
   description?: string;
-  category?: ServiceCategory;
+  category?: PrismaServiceCategory; // Cambiado a PrismaServiceCategory
   price?: number;
   duration?: number;
   isActive?: boolean;
@@ -50,7 +52,7 @@ export interface UpdateServiceRequest {
 
 // Interface para filtros de búsqueda
 export interface ServiceFilters {
-  category?: ServiceCategory;
+  category?: PrismaServiceCategory; // Cambiado a PrismaServiceCategory
   isActive?: boolean;
   minPrice?: number;
   maxPrice?: number;
@@ -80,7 +82,7 @@ export interface ServiceStats {
 
 // Interface para categorías con conteo
 export interface CategoryStats {
-  category: ServiceCategory;
+  category: PrismaServiceCategory; // Cambiado a PrismaServiceCategory
   count: number;
   averagePrice: number;
   totalServices: number;
