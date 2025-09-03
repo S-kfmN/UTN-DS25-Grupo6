@@ -214,11 +214,10 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
                   style={{ maxWidth: 130, marginLeft: 8, marginRight: 8 }}
                 >
                   <option value="registrado">Registrado</option>
-                  <option value="activo">Activo</option>
-                  <option value="en_servicio">En Servicio</option>
-                  <option value="inactivo">Inactivo</option>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
                 </select>
-                <span className={`badge bg-${vehiculo.estado === 'activo' ? 'success' : vehiculo.estado === 'en_servicio' ? 'warning' : vehiculo.estado === 'inactivo' ? 'danger' : 'info'}`}>{vehiculo.estado}</span>
+                <span className={`badge bg-${vehiculo.estado === 'ACTIVO' ? 'success' : vehiculo.estado === 'INACTIVO' ? 'danger' : 'info'}`}>{vehiculo.estado}</span>
               </div>
             ))}
           </div>

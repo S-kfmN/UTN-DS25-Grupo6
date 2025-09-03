@@ -33,7 +33,7 @@ app.use(express.json());  // Permite recibir JSON en el body de las peticiones
 
 // Middleware para hacer Prisma disponible en todas las rutas
 app.use((req, res, next) => {
-  req.prisma = prisma;
+  (req as any).prisma = prisma;
   next();
 });
 

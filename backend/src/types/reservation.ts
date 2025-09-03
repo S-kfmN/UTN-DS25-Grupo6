@@ -1,18 +1,7 @@
-import { ReservationStatus } from "@prisma/client";
+import { Reservation, ReservationStatus } from "../generated/prisma";
 
-// Interfaces de Reserva
-export interface Reservation {
-  id: number;
-  userId: number;           // ID del usuario que hace la reserva
-  vehicleId: number;        // ID del vehículo para la reserva
-  serviceId: number;        // ID del servicio solicitado (Cambiado de serviceType a serviceId)
-  date: string;             // Fecha de la reserva (YYYY-MM-DD)
-  time: string;             // Hora de la reserva (HH:MM)
-  status: ReservationStatus; // Cambiado a ReservationStatus
-  notes: string | null;     // Cambiado a string | null para coincidir con Prisma
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Re-exportar el tipo Reservation de Prisma para mantener compatibilidad
+export { Reservation, ReservationStatus };
 
 export interface CreateReservationRequest {
   vehicleId: number;

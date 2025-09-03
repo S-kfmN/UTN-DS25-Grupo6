@@ -1,17 +1,7 @@
-import { UserRole } from "@prisma/client";
+import { User, UserRole } from "../generated/prisma";
 
-// Interfaces de Usuario
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    phone: string | null; // Cambiado a string | null
-    password?: string;
-    role: UserRole; // Cambiado a UserRole
-    isActive: boolean; // Añadido campo isActive
-    createdAt: Date;
-    updatedAt: Date;
-  }
+// Re-exportar el tipo User de Prisma para mantener compatibilidad
+export { User, UserRole };
   
   export interface LoginRequest {
     email: string;

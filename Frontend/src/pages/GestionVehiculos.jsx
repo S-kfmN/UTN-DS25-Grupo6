@@ -57,7 +57,7 @@ export default function GestionVehiculos() {
                     <td>{v.modelo}</td>
                     <td>{v.marca}</td>
                     <td>{v.año || '-'}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{v.estado || 'activo'}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{v.estado || 'ACTIVO'}</td>
                     <td>{v.usuario?.nombre} {v.usuario?.apellido}</td>
                     <td>
                       <Button 
@@ -91,7 +91,7 @@ export default function GestionVehiculos() {
                 <li><b>Modelo:</b> {vehiculoDetalle.modelo}</li>
                 <li><b>Marca:</b> {vehiculoDetalle.marca}</li>
                 <li><b>Año:</b> {vehiculoDetalle.año || '-'}</li>
-                <li><b>Estado:</b> {vehiculoDetalle.estado || 'activo'}</li>
+                <li><b>Estado:</b> {vehiculoDetalle.estado || 'ACTIVO'}</li>
               </ul>
               <h5 className="mt-3">Dueño Actual</h5>
               {vehiculoDetalle.usuario ? (
