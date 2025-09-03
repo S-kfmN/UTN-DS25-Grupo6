@@ -5,7 +5,7 @@ import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
 import { crearFecha, formatearFechaParaMostrar, esFechaPasada } from '../utils/dateUtils';
 
 export default function Reservar() {
-  const { usuario, crearReserva, obtenerVehiculosActivos, refrescarUsuario } = usarAuth();
+  const { usuario, crearReserva, obtenerVehiculosActivos, refrescarUsuario, cargarVehiculosUsuario } = usarAuth();
   
 
   useLocalStorageSync();
@@ -50,31 +50,67 @@ export default function Reservar() {
 
 
   useEffect(() => {
-    if (usuario) {
-      const vehiculos = obtenerVehiculosActivos();
+    const cargarDatos = async () => {
+      if (usuario?.id) {
+        // Cargar vehículos desde el backend
+        await cargarVehiculosUsuario();
+        
+        // Obtener vehículos activos después de cargar
+        const vehiculos = obtenerVehiculosActivos();
+        setVehiculosActivos(vehiculos);
 
-      setVehiculosActivos(vehiculos);
+        if (vehiculos.length > 0) {
+          setVehiculoSeleccionado(vehiculos[0]);
+          setDatosReserva(prev => ({
+            ...prev,
+            patente: vehiculos[0].patente,
+            marca: vehiculos[0].marca,
+            modelo: vehiculos[0].modelo,
+            año: vehiculos[0].año
+          }));
+        }
+
+        // Cargar reservas existentes
+        const reservasGuardadas = localStorage.getItem('reservas');
+        if (reservasGuardadas) {
+          setReservasExistentes(JSON.parse(reservasGuardadas));
+        }
+      }
+    };
+
+    cargarDatos();
+  }, [usuario?.id]);
+
+  // Dividir nombre completo en nombre y apellido
+  useEffect(() => {
+    if (usuario?.nombre && !usuario?.apellido) {
+      const nombreCompleto = usuario.nombre.trim();
+      const espacioIndex = nombreCompleto.indexOf(' ');
       
-
-      if (vehiculos.length > 0) {
-        setVehiculoSeleccionado(vehiculos[0]);
+      if (espacioIndex !== -1) {
+        const nombre = nombreCompleto.substring(0, espacioIndex);
+        const apellido = nombreCompleto.substring(espacioIndex + 1);
+        
         setDatosReserva(prev => ({
           ...prev,
-          patente: vehiculos[0].patente,
-          marca: vehiculos[0].marca,
-          modelo: vehiculos[0].modelo,
-          año: vehiculos[0].año
+          nombre: nombre,
+          apellido: apellido
+        }));
+      } else {
+        setDatosReserva(prev => ({
+          ...prev,
+          nombre: nombreCompleto,
+          apellido: ''
         }));
       }
-      
-
-      const reservasGuardadas = localStorage.getItem('reservas');
-      if (reservasGuardadas) {
-        setReservasExistentes(JSON.parse(reservasGuardadas));
-      }
+    } else if (usuario?.nombre && usuario?.apellido) {
+      setDatosReserva(prev => ({
+        ...prev,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido
+      }));
     }
-  }, [usuario, obtenerVehiculosActivos, usuario?.vehiculos]);
-
+  }, [usuario]);
 
   useEffect(() => {
     const reservasGuardadas = localStorage.getItem('reservas');

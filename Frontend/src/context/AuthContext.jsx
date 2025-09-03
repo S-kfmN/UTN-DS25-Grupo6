@@ -399,18 +399,14 @@ export const AuthProvider = ({ children }) => {
   // Función para cargar vehículos del usuario desde la API
   const cargarVehiculosUsuario = useCallback(async () => {
     if (!usuario?.id) {
-      console.log('⚠️ cargarVehiculosUsuario: No hay usuario.id');
       return [];
     }
     
     try {
-      console.log('📡 cargarVehiculosUsuario: Llamando a apiService.getVehicles...');
       const response = await apiService.getVehicles(usuario.id);
-      console.log('📡 cargarVehiculosUsuario: Respuesta del backend:', response);
       
       // El backend devuelve { success: true, data: [...] }
       const vehiculos = response.data || [];
-      console.log('🚗 cargarVehiculosUsuario: Vehículos del backend:', vehiculos);
       
       // Transformar datos del backend al formato del frontend
       const vehiculosTransformados = vehiculos.map(vehiculo => ({
@@ -422,8 +418,6 @@ export const AuthProvider = ({ children }) => {
         color: vehiculo.color,
         estado: vehiculo.status || 'ACTIVO'
       }));
-
-      console.log('🔄 cargarVehiculosUsuario: Vehículos transformados:', vehiculosTransformados);
 
       const usuarioActualizado = { ...usuario, vehiculos: vehiculosTransformados };
       setUsuario(usuarioActualizado);

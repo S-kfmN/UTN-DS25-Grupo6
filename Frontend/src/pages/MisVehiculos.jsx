@@ -15,25 +15,18 @@ export default function MisVehiculos() {
   // Cargar vehículos desde la API al montar el componente
   useEffect(() => {
     const cargarDatos = async () => {
-      console.log('🔄 Iniciando carga de vehículos...');
-      console.log('👤 Usuario:', usuario);
-      
       if (usuario?.id) {
         setCargando(true);
         try {
-          console.log('📡 Llamando a cargarVehiculosUsuario...');
           const vehiculosDelBackend = await cargarVehiculosUsuario();
-          console.log('🚗 Vehículos recibidos del backend:', vehiculosDelBackend);
           setVehiculos(vehiculosDelBackend || []);
         } catch (error) {
-          console.error('❌ Error al cargar vehículos:', error);
+          console.error('Error al cargar vehículos:', error);
           setVehiculos([]);
         } finally {
-          console.log('✅ Finalizando carga de vehículos');
           setCargando(false);
         }
       } else {
-        console.log('⚠️ No hay usuario.id, no se cargan vehículos');
         setCargando(false);
       }
     };

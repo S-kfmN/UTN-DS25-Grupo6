@@ -65,7 +65,7 @@ export const useReservas = (userId = null) => {
         setReservas(prev => [...prev, nuevaReserva]);
         return { success: true, reserva: nuevaReserva };
       } catch (apiError) {
-        console.log('API no disponible, creando localmente:', apiError.message);
+        // API no disponible, continuar con fallback local
       }
       
       // Fallback: crear localmente
@@ -96,7 +96,7 @@ export const useReservas = (userId = null) => {
         );
         return { success: true };
       } catch (apiError) {
-        console.log('API no disponible, cancelando localmente:', apiError.message);
+        // API no disponible, continuar con fallback local
       }
       
       // Fallback: actualizar localmente
