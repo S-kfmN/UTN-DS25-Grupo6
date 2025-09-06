@@ -16,6 +16,20 @@ export const createVehicle = async (req: Request, res: Response) => {
       });
     }
 
+    // Validar formato de patente
+    const patenteRegex = /^[A-Z]{3}-?[0-9]{3}$/;
+    if (!patenteRegex.test(vehicleData.license)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de patente inválido. Use: ABC-123 o ABC123'
+      });
+    }
+
+    // Normalizar patente a formato ABC-123
+    if (!vehicleData.license.includes('-')) {
+      vehicleData.license = vehicleData.license.slice(0, 3) + '-' + vehicleData.license.slice(3);
+    }
+
     // Validar año del vehículo
     if (vehicleData.year < 1900 || vehicleData.year > new Date().getFullYear() + 1) {
       return res.status(400).json({

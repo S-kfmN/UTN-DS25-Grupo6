@@ -192,7 +192,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Transformar datos para el backend
       const vehiculoParaBackend = {
-        license: nuevoVehiculo.patente,
+        license: nuevoVehiculo.patente.toUpperCase(), // Asegurar mayúsculas
         brand: nuevoVehiculo.marca,
         model: nuevoVehiculo.modelo,
         year: parseInt(nuevoVehiculo.año),

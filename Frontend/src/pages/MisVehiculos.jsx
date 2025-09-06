@@ -58,12 +58,40 @@ export default function MisVehiculos() {
     vehiculo.modelo.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  // Función para formatear patente automáticamente
+  const formatearPatente = (patente) => {
+    // Remover espacios y convertir a mayúsculas
+    let patenteLimpia = patente.replace(/\s/g, '').toUpperCase();
+    
+    // Si tiene 6 caracteres, agregar guión en el medio (ABC123 -> ABC-123)
+    if (patenteLimpia.length === 6) {
+      return patenteLimpia.slice(0, 3) + '-' + patenteLimpia.slice(3);
+    }
+    
+    // Si ya tiene guión, mantener el formato
+    if (patenteLimpia.includes('-')) {
+      return patenteLimpia;
+    }
+    
+    return patenteLimpia;
+  };
+
   const manejarCambio = (evento) => {
     const { name, value } = evento.target;
-    setNuevoVehiculo(previo => ({
-      ...previo,
-      [name]: value
-    }));
+    
+    // Formatear patente automáticamente
+    if (name === 'patente') {
+      const patenteFormateada = formatearPatente(value);
+      setNuevoVehiculo(previo => ({
+        ...previo,
+        [name]: patenteFormateada
+      }));
+    } else {
+      setNuevoVehiculo(previo => ({
+        ...previo,
+        [name]: value
+      }));
+    }
     
     // Limpiar error del campo cuando el usuario escriba
     if (errores[name]) {
@@ -79,6 +107,12 @@ export default function MisVehiculos() {
 
     if (!nuevoVehiculo.patente.trim()) {
       nuevosErrores.patente = 'La patente es requerida';
+    } else {
+      // Validar formato de patente (ABC-123 o ABC123)
+      const patenteRegex = /^[A-Z]{3}-?[0-9]{3}$/;
+      if (!patenteRegex.test(nuevoVehiculo.patente)) {
+        nuevosErrores.patente = 'Formato de patente inválido. Use: ABC-123 o ABC123';
+      }
     }
 
     // La marca siempre es RENAULT, no necesita validación
@@ -386,7 +420,7 @@ export default function MisVehiculos() {
                     value={nuevoVehiculo.patente}
                     onChange={manejarCambio}
                     isInvalid={!!errores.patente}
-                    placeholder="ABC123"
+                    placeholder="ABC-123"
                     style={{
                       backgroundColor: 'var(--color-gris)',
                       border: '1px solid var(--color-acento)',
