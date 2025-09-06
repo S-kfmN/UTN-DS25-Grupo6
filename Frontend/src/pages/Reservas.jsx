@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usarAuth } from '../context/AuthContext';
 import { useReservasSync } from '../hooks/useReservasSync';
-import { obtenerProximasFechas, formatearFechaParaMostrar } from '../utils/dateUtils';
+import { obtenerProximasFechas, formatearFechaParaMostrar, dividirNombreCompleto } from '../utils/dateUtils';
 import { Collapse, Button } from 'react-bootstrap';
 
 export default function Reservas() {
   const navigate = useNavigate();
-  
-
   
 
   const [filtroFecha, setFiltroFecha] = useState('');
@@ -189,7 +187,10 @@ export default function Reservas() {
                       
                       <div className="reserva-info">
                         <div className="cliente-info">
-                          <h4>{reserva.nombre} {reserva.apellido}</h4>
+                          <h4>{(() => {
+                            const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
+                            return `${nombre} ${apellido}`.trim();
+                          })()}</h4>
                           <p><strong>Teléfono:</strong> {reserva.telefono}</p>
                         </div>
                         
@@ -261,7 +262,10 @@ export default function Reservas() {
                     <div className="cliente-info">
                       <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                       <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                      <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                      <p><strong>Cliente:</strong> {(() => {
+                        const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
+                        return `${nombre} ${apellido}`.trim() || 'N/A';
+                      })()}</p>
                     </div>
                     {reserva.observaciones && (
                       <div className="observaciones">
@@ -330,7 +334,10 @@ export default function Reservas() {
                           <div className="cliente-info">
                             <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                             <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                            <p><strong>Cliente:</strong> {(() => {
+                        const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
+                        return `${nombre} ${apellido}`.trim() || 'N/A';
+                      })()}</p>
                           </div>
                           {reserva.observaciones && (
                             <div className="observaciones">
@@ -380,7 +387,10 @@ export default function Reservas() {
                           <div className="cliente-info">
                             <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                             <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                            <p><strong>Cliente:</strong> {(() => {
+                        const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
+                        return `${nombre} ${apellido}`.trim() || 'N/A';
+                      })()}</p>
                           </div>
                           {reserva.observaciones && (
                             <div className="observaciones">

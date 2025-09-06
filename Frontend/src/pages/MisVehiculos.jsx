@@ -60,11 +60,16 @@ export default function MisVehiculos() {
 
   // Función para formatear patente automáticamente
   const formatearPatente = (patente) => {
+    // Si está vacío o es null/undefined, devolver string vacío
+    if (!patente || patente.trim() === '') {
+      return '';
+    }
+    
     // Remover espacios y convertir a mayúsculas
     let patenteLimpia = patente.replace(/\s/g, '').toUpperCase();
     
-    // Si tiene 6 caracteres, agregar guión en el medio (ABC123 -> ABC-123)
-    if (patenteLimpia.length === 6) {
+    // Solo agregar guión si tiene exactamente 6 caracteres Y no tiene guión
+    if (patenteLimpia.length === 6 && !patenteLimpia.includes('-')) {
       return patenteLimpia.slice(0, 3) + '-' + patenteLimpia.slice(3);
     }
     
@@ -161,10 +166,18 @@ export default function MisVehiculos() {
       console.error('Error al guardar vehículo:', error);
     }
 
-    setNuevoVehiculo({ patente: '', marca: 'RENAULT', modelo: '', año: '', color: '' });
+    // Limpiar formulario con valores por defecto seguros
+    setNuevoVehiculo({ 
+      patente: '', 
+      marca: 'RENAULT', 
+      modelo: '', 
+      año: '', 
+      color: '' 
+    });
     setModoEdicion(false);
     setVehiculoAEditar(null);
     setMostrarModal(false);
+    setErrores({}); // Limpiar errores también
   };
 
   const manejarEliminarVehiculo = (vehiculo) => {
@@ -189,7 +202,13 @@ export default function MisVehiculos() {
     }
   };
   const manejarEditarVehiculo = (vehiculo) => {
-    setNuevoVehiculo({ ...vehiculo, marca: 'RENAULT' }); // Siempre forzar marca RENAULT
+    // Limpiar la patente para evitar problemas de formateo
+    const vehiculoLimpio = {
+      ...vehiculo,
+      marca: 'RENAULT', // Siempre forzar marca RENAULT
+      patente: vehiculo.patente || '' // Asegurar que patente no sea null/undefined
+    };
+    setNuevoVehiculo(vehiculoLimpio);
     setVehiculoAEditar(vehiculo);
     setModoEdicion(true);
     setMostrarModal(true);
@@ -417,7 +436,7 @@ export default function MisVehiculos() {
                   <Form.Control
                     type="text"
                     name="patente"
-                    value={nuevoVehiculo.patente}
+                    value={nuevoVehiculo.patente || ''}
                     onChange={manejarCambio}
                     isInvalid={!!errores.patente}
                     placeholder="ABC-123"
@@ -444,7 +463,7 @@ export default function MisVehiculos() {
                   <Form.Control
                     type="text"
                     name="marca"
-                    value={nuevoVehiculo.marca}
+                    value={nuevoVehiculo.marca || 'RENAULT'}
                     readOnly
                     style={{
                       backgroundColor: 'var(--color-gris)',
@@ -472,7 +491,7 @@ export default function MisVehiculos() {
                   <Form.Control
                     type="text"
                     name="modelo"
-                    value={nuevoVehiculo.modelo}
+                    value={nuevoVehiculo.modelo || ''}
                     onChange={manejarCambio}
                     isInvalid={!!errores.modelo}
                     placeholder="Clio"
@@ -499,7 +518,7 @@ export default function MisVehiculos() {
                   <Form.Control
                     type="number"
                     name="año"
-                    value={nuevoVehiculo.año}
+                    value={nuevoVehiculo.año || ''}
                     onChange={manejarCambio}
                     isInvalid={!!errores.año}
                     placeholder="2025"
@@ -528,7 +547,7 @@ export default function MisVehiculos() {
               <Form.Control
                 type="text"
                 name="color"
-                value={nuevoVehiculo.color}
+                value={nuevoVehiculo.color || ''}
                 onChange={manejarCambio}
                 placeholder="Blanco"
                 style={{

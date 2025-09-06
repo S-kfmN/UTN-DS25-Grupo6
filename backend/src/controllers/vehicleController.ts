@@ -25,11 +25,6 @@ export const createVehicle = async (req: Request, res: Response) => {
       });
     }
 
-    // Normalizar patente a formato ABC-123
-    if (!vehicleData.license.includes('-')) {
-      vehicleData.license = vehicleData.license.slice(0, 3) + '-' + vehicleData.license.slice(3);
-    }
-
     // Validar año del vehículo
     if (vehicleData.year < 1900 || vehicleData.year > new Date().getFullYear() + 1) {
       return res.status(400).json({
@@ -38,9 +33,9 @@ export const createVehicle = async (req: Request, res: Response) => {
       });
     }
 
-    // Verificar si la patente ya existe
-    const existingVehicle = await VehicleModel.findByLicense(vehicleData.license);
-    if (existingVehicle) {
+    // Verificar si la patente ya existe (validación centralizada)
+    const esPatenteUnica = await VehicleModel.validarPatenteUnica(vehicleData.license);
+    if (!esPatenteUnica) {
       return res.status(400).json({
         success: false,
         message: 'Ya existe un vehículo con esa patente'
@@ -149,8 +144,9 @@ export const updateVehicle = async (req: Request, res: Response) => {
 
     // Si se está actualizando la patente, verificar que no exista
     if (updateData.license && updateData.license !== vehicle.license) {
-      const existingVehicle = await VehicleModel.findByLicense(updateData.license);
-      if (existingVehicle) {
+      // Verificar si la patente ya existe (validación centralizada)
+      const esPatenteUnica = await VehicleModel.validarPatenteUnica(updateData.license, vehicleId);
+      if (!esPatenteUnica) {
         return res.status(400).json({
           success: false,
           message: 'Ya existe un vehículo con esa patente'

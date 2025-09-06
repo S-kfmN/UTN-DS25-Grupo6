@@ -85,4 +85,31 @@ export const formatearFechaParaMostrar = (fecha) => {
   const fechaLocal = new Date(año, mes - 1, dia); // mes - 1 porque los meses van de 0-11
   const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   return fechaLocal.toLocaleDateString('es-ES', opciones);
+};
+
+// ===== UTILIDADES PARA MANEJO DE NOMBRES =====
+
+/**
+ * Divide un nombre completo en nombre y apellido
+ * @param {string} nombreCompleto - El nombre completo a dividir
+ * @returns {object} - Objeto con propiedades nombre y apellido
+ */
+export const dividirNombreCompleto = (nombreCompleto) => {
+  if (!nombreCompleto) return { nombre: '', apellido: '' };
+  
+  const partes = nombreCompleto.trim().split(' ');
+  const nombre = partes[0] || '';
+  const apellido = partes.slice(1).join(' ') || '';
+  
+  return { nombre, apellido };
+};
+
+/**
+ * Combina nombre y apellido en un nombre completo
+ * @param {string} nombre - El nombre
+ * @param {string} apellido - El apellido
+ * @returns {string} - El nombre completo
+ */
+export const combinarNombreCompleto = (nombre, apellido) => {
+  return `${nombre || ''} ${apellido || ''}`.trim();
 }; 

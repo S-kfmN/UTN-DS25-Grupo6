@@ -6,25 +6,41 @@ class VehicleModel {
   // private vehicles: Vehicle[] = [];
   // private nextId = 1;
 
+  // Función helper para normalizar patentes
+  private normalizarPatente(patente: string): string {
+    if (!patente.includes('-')) {
+      return patente.slice(0, 3) + '-' + patente.slice(3);
+    }
+    return patente;
+  }
+
+  // Validar si una patente ya existe (excluyendo un ID específico para edición)
+  async validarPatenteUnica(patente: string, excludeId?: number): Promise<boolean> {
+    const patenteNormalizada = this.normalizarPatente(patente);
+    const existingVehicle = await this.findByLicense(patenteNormalizada);
+    
+    // Si no hay vehículo existente, la patente es única
+    if (!existingVehicle) return true;
+    
+    // Si estamos editando y es el mismo vehículo, la patente es única
+    if (excludeId && existingVehicle.id === excludeId) return true;
+    
+    // La patente ya existe
+    return false;
+  }
+
   // CREATE - Crear vehículo
   async create(vehicleData: CreateVehicleRequest, userId: number): Promise<Vehicle> {
-    // const newVehicle: Vehicle = {
-    //   id: this.nextId++,
-    //   ...vehicleData,
-    //   userId,                    // Asociar al usuario
-    //   status: 'ACTIVO',          // Por defecto activo
-    //   createdAt: new Date().toISOString(),
-    //   updatedAt: new Date().toISOString()
-    // };
+    // Normalizar patente
+    const patenteNormalizada = this.normalizarPatente(vehicleData.license);
     
-    // this.vehicles.push(newVehicle);
-    // return newVehicle;
     const newVehicle = await prisma.vehicle.create({
       data: {
         ...vehicleData,
+        license: patenteNormalizada, // Usar patente normalizada
         color: vehicleData.color || null, // Manejar color vacío
         userId,
-        status: VehicleStatus.ACTIVE, // Cambiado de 'ACTIVO' a VehicleStatus.ACTIVE
+        status: VehicleStatus.ACTIVE,
       },
     });
     return newVehicle;
@@ -56,17 +72,12 @@ class VehicleModel {
 
   // UPDATE - Actualizar vehículo
   async update(id: number, updateData: UpdateVehicleRequest): Promise<Vehicle | null> {
-    // const vehicleIndex = this.vehicles.findIndex(vehicle => vehicle.id === id);
-    // if (vehicleIndex === -1) return null;
-
-    // this.vehicles[vehicleIndex] = {
-    //   ...this.vehicles[vehicleIndex],
-    //   ...updateData,
-    //   updatedAt: new Date().toISOString()
-    // };
-
-    // return this.vehicles[vehicleIndex];
     try {
+      // Si se está actualizando la patente, normalizarla
+      if (updateData.license) {
+        updateData.license = this.normalizarPatente(updateData.license);
+      }
+
       const updatedVehicle = await prisma.vehicle.update({
         where: { id: id },
         data: {
