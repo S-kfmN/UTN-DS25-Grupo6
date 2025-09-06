@@ -1,7 +1,6 @@
 import { Reservation, CreateReservationRequest, UpdateReservationRequest } from '../types/reservation';
 import { PrismaClient, ReservationStatus } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma';
 
 class ReservationModel {
   // private reservations: Reservation[] = [];

@@ -9,10 +9,10 @@ export const createVehicle = async (req: Request, res: Response) => {
     const vehicleData: CreateVehicleRequest = req.body;
 
     // Validaciones básicas
-    if (!vehicleData.license || !vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.color) {
+    if (!vehicleData.license || !vehicleData.brand || !vehicleData.model || !vehicleData.year) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos'
+        message: 'Los campos patente, marca, modelo y año son requeridos'
       });
     }
 
@@ -42,9 +42,11 @@ export const createVehicle = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    console.error('❌ Error en createVehicle:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Error interno del servidor',
+      error: (error as Error).message
     });
   }
 };

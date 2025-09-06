@@ -196,8 +196,7 @@ export const AuthProvider = ({ children }) => {
         brand: nuevoVehiculo.marca,
         model: nuevoVehiculo.modelo,
         year: parseInt(nuevoVehiculo.año),
-        color: nuevoVehiculo.color,
-        userId: usuario?.id
+        color: nuevoVehiculo.color
       };
 
       // Crear vehículo en el backend
@@ -214,7 +213,7 @@ export const AuthProvider = ({ children }) => {
         modelo: vehiculoData.model,
         año: vehiculoData.year,
         color: vehiculoData.color,
-        estado: 'ACTIVO'
+        estado: 'ACTIVE'
       };
 
       const vehiculosActualizados = [...(usuario?.vehiculos || []), vehiculoCompleto];
@@ -416,7 +415,7 @@ export const AuthProvider = ({ children }) => {
         modelo: vehiculo.model,
         año: vehiculo.year,
         color: vehiculo.color,
-        estado: vehiculo.status || 'ACTIVO'
+        estado: vehiculo.status || 'ACTIVE'
       }));
 
       const usuarioActualizado = { ...usuario, vehiculos: vehiculosTransformados };

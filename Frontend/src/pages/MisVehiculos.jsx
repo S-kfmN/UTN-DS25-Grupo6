@@ -162,16 +162,16 @@ export default function MisVehiculos() {
   };
   const obtenerColorEstado = (estado) => {
     switch (estado?.toLowerCase()) {
-      case 'activo': return 'success';
-      case 'inactivo': return 'danger';
+      case 'active': return 'success';
+      case 'inactive': return 'danger';
       default: return 'secondary';
     }
   };
 
   const obtenerTextoEstado = (estado) => {
     switch (estado?.toLowerCase()) {
-      case 'activo': return 'Activo';
-      case 'inactivo': return 'Inactivo';
+      case 'active': return 'Activo';
+      case 'inactive': return 'Inactivo';
       default: return estado || 'Desconocido';
     }
   };
@@ -295,8 +295,8 @@ export default function MisVehiculos() {
                         minWidth: '120px'
                       }}
                     >
-                      <option value="ACTIVO">Activo</option>
-                      <option value="INACTIVO">Inactivo</option>
+                      <option value="ACTIVE">Activo</option>
+                      <option value="INACTIVE">Inactivo</option>
                     </select>
                   </div>
 

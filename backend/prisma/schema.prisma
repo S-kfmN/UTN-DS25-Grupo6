@@ -15,8 +15,8 @@ datasource db {
 }
 
 enum VehicleStatus {
-  ACTIVO
-  INACTIVO
+  ACTIVE
+  INACTIVE
 }
 
 enum ServiceCategory {
@@ -62,8 +62,8 @@ model Vehicle {
   brand        String
   model        String
   year         Int
-  color        String
-  status       VehicleStatus @default(ACTIVO) // Cambiado a VehicleStatus
+  color        String?
+  status       VehicleStatus @default(ACTIVE) // Cambiado a VehicleStatus
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   userId       Int

@@ -1,7 +1,6 @@
 import { Service, CreateServiceRequest, UpdateServiceRequest } from '../types/service';
 import { PrismaClient, ServiceCategory as PrismaServiceCategory } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma';
 
 // Modelo para el CRUD de Servicios
 // Maneja la lógica de datos y operaciones CRUD para servicios

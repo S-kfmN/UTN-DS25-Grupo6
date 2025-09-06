@@ -17,7 +17,7 @@ import adminRoutes from './routes/admin';
 dotenv.config();
 
 // Inicializar Prisma Client
-const prisma = new PrismaClient();
+import prisma, { disconnectPrisma } from './config/prisma';
 
 // Crear la aplicación Express
 const app = express();
@@ -109,7 +109,16 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Cerrando servidor...');
-  await prisma.$disconnect();
+  await disconnectPrisma();
+  server.close(() => {
+    console.log('✅ Servidor cerrado correctamente');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Cerrando servidor...');
+  await disconnectPrisma();
   server.close(() => {
     console.log('✅ Servidor cerrado correctamente');
     process.exit(0);

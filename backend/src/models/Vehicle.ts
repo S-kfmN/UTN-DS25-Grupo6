@@ -1,8 +1,6 @@
 import { Vehicle, CreateVehicleRequest, UpdateVehicleRequest } from '../types/vehicle';
 import { PrismaClient, VehicleStatus } from '../generated/prisma';
-
-// Crear una nueva instancia de Prisma para este modelo
-const prisma = new PrismaClient();
+import prisma from '../config/prisma'; // Usar la instancia compartida
 
 class VehicleModel {
   // private vehicles: Vehicle[] = [];
@@ -24,8 +22,9 @@ class VehicleModel {
     const newVehicle = await prisma.vehicle.create({
       data: {
         ...vehicleData,
+        color: vehicleData.color || null, // Manejar color vacío
         userId,
-        status: VehicleStatus.ACTIVO, // Cambiado de 'ACTIVO' a VehicleStatus.ACTIVO
+        status: VehicleStatus.ACTIVE, // Cambiado de 'ACTIVO' a VehicleStatus.ACTIVE
       },
     });
     return newVehicle;
