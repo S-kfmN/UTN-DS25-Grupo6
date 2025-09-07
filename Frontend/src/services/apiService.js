@@ -127,8 +127,16 @@ class ApiService {
   }
 
   // Métodos para vehículos
-  async getVehicles(userId = null, statusFilter = null) {
-    let endpoint = userId ? API_ENDPOINTS.VEHICLES.BY_USER(userId) : API_ENDPOINTS.VEHICLES.LIST;
+  async getVehicles(userId = null, statusFilter = null, forAdminAll = false) {
+    let endpoint;
+
+    if (forAdminAll) {
+      endpoint = API_ENDPOINTS.VEHICLES.ALL_FOR_ADMIN; // Usar el nuevo endpoint para admin
+    } else if (userId) {
+      endpoint = API_ENDPOINTS.VEHICLES.BY_USER(userId);
+    } else {
+      endpoint = API_ENDPOINTS.VEHICLES.LIST;
+    }
     
     if (statusFilter) {
       endpoint += `?status=${statusFilter}`;
@@ -158,8 +166,15 @@ class ApiService {
   }
 
   // Métodos para reservas
-  async getReservations(userId = null) {
-    const endpoint = userId ? API_ENDPOINTS.RESERVATIONS.BY_USER(userId) : API_ENDPOINTS.RESERVATIONS.LIST;
+  async getReservations(userId = null, forAdminAll = false) {
+    let endpoint;
+    if (forAdminAll) {
+      endpoint = API_ENDPOINTS.RESERVATIONS.LIST; // Esta es ahora la ruta para que el admin obtenga TODAS las reservas
+    } else if (userId) {
+      endpoint = API_ENDPOINTS.RESERVATIONS.BY_USER(userId); // Esta es para las reservas de un usuario específico
+    } else {
+      throw new Error('Debe proporcionar un userId o especificar forAdminAll para obtener reservas.');
+    }
     return this.request(endpoint);
   }
 

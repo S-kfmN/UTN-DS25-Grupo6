@@ -4,7 +4,8 @@ import {
   getUserVehicles, 
   getVehicle, 
   updateVehicle, 
-  deleteVehicle 
+  deleteVehicle,
+  getAllVehicles // Importar la nueva función
 } from '../controllers/vehicleController';
 import { authenticateToken } from '../middlewares/auth';
 
@@ -17,7 +18,10 @@ router.use(authenticateToken);
 // POST /api/vehicles - Crear nuevo vehículo
 router.post('/', createVehicle);
 
-// GET /api/vehicles - Obtener vehículos del usuario
+// GET /api/vehicles/all - Obtener TODOS los vehículos (solo para admin)
+router.get('/all', getAllVehicles);
+
+// GET /api/vehicles - Obtener vehículos del usuario autenticado (o de todos si es admin y no se especifica userId explícitamente)
 router.get('/', getUserVehicles);
 
 // GET /api/vehicles/:id - Obtener vehículo específico

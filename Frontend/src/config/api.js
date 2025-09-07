@@ -47,7 +47,8 @@ export const API_ENDPOINTS = {
     CREATE: '/vehicles',
     UPDATE: (id) => `/vehicles/${id}`,
     DELETE: (id) => `/vehicles/${id}`,
-    BY_USER: (userId) => '/vehicles' // El backend obtiene vehículos del usuario autenticado
+    BY_USER: (userId) => '/vehicles', // El backend obtiene vehículos del usuario autenticado
+    ALL_FOR_ADMIN: '/vehicles/all' // Nuevo endpoint para que el admin obtenga TODOS los vehículos
   },
   
   // Reservas
@@ -56,7 +57,7 @@ export const API_ENDPOINTS = {
     CREATE: '/reservations',
     UPDATE: (id) => `/reservations/${id}`,
     DELETE: (id) => `/reservations/${id}`,
-    BY_USER: (userId) => '/reservations',
+    BY_USER: (userId) => `/reservations/user/${userId}`, // Nuevo endpoint para obtener reservas de un usuario específico
     BY_DATE: (date) => `/reservations/date/${date}`,
     CANCEL: (id) => `/reservations/${id}/cancel`
   },

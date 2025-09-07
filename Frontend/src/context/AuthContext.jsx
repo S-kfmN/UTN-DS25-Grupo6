@@ -66,7 +66,8 @@ export const AuthProvider = ({ children }) => {
       return [];
     }
     try {
-      const response = await apiService.getReservations(userId);
+      // Asegurarse de que la llamada usa el userId para filtrar en el backend
+      const response = await apiService.getReservations(userId); 
       console.log('📅 obtenerReservasUsuario: Respuesta de la API para reservas:', response);
       const loadedReservas = response.data.reservations || [];
       const reservasTransformadas = loadedReservas.map(reserva => ({
@@ -111,10 +112,25 @@ export const AuthProvider = ({ children }) => {
       const response = await apiService.getAllUsers();
       console.log('👥 AuthContext: Respuesta de apiService.getAllUsers:', response);
       const loadedUsers = response.data || []; // Asumiendo que devuelve directamente un array de usuarios
-      setAllUsers(loadedUsers);
-      console.log('👥 AuthContext: loadedUsers (antes de setAllUsers):', loadedUsers);
-      console.log('👥 AuthContext: allUsers (después de setAllUsers):', loadedUsers); // Esto mostrará el mismo array por el closure de useCallback
-      return loadedUsers;
+
+      // Transformar loadedUsers para que coincida con la estructura esperada por el frontend
+      const usersTransformados = loadedUsers.map(user => {
+        const [nombre, ...apellidoParts] = user.name?.split(' ') || [];
+        const apellido = apellidoParts.join(' ');
+        return {
+          ...user,
+          nombre: nombre || '',
+          apellido: apellido || '',
+          telefono: user.phone,
+          fechaRegistro: user.createdAt, // Mapear createdAt a fechaRegistro
+        };
+      });
+
+      console.log('👥 AuthContext: Usuarios transformados para setAllUsers:', usersTransformados);
+      setAllUsers(usersTransformados);
+      console.log('👥 AuthContext: loadedUsers (antes de setAllUsers):', usersTransformados);
+      console.log('👥 AuthContext: allUsers (después de setAllUsers):', usersTransformados); 
+      return usersTransformados;
     } catch (error) {
       console.error('❌ AuthContext: Error al cargar todos los usuarios:', error);
       return [];
@@ -124,8 +140,8 @@ export const AuthProvider = ({ children }) => {
   // Función para cargar TODAS las reservas (Admin)
   const cargarTodasLasReservas = useCallback(async () => {
     try {
-      // apiService.getReservations sin userId debería devolver todas las reservas
-      const response = await apiService.getReservations(); 
+      // Llamar a getReservations con forAdminAll para la nueva ruta que obtiene todas las reservas
+      const response = await apiService.getReservations(null, true); 
       const loadedReservas = response.data.reservations || [];
       console.log('🔍 AuthContext: loadedReservas (antes de transformar):', loadedReservas[0]); // Log de una reserva cruda
       // Transformar loadedReservas para que tenga los campos de las relaciones directamente accesibles
@@ -143,6 +159,7 @@ export const AuthProvider = ({ children }) => {
         dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
       }));
 
+      console.log('🔍 Debug AuthContext: reservasTransformadas en cargarTodasLasReservas', reservasTransformadas);
       setAllReservations(reservasTransformadas); 
       console.log('📅 AuthContext: Todas las reservas cargadas y transformadas:', reservasTransformadas);
       return reservasTransformadas; 
@@ -156,7 +173,7 @@ export const AuthProvider = ({ children }) => {
   const cargarTodosLosVehiculos = useCallback(async () => {
     try {
       // apiService.getVehicles sin userId debería devolver todos los vehículos
-      const response = await apiService.getVehicles(); 
+      const response = await apiService.getVehicles(null, null, true); // Pasar true para forAdminAll
       const loadedVehiculos = response.data || [];
       const vehiculosTransformados = loadedVehiculos.map(vehiculo => ({
         ...vehiculo,
@@ -450,27 +467,20 @@ export const AuthProvider = ({ children }) => {
       const response = await apiService.createReservation(reservaParaBackend);
       const reservaCreada = response.data;
 
-      const reservaTransformada = {
-        ...reservaCreada,
-        servicio: reservaCreada.service?.name,
-        patente: reservaCreada.vehicle?.license,
-        marca: reservaCreada.vehicle?.brand,
-        modelo: reservaCreada.vehicle?.model,
-        año: reservaCreada.vehicle?.year,
-        nombre: reservaCreada.user?.name,
-        apellido: reservaCreada.user?.name?.split(' ').slice(1).join(' ') || '',
-      };
+      // En lugar de añadir la reserva transformada manualmente, recargamos todas las reservas
+      // para asegurar la consistencia con el backend, incluyendo cualquier campo relacionado
+      // que el backend haya adjuntado o transformado.
+      await obtenerReservasUsuario(usuario.id);
 
-      const reservasActualizadas = [...reservas, reservaTransformada];
-      setReservas(reservasActualizadas);
-      localStorage.setItem('reservas', JSON.stringify(reservasActualizadas));
+      // La línea de localStorage.setItem('reservas', ...) será manejada por obtenerReservasUsuario
+      // si decide guardar en localStorage, o se dejará que AuthContext maneje la persistencia si ya lo hace.
       
-      return { exito: true, reserva: reservaTransformada };
+      return { exito: true, reserva: reservaCreada };
     } catch (error) {
       console.error('Error al crear reserva:', error);
       return { exito: false, error: error.message };
     }
-  }, [usuario, reservas, servicios]);
+  }, [usuario, obtenerReservasUsuario, servicios]);
 
   // Función para cancelar reserva
   const cancelarReserva = useCallback(async (reservaId) => {

@@ -44,10 +44,11 @@ export default function Reservas() {
             ...reserva,
             fecha: reserva.date, // Mapear 'date' a 'fecha'
             hora: reserva.time, // Mapear 'time' a 'hora'
-            nombre: reserva.user ? `${reserva.user.name} ${reserva.user.lastName}` : 'N/A',
+            estado: reserva.status, // Mapear 'status' a 'estado'
+            nombre: reserva.user ? reserva.user.name : 'N/A',
             telefono: reserva.user ? reserva.user.phone : 'N/A',
-            patente: reserva.vehicle ? reserva.vehicle.licensePlate : 'N/A',
-            modelo: reserva.vehicle ? reserva.vehicle.brandAndModel : 'N/A',
+            patente: reserva.vehicle ? reserva.vehicle.license : 'N/A',
+            modelo: reserva.vehicle ? `${reserva.vehicle.brand} ${reserva.vehicle.model}` : 'N/A',
             servicio: reserva.service ? reserva.service.name : 'N/A',
             observaciones: reserva.notes || '',
           }));
@@ -141,9 +142,10 @@ export default function Reservas() {
 
   const obtenerColorEstado = (estado) => {
     switch (estado) {
-      case 'completado': return 'success';
-      case 'pendiente': return 'warning';
-      case 'cancelado': return 'danger';
+      case 'COMPLETED': return 'success';
+      case 'PENDING': return 'warning';
+      case 'CANCELLED': return 'danger';
+      case 'CONFIRMED': return 'primary'; // Añadido para el estado CONFIRMED
       default: return 'secondary';
     }
   };
@@ -228,19 +230,17 @@ export default function Reservas() {
                           <strong>{reserva.hora}</strong>
                         </div>
                         <div className="reserva-estado">
-                          <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>
-                            {reserva.estado.toUpperCase()}
+                          <span className={`badge bg-${obtenerColorEstado(reserva.status)}`}>
+                            {reserva.status}
                           </span>
                         </div>
                       </div>
 
                       <div className="reserva-info">
                         <div className="cliente-info">
-                          <h4>{(() => {
-                            const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
-                            return `${nombre} ${apellido}`.trim();
-                          })()}</h4>
-                          <p><strong>Teléfono:</strong> {reserva.telefono}</p>
+                          <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
+                          <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
+                          <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'}</p>
                         </div>
 
                         <div className="vehiculo-info">
@@ -311,10 +311,7 @@ export default function Reservas() {
                     <div className="cliente-info">
                       <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                       <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                      <p><strong>Cliente:</strong> {(() => {
-                        const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
-                        return `${nombre} ${apellido}`.trim() || 'N/A';
-                      })()}</p>
+                      <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'}</p>
                     </div>
                     {reserva.observaciones && (
                       <div className="observaciones">
@@ -383,10 +380,7 @@ export default function Reservas() {
                           <div className="cliente-info">
                             <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                             <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> {(() => {
-                        const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
-                        return `${nombre} ${apellido}`.trim() || 'N/A';
-                      })()}</p>
+                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'}</p>
                           </div>
                           {reserva.observaciones && (
                             <div className="observaciones">
@@ -436,10 +430,7 @@ export default function Reservas() {
                           <div className="cliente-info">
                             <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                             <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> {(() => {
-                        const { nombre, apellido } = dividirNombreCompleto(reserva.nombre || reserva.name);
-                        return `${nombre} ${apellido}`.trim() || 'N/A';
-                      })()}</p>
+                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'}</p>
                           </div>
                           {reserva.observaciones && (
                             <div className="observaciones">

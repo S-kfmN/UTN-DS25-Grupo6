@@ -71,12 +71,21 @@ export const getUserVehicles = async (req: Request, res: Response) => {
     
     let vehicles;
 
-    if (userRole === 'ADMIN') {
+    // Si se proporciona un userId (es decir, la solicitud viene de MisVehiculos o similar)
+    // SIEMPRE debe devolver los vehículos de ESE usuario, independientemente de su rol.
+    // La lógica para que los administradores vean TODOS los vehículos se maneja en cargarTodosLosVehiculos
+    // en el frontend, que llama a la API sin un userId específico.
+    if (userId) {
+      console.log('👤 vehicleController: Obteniendo vehículos para userId:', userId);
+      vehicles = await VehicleModel.findByUserId(userId, statusFilter);
+    } else if (userRole === 'ADMIN') {
+      // Si NO se proporciona userId y es admin, entonces se pide ALLVehicles
       console.log('👑 vehicleController: ADMIN detectado, obteniendo todos los vehículos...');
       vehicles = await VehicleModel.findAll();
     } else {
-      console.log('👤 vehicleController: Usuario normal detectado, obteniendo vehículos para userId:', userId);
-      vehicles = await VehicleModel.findByUserId(userId, statusFilter);
+      // Caso por defecto para usuarios normales sin userId (esto no debería ocurrir con el middleware)
+      console.log('⚠️ vehicleController: Caso no esperado: No userId y no ADMIN. Devolviendo vacío.');
+      vehicles = [];
     }
 
     console.log('🚗 getUserVehicles - vehicles found:', vehicles.length);
@@ -124,6 +133,36 @@ export const getVehicle = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+// READ - Obtener todos los vehículos (para admin)
+export const getAllVehicles = async (req: Request, res: Response) => {
+  try {
+    const userRole = (req as any).userRole;
+
+    if (userRole !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver todos los vehículos.'
+      });
+    }
+
+    const vehicles = await VehicleModel.findAll();
+    
+    console.log('👑 vehicleController: ADMIN - Obteniendo TODOS los vehículos. Encontrados:', vehicles.length);
+
+    res.json({
+      success: true,
+      data: vehicles
+    });
+
+  } catch (error) {
+    console.error('❌ Error en getAllVehicles:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'

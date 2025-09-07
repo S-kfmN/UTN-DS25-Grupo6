@@ -108,28 +108,39 @@ export default function GestionReservas() {
                 </tr>
               </thead>
               <tbody>
-                {reservasFiltradas.map(r => (
-                  <tr key={r.id}>
-                    <td>{r.fecha}</td>
-                    <td>{r.hora}</td>
-                    <td>{r.servicio}</td>
-                    <td>{r.patente} - {r.modelo}</td>
-                    <td>{r.nombre} {r.apellido}</td>
-                    <td>{r.dni}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{r.estado}</td>
-                    <td>
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
-                        onClick={() => { setReservaDetalle(r); setMostrarModal(true); }}
-                        style={{ fontWeight: 'bold' }}
-                      >
-                        <i className="bi bi-eye me-1"></i>
-                        Ver Detalle
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {reservasFiltradas.map(r => {
+                  console.log('🔍 Debug GestionReservas: Reserva en tabla:', r);
+                  return (
+                    <tr key={r.id}>
+                      <td>{r.fecha}</td>
+                      <td>{r.hora}</td>
+                      <td>{r.servicio}</td>
+                      <td>{r.patente} - {r.modelo}</td>
+                      <td>{r.nombre} {r.apellido}</td>
+                      <td>{r.dni}</td>
+                      <td>
+                        <Badge bg={
+                          r.status === 'CONFIRMED' ? 'success' :
+                          r.status === 'PENDING' ? 'warning' :
+                          r.status === 'CANCELLED' ? 'danger' : 'secondary'
+                        }>
+                          {r.status}
+                        </Badge>
+                      </td>
+                      <td>
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm" 
+                          onClick={() => { setReservaDetalle(r); setMostrarModal(true); }}
+                          style={{ fontWeight: 'bold' }}
+                        >
+                          <i className="bi bi-eye me-1"></i>
+                          Ver Detalle
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           </div>
@@ -149,7 +160,7 @@ export default function GestionReservas() {
                 <li><b>Hora:</b> {reservaDetalle.hora}</li>
                 <li><b>Servicio:</b> {reservaDetalle.servicio}</li>
                 <li><b>Vehículo:</b> {reservaDetalle.patente} - {reservaDetalle.modelo}</li>
-                <li><b>Estado:</b> <Badge bg={reservaDetalle.estado === 'completado' ? 'success' : reservaDetalle.estado === 'pendiente' ? 'warning' : 'danger'}>{reservaDetalle.estado}</Badge></li>
+                <li><b>Estado:</b> <Badge bg={reservaDetalle.status === 'CONFIRMED' ? 'success' : reservaDetalle.status === 'PENDING' ? 'warning' : 'danger'}>{reservaDetalle.status}</Badge></li>
                 <li><b>Observaciones:</b> {reservaDetalle.observaciones || 'Sin observaciones'}</li>
               </ul>
               <h5 className="mt-3">Datos del Cliente</h5>

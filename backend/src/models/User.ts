@@ -38,6 +38,14 @@ class UserModel {
     // return this.users.find(user => user.id === id) || null;
     return await prisma.user.findUnique({
       where: { id: id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        createdAt: true, // Incluir fecha de creación
+      },
     });
   }
 
@@ -46,6 +54,15 @@ class UserModel {
     // return this.users.find(user => user.email === email) || null;
     return await prisma.user.findUnique({
       where: { email: email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        password: true, // Incluir password para login
+        phone: true,
+        role: true,
+        createdAt: true, // Incluir fecha de creación
+      },
     });
   }
 
@@ -60,7 +77,6 @@ class UserModel {
     //   updatedAt: new Date().toISOString()
     // };
 
-    // return this.users[userIndex];
     try {
       const updatedUser = await prisma.user.update({
         where: { id: id },
@@ -68,6 +84,14 @@ class UserModel {
           ...updateData,
           role: updateData.role, // Asegurarse de que el enum se mapea correctamente
           updatedAt: new Date(),
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          createdAt: true, // Incluir fecha de creación
         },
       });
       return updatedUser;
@@ -99,7 +123,16 @@ class UserModel {
   // READ - Obtener todos los usuarios (para admin)
   async findAll(): Promise<User[]> {
     // return [...this.users];
-    return await prisma.user.findMany();
+    return await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        createdAt: true, // Incluir fecha de creación
+      },
+    });
   }
 }
 

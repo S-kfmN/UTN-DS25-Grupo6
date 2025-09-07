@@ -89,29 +89,67 @@ export const createReservation = async (req: Request, res: Response) => {
 // READ - Obtener reservas del usuario
 export const getUserReservations = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!; // ID del usuario autenticado
-    const userRole = req.userRole!; // Rol del usuario autenticado
-    let reservations;
+    const userIdFromParams = parseInt(req.params.userId); // Obtener userId de los parámetros de la ruta
+    const userRole = (req as any).userRole; // Obtener el rol del usuario autenticado
+    const authenticatedUserId = (req as any).userId; // Obtener el ID del usuario autenticado
 
-    if (userRole === 'ADMIN') {
-      // Si es administrador, obtener todas las reservas
-      console.log('👑 reservationController: ADMIN detectado, obteniendo todas las reservas...');
-      reservations = await ReservationModel.findAll();
+    // Un usuario normal solo puede ver sus propias reservas
+    if (userRole === 'USER' && userIdFromParams !== authenticatedUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver las reservas de otro usuario.'
+      });
+    }
+
+    // Un administrador puede ver las reservas de cualquier usuario si se especifica userId
+    // Si es un administrador y se está pidiendo una lista por userId (no /reservations/all)
+    let reservations;
+    if (userRole === 'ADMIN' && userIdFromParams) {
+      console.log('👑 reservationController: ADMIN - Obteniendo reservas para userId de params:', userIdFromParams);
+      reservations = await ReservationModel.findByUserId(userIdFromParams);
     } else {
-      // Si no es administrador, obtener solo las reservas del usuario
-      console.log('👤 reservationController: Usuario normal detectado, obteniendo reservas para userId:', userId);
-      reservations = await ReservationModel.findByUserId(userId);
+      // Para usuarios normales o admin pidiendo sus propias reservas (cuando no hay /all)
+      console.log('👤 reservationController: Obteniendo reservas para userId autenticado:', authenticatedUserId);
+      reservations = await ReservationModel.findByUserId(authenticatedUserId);
     }
 
     res.json({
       success: true,
-      data: {
-        reservations
-      }
+      data: { reservations }
     });
 
   } catch (error) {
-    console.error('Error al obtener reservas:', error);
+    console.error('❌ Error en getUserReservations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+// Nueva función para obtener TODAS las reservas (solo para administradores)
+export const getAllReservations = async (req: Request, res: Response) => {
+  try {
+    const userRole = (req as any).userRole;
+
+    if (userRole !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver todas las reservas.'
+      });
+    }
+
+    const reservations = await ReservationModel.findAll();
+
+    console.log('👑 reservationController: ADMIN - Obteniendo TODAS las reservas. Encontradas:', reservations.length);
+
+    res.json({
+      success: true,
+      data: { reservations }
+    });
+
+  } catch (error) {
+    console.error('❌ Error en getAllReservations:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -297,10 +335,7 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: {
-        date,
-        reservations
-      }
+      data: reservations
     });
 
   } catch (error) {
