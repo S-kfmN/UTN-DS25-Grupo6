@@ -176,3 +176,19 @@ export const logout = (req: Request, res: Response) => {
     message: 'Sesión cerrada exitosamente'
   });
 };
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await UserModel.findAll();
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.error('Error al obtener todos los usuarios:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};

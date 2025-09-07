@@ -7,11 +7,12 @@ export default function GestionVehiculos() {
   const [filtroPatente, setFiltroPatente] = useState('');
   const [vehiculoDetalle, setVehiculoDetalle] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
-  const { usuarios } = usarAuth();
+  const { allVehicles, cargarTodosLosVehiculos, allUsers } = usarAuth(); // Obtener allVehicles y cargarTodosLosVehiculos
   const navigate = useNavigate();
 
-  // Obtener todos los vehículos del sistema (de todos los usuarios)
-  const vehiculos = usuarios.flatMap(u => (u.vehiculos || []).map(v => ({ ...v, usuario: u })));
+  // Eliminar la lógica de aplanar vehículos de usuarios, usar allVehicles directamente
+  // const vehiculos = usuarios.flatMap(u => (u.vehiculos || []).map(v => ({ ...v, usuario: u })));
+  const vehiculos = allVehicles; // Ahora vehiculos contiene todos los vehículos del contexto
 
   // Filtrar por patente
   const vehiculosFiltrados = vehiculos.filter(v =>
@@ -23,6 +24,20 @@ export default function GestionVehiculos() {
       <div className="header-gestion-reservas">
         <h1>Gestión de Vehículos</h1>
         <p>Consulta y administra todos los vehículos registrados por patente</p>
+        <Button 
+          variant="outline-primary" 
+          size="sm"
+          onClick={cargarTodosLosVehiculos} // Llamar a la función de carga global
+          style={{
+            borderColor: 'var(--color-acento)',
+            color: 'var(--color-acento)',
+            fontSize: '0.8rem',
+            marginBottom: '1rem'
+          }}
+        >
+          <i className="bi bi-arrow-clockwise me-1"></i>
+          Refrescar Vehículos
+        </Button>
       </div>
       <div className="filtros-gestion">
         <div className="filtro-grupo">

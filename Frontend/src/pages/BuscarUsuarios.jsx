@@ -6,13 +6,14 @@ import UserDetailsModal from '../components/UserDetailsModal';
 import EditUserModal from '../components/EditUserModal';
 
 export default function BuscarUsuarios() {
-  const { esAdmin, usuarios, reservas, buscarUsuarios, refrescarUsuario, actualizarUsuario, actualizarEstadoVehiculoGlobal } = usarAuth();
+  const { esAdmin, allUsers, allReservations, refrescarUsuario, actualizarUsuario, actualizarEstadoVehiculoGlobal, cargarTodosLosUsuarios, limpiarError } = usarAuth();
   
-  // Sincronizar datos del localStorage
-  useLocalStorageSync();
+  // Eliminamos useLocalStorageSync ya que AuthContext maneja la persistencia y carga
+  // useLocalStorageSync();
   
   const [terminoBusqueda, setTerminoBusqueda] = useState('');
-  const [usuariosFiltrados, setUsuariosFiltrados] = useState(usuarios);
+  // Inicializar con allUsers en lugar de usuarios
+  const [usuariosFiltrados, setUsuariosFiltrados] = useState(allUsers);
   const [mostrarDetalles, setMostrarDetalles] = useState(false);
   const [mostrarEditar, setMostrarEditar] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
@@ -36,24 +37,36 @@ export default function BuscarUsuarios() {
   // Funcion para manejar la busqueda
   const manejarBusqueda = (e) => {
     e.preventDefault();
-    const resultado = buscarUsuarios(terminoBusqueda);
+    const terminoLower = terminoBusqueda.toLowerCase();
+    const resultado = allUsers.filter(usuario =>
+      (usuario.nombre?.toLowerCase().includes(terminoLower)) ||
+      (usuario.apellido?.toLowerCase().includes(terminoLower)) ||
+      (usuario.email?.toLowerCase().includes(terminoLower)) ||
+      (usuario.dni && String(usuario.dni).includes(terminoBusqueda)) 
+    );
     setUsuariosFiltrados(resultado);
   };
 
   // Actualizar usuarios filtrados cuando cambien los usuarios
   useEffect(() => {
     if (terminoBusqueda) {
-      const resultado = buscarUsuarios(terminoBusqueda);
+      const terminoLower = terminoBusqueda.toLowerCase();
+      const resultado = allUsers.filter(usuario =>
+        (usuario.nombre?.toLowerCase().includes(terminoLower)) ||
+        (usuario.apellido?.toLowerCase().includes(terminoLower)) ||
+        (usuario.email?.toLowerCase().includes(terminoLower)) ||
+        (usuario.dni && String(usuario.dni).includes(terminoBusqueda))
+      );
       setUsuariosFiltrados(resultado);
     } else {
-      setUsuariosFiltrados(usuarios);
+      setUsuariosFiltrados(allUsers);
     }
-  }, [usuarios, terminoBusqueda, buscarUsuarios]);
+  }, [allUsers, terminoBusqueda]); // buscarUsuarios ya no es una dependencia
 
   // Funcion para limpiar busqueda
   const limpiarBusqueda = () => {
     setTerminoBusqueda('');
-    setUsuariosFiltrados(usuarios);
+    setUsuariosFiltrados(allUsers);
   };
 
   // Funcion para formatear fecha
@@ -106,10 +119,7 @@ export default function BuscarUsuarios() {
           <Button 
             variant="outline-primary" 
             size="sm"
-            onClick={() => {
-              // Forzar actualización de usuarios
-              refrescarUsuario();
-            }}
+            onClick={cargarTodosLosUsuarios}
             style={{
               borderColor: 'var(--color-acento)',
               color: 'var(--color-acento)',
@@ -278,7 +288,7 @@ export default function BuscarUsuarios() {
         show={mostrarDetalles}
         onHide={cerrarModales}
         usuario={usuarioSeleccionado}
-        reservas={reservas}
+        reservas={allReservations}
       />
       
       <EditUserModal

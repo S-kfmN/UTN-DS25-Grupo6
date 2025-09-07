@@ -114,6 +114,18 @@ class ApiService {
     return this.request(`${API_ENDPOINTS.USERS.SEARCH}?q=${encodeURIComponent(query)}`);
   }
 
+  async getAllUsers() {
+    console.log('🔍 ApiService: Llamando a getAllUsers...');
+    try {
+      const response = await this.request(API_ENDPOINTS.USERS.LIST);
+      console.log('👥 ApiService: Respuesta de getAllUsers:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ ApiService: Error en getAllUsers:', error);
+      throw error; // Re-lanzar el error para que sea manejado por el AuthContext
+    }
+  }
+
   // Métodos para vehículos
   async getVehicles(userId = null, statusFilter = null) {
     let endpoint = userId ? API_ENDPOINTS.VEHICLES.BY_USER(userId) : API_ENDPOINTS.VEHICLES.LIST;

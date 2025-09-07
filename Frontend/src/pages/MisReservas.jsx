@@ -5,37 +5,40 @@ import { formatearFechaParaMostrar } from '../utils/dateUtils';
 import { formatearFechaHoraParaMostrar } from '../utils/dateUtils';
 
 export default function MisReservas() {
-  const { usuario, obtenerReservasUsuario, cancelarReserva } = usarAuth();
+  const { usuario, obtenerReservasUsuario, cancelarReserva, reservas } = usarAuth();
   
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [reservasUsuario, setReservasUsuario] = useState([]);
+  // Eliminar el estado local `reservasUsuario` y el `useEffect` para cargarlas
+  // const [reservasUsuario, setReservasUsuario] = useState([]);
   const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
   const [modalCancelar, setModalCancelar] = useState({ show: false, reserva: null, error: '' });
 
-  // Obtener reservas del usuario desde el contexto
-  useEffect(() => {
-    const cargarReservas = async () => {
-      if (usuario) {
-        const reservas = await obtenerReservasUsuario(); // Ahora es asíncrona
-        console.log('MisReservas: Reservas cargadas en useEffect:', reservas); // Debugging
-        setReservasUsuario(reservas);
-      }
-    };
-    cargarReservas();
-  }, [usuario, obtenerReservasUsuario]);
+  // Usar las reservas directamente del contexto, ya cargadas por AuthProvider
+  // Si necesitas filtrar o manipular, hazlo sobre el array `reservas` directamente
+  const reservasUsuario = reservas; // Asignar directamente las reservas del contexto
 
-  // Efecto para sincronizar cuando cambien las reservas en el contexto
-  useEffect(() => {
-    const cargarReservas = async () => {
-      if (usuario) {
-        const reservas = await obtenerReservasUsuario(); // Ahora es asíncrona
-        console.log('MisReservas: Reservas sincronizadas en useEffect:', reservas); // Debugging
-        setReservasUsuario(reservas);
-      }
-    };
-    cargarReservas();
-  }, [usuario, obtenerReservasUsuario]);
+  // Eliminar los useEffects que cargaban reservas aquí, ya que AuthContext se encarga
+  // useEffect(() => {
+  //   const cargarReservas = async () => {
+  //     if (usuario) {
+  //       const reservas = await obtenerReservasUsuario(); 
+  //       console.log('MisReservas: Reservas cargadas en useEffect:', reservas); 
+  //       setReservasUsuario(reservas);
+  //     }
+  //   };
+  //   cargarReservas();
+  // }, [usuario, obtenerReservasUsuario]);
 
+  // useEffect(() => {
+  //   const cargarReservas = async () => {
+  //     if (usuario) {
+  //       const reservas = await obtenerReservasUsuario(); 
+  //       console.log('MisReservas: Reservas sincronizadas en useEffect:', reservas); 
+  //       setReservasUsuario(reservas);
+  //     }
+  //   };
+  //   cargarReservar();
+  // }, [usuario, obtenerReservasUsuario]);
 
 
   // Filtrar reservas según el estado seleccionado

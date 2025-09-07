@@ -89,8 +89,19 @@ export const createReservation = async (req: Request, res: Response) => {
 // READ - Obtener reservas del usuario
 export const getUserReservations = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
-    const reservations = await ReservationModel.findByUserId(userId);
+    const userId = req.userId!; // ID del usuario autenticado
+    const userRole = req.userRole!; // Rol del usuario autenticado
+    let reservations;
+
+    if (userRole === 'ADMIN') {
+      // Si es administrador, obtener todas las reservas
+      console.log('👑 reservationController: ADMIN detectado, obteniendo todas las reservas...');
+      reservations = await ReservationModel.findAll();
+    } else {
+      // Si no es administrador, obtener solo las reservas del usuario
+      console.log('👤 reservationController: Usuario normal detectado, obteniendo reservas para userId:', userId);
+      reservations = await ReservationModel.findByUserId(userId);
+    }
 
     res.json({
       success: true,

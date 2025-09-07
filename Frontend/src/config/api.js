@@ -37,7 +37,8 @@ export const API_ENDPOINTS = {
     PROFILE: '/users/profile',
     UPDATE_PROFILE: '/users/profile',
     CHANGE_PASSWORD: '/users/change-password',
-    SEARCH: '/users/search'
+    SEARCH: '/users/search',
+    LIST: '/users' // Nuevo endpoint para obtener todos los usuarios
   },
   
   // Vehículos

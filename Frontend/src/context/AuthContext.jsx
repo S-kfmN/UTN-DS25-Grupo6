@@ -22,98 +22,214 @@ export const AuthProvider = ({ children }) => {
   const [usuarios, setUsuarios] = useState([]);
   const [servicios, setServicios] = useState([]); // Nuevo estado para servicios
 
-  // Verificar si hay un usuario guardado al cargar la app
-  useEffect(() => {
-    const verificarUsuarioGuardado = async () => {
-      try {
-        setCargando(true);
-        setError(null);
-        
-        // Intentar obtener token del localStorage
-        const token = localStorage.getItem('token');
-        const usuarioGuardado = localStorage.getItem('usuario');
-        
-        if (token && usuarioGuardado) {
-          // Verificar si el token es válido con la API
-          try {
-            const perfilActualizado = await apiService.getUserProfile();
-            const vehiculosCargados = await cargarVehiculosUsuario(perfilActualizado.id); // Cargar vehículos
-            const usuarioCompleto = { ...perfilActualizado, vehiculos: vehiculosCargados };
-            setUsuario(usuarioCompleto);
-            localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
-          } catch (apiError) {
-            // Si falla la API, usar datos del localStorage
-            const usuarioData = JSON.parse(usuarioGuardado);
-            const vehiculosCargados = await cargarVehiculosUsuario(usuarioData.id); // Cargar vehículos
-            const usuarioCompleto = { ...usuarioData, vehiculos: vehiculosCargados };
-            setUsuario(usuarioCompleto);
-            localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
-          }
-        } else if (usuarioGuardado) {
-          // Si no hay token válido pero hay usuario en localStorage, intentar cargarlo
-          const usuarioData = JSON.parse(usuarioGuardado);
-          const vehiculosCargados = await cargarVehiculosUsuario(usuarioData.id); // Cargar vehículos
-          const usuarioCompleto = { ...usuarioData, vehiculos: vehiculosCargados };
-          setUsuario(usuarioCompleto);
-          localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
-        }
-        
-        // Los usuarios se cargarán desde la API cuando sea necesario
-        
-        // Cargar servicios al iniciar la aplicación
-        await cargarServicios(); // Añadir llamada para cargar servicios
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
-        setError('Error al cargar datos de sesión');
-      } finally {
-        setCargando(false);
-      }
-    };
+  // Nuevos estados para datos globales (administrador)
+  const [allReservations, setAllReservations] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allVehicles, setAllVehicles] = useState([]);
 
-    verificarUsuarioGuardado();
+  // --- Definiciones de funciones useCallback ---
+
+  // Función para cargar vehículos del usuario desde la API
+  const cargarVehiculosUsuario = useCallback(async (userId, statusFilter = null) => {
+    console.log('🔍 cargarVehiculosUsuario: Llamado para userId:', userId, 'statusFilter:', statusFilter);
+    if (!userId) {
+      console.log('⚠️ cargarVehiculosUsuario: userId es nulo o indefinido.');
+      return [];
+    }
+    
+    try {
+      const response = await apiService.getVehicles(userId, statusFilter); // Pasar statusFilter
+      console.log('🚗 cargarVehiculosUsuario: Respuesta de la API para vehículos:', response);
+      const vehiculos = response.data || [];
+      const vehiculosTransformados = vehiculos.map(vehiculo => ({
+        ...vehiculo,
+        patente: vehiculo.license,
+        marca: vehiculo.brand,
+        modelo: vehiculo.model,
+        año: vehiculo.year,
+        color: vehiculo.color,
+        estado: vehiculo.status || 'ACTIVE'
+      }));
+      console.log('🚗 cargarVehiculosUsuario: Vehículos transformados devueltos:', vehiculosTransformados);
+      return vehiculosTransformados;
+    } catch (error) {
+      console.error('❌ cargarVehiculosUsuario: Error al cargar vehículos:', error);
+      return [];
+    }
   }, []);
+
+  // Función para obtener reservas del usuario
+  const obtenerReservasUsuario = useCallback(async (userId) => {
+    console.log('🔍 obtenerReservasUsuario: Llamado para userId:', userId);
+    if (!userId) {
+      console.log('⚠️ obtenerReservasUsuario: userId es nulo o indefinido.');
+      return [];
+    }
+    try {
+      const response = await apiService.getReservations(userId);
+      console.log('📅 obtenerReservasUsuario: Respuesta de la API para reservas:', response);
+      const loadedReservas = response.data.reservations || [];
+      const reservasTransformadas = loadedReservas.map(reserva => ({
+        ...reserva,
+        fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
+        hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
+        servicio: reserva.service?.name,
+        patente: reserva.vehicle?.license,
+        marca: reserva.vehicle?.brand,
+        modelo: reserva.vehicle?.model,
+        año: reserva.vehicle?.year,
+        nombre: reserva.user?.name,   
+        apellido: reserva.user?.name?.split(' ').slice(1).join(' ') || '',
+        dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
+      }));
+      setReservas(reservasTransformadas); 
+      console.log('📅 obtenerReservasUsuario: Reservas transformadas devueltas:', reservasTransformadas);
+      return reservasTransformadas; 
+    } catch (error) {
+      console.error('Error al obtener reservas del usuario:', error);
+      return [];
+    }
+  }, [setReservas]);
+
+  // Función para cargar servicios desde la API
+  const cargarServicios = useCallback(async () => {
+    try {
+      const response = await apiService.getServices();
+      const loadedServices = response.data.services || [];
+      setServicios(loadedServices);
+      return loadedServices;
+    } catch (error) {
+      console.error('❌ cargarServicios: Error al cargar servicios:', error);
+      return [];
+    }
+  }, [setServicios]);
+
+  // Función para cargar TODOS los usuarios (Admin)
+  const cargarTodosLosUsuarios = useCallback(async () => {
+    console.log('🔍 AuthContext: Llamando a cargarTodosLosUsuarios...');
+    try {
+      const response = await apiService.getAllUsers();
+      console.log('👥 AuthContext: Respuesta de apiService.getAllUsers:', response);
+      const loadedUsers = response.data || []; // Asumiendo que devuelve directamente un array de usuarios
+      setAllUsers(loadedUsers);
+      console.log('👥 AuthContext: loadedUsers (antes de setAllUsers):', loadedUsers);
+      console.log('👥 AuthContext: allUsers (después de setAllUsers):', loadedUsers); // Esto mostrará el mismo array por el closure de useCallback
+      return loadedUsers;
+    } catch (error) {
+      console.error('❌ AuthContext: Error al cargar todos los usuarios:', error);
+      return [];
+    }
+  }, [setAllUsers]);
+
+  // Función para cargar TODAS las reservas (Admin)
+  const cargarTodasLasReservas = useCallback(async () => {
+    try {
+      // apiService.getReservations sin userId debería devolver todas las reservas
+      const response = await apiService.getReservations(); 
+      const loadedReservas = response.data.reservations || [];
+      console.log('🔍 AuthContext: loadedReservas (antes de transformar):', loadedReservas[0]); // Log de una reserva cruda
+      // Transformar loadedReservas para que tenga los campos de las relaciones directamente accesibles
+      const reservasTransformadas = loadedReservas.map(reserva => ({
+        ...reserva,
+        fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
+        hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
+        servicio: reserva.service?.name, 
+        patente: reserva.vehicle?.license, 
+        marca: reserva.vehicle?.brand,
+        modelo: reserva.vehicle?.model,
+        año: reserva.vehicle?.year,
+        nombre: reserva.user?.name,   
+        apellido: reserva.user?.name?.split(' ').slice(1).join(' ') || '',
+        dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
+      }));
+
+      setAllReservations(reservasTransformadas); 
+      console.log('📅 AuthContext: Todas las reservas cargadas y transformadas:', reservasTransformadas);
+      return reservasTransformadas; 
+    } catch (error) {
+      console.error('❌ AuthContext: Error al cargar todas las reservas:', error);
+      return [];
+    }
+  }, [setAllReservations]);
+
+  // Función para cargar TODOS los vehículos (Admin)
+  const cargarTodosLosVehiculos = useCallback(async () => {
+    try {
+      // apiService.getVehicles sin userId debería devolver todos los vehículos
+      const response = await apiService.getVehicles(); 
+      const loadedVehiculos = response.data || [];
+      const vehiculosTransformados = loadedVehiculos.map(vehiculo => ({
+        ...vehiculo,
+        patente: vehiculo.license,
+        marca: vehiculo.brand,
+        modelo: vehiculo.model,
+        año: vehiculo.year,
+        color: vehiculo.color,
+        estado: vehiculo.status || 'ACTIVE',
+        // Mapear la información del usuario propietario al campo 'usuario' esperado por el frontend
+        usuario: vehiculo.user ? {
+          id: vehiculo.user.id,
+          nombre: vehiculo.user.name, // El backend envía 'name', el frontend espera 'nombre'
+          apellido: vehiculo.user.name?.split(' ').slice(1).join(' ') || '', // Dividir el nombre para obtener el apellido
+          email: vehiculo.user.email,
+          phone: vehiculo.user.phone
+        } : undefined,
+      }));
+      setAllVehicles(vehiculosTransformados); 
+      console.log('🚗 AuthContext: Todos los vehículos cargados y transformados:', vehiculosTransformados);
+      return vehiculosTransformados; 
+    } catch (error) {
+      console.error('❌ AuthContext: Error al cargar todos los vehículos:', error);
+      return [];
+    }
+  }, [setAllVehicles]);
 
   // Función para iniciar sesión
   const iniciarSesion = useCallback(async (credenciales) => {
+    console.log('➡️ AuthContext: Iniciando sesión...');
     try {
       setCargando(true);
       setError(null);
       
-      // Transformar datos para que coincidan con el backend
       const credencialesParaBackend = {
         email: credenciales.email,
         password: credenciales.contraseña
       };
       
-      // Login con API real
       const response = await apiService.login(credencialesParaBackend);
+      console.log('➡️ AuthContext: Respuesta de login exitosa:', response);
       
-      // Transformar datos del usuario para el frontend
       const usuarioTransformado = {
         ...response.data.user,
-        nombre: response.data.user.name, // Mapear name -> nombre
-        rol: response.data.user.role     // Mapear role -> rol para compatibilidad
+        nombre: response.data.user.name,
+        rol: response.data.user.role
       };
       
-      // Guardar token y datos del usuario
       localStorage.setItem('token', response.data.token);
       
-      // Cargar vehículos del usuario desde la API
       const vehiculosCargados = await cargarVehiculosUsuario(usuarioTransformado.id);
-      const usuarioCompleto = { ...usuarioTransformado, vehiculos: vehiculosCargados };
+      const reservasCargadas = await obtenerReservasUsuario(usuarioTransformado.id);
+      const reservasTransformadasUsuario = reservasCargadas.map(reserva => ({
+        ...reserva,
+        fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
+        hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
+      }));
+      const usuarioCompleto = { ...usuarioTransformado, vehiculos: vehiculosCargados, reservas: reservasTransformadasUsuario };
       
       localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
       setUsuario(usuarioCompleto);
+      console.log('🎉 AuthContext: Sesión iniciada y usuario establecido (completo).', usuarioCompleto);
       
       return { exito: true };
     } catch (error) {
-      console.error('Error al iniciar sesión:', error);
+      console.error('❌ AuthContext: Error al iniciar sesión:', error);
       setError('Error al iniciar sesión');
       return { exito: false, error: error.message };
     } finally {
       setCargando(false);
+      console.log('🏁 AuthContext: Inicio de sesión finalizado. Cargando:', false);
     }
-  }, []);
+  }, [cargarVehiculosUsuario, obtenerReservasUsuario]); // Añadir dependencias
 
   // Función para registrar usuario
   const registrarUsuario = useCallback(async (datosUsuario) => {
@@ -121,7 +237,6 @@ export const AuthProvider = ({ children }) => {
       setCargando(true);
       setError(null);
       
-      // Transformar datos para que coincidan con el backend
       const datosParaBackend = {
         name: `${datosUsuario.nombre} ${datosUsuario.apellido}`.trim(),
         email: datosUsuario.email,
@@ -129,14 +244,12 @@ export const AuthProvider = ({ children }) => {
         phone: datosUsuario.telefono
       };
       
-      // Registro con API real
       const response = await apiService.register(datosParaBackend);
       
-      // Transformar datos del usuario para el frontend
       const usuarioTransformado = {
         ...response.data.user,
-        nombre: response.data.user.name, // Mapear name -> nombre
-        rol: response.data.user.role     // Mapear role -> rol para compatibilidad
+        nombre: response.data.user.name,
+        rol: response.data.user.role
       };
       
       return { exito: true, usuario: usuarioTransformado };
@@ -152,7 +265,6 @@ export const AuthProvider = ({ children }) => {
   // Función para cerrar sesión
   const cerrarSesion = useCallback(async () => {
     try {
-      // Intentar logout con API real
       try {
         await apiService.logout();
       } catch (apiError) {
@@ -161,11 +273,11 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     } finally {
-      // Limpiar solo el token y el usuario actual, pero mantener los datos en localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
       setUsuario(null);
       setError(null);
+      setReservas([]); // Limpiar reservas al cerrar sesión
     }
   }, []);
 
@@ -175,14 +287,12 @@ export const AuthProvider = ({ children }) => {
       setCargando(true);
       setError(null);
       
-      // Intentar actualizar con API real
       try {
         const usuarioActualizado = await apiService.updateUserProfile(nuevosDatos);
         setUsuario(usuarioActualizado);
         localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
         return { exito: true, usuario: usuarioActualizado };
       } catch (apiError) {
-        // Si falla la API, actualizar localmente
         const usuarioActualizado = { ...usuario, ...nuevosDatos };
         setUsuario(usuarioActualizado);
         localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
@@ -200,22 +310,17 @@ export const AuthProvider = ({ children }) => {
   // Función para agregar vehículo
   const agregarVehiculo = useCallback(async (nuevoVehiculo) => {
     try {
-      // Transformar datos para el backend
       const vehiculoParaBackend = {
-        license: nuevoVehiculo.patente.toUpperCase(), // Asegurar mayúsculas
+        license: nuevoVehiculo.patente.toUpperCase(),
         brand: nuevoVehiculo.marca,
         model: nuevoVehiculo.modelo,
         year: parseInt(nuevoVehiculo.año),
         color: nuevoVehiculo.color
       };
 
-      // Crear vehículo en el backend
       const response = await apiService.createVehicle(vehiculoParaBackend);
-      
-      // El backend devuelve { success: true, data: {...} }
       const vehiculoData = response.data;
       
-      // Actualizar usuario local con el nuevo vehículo
       const vehiculoCompleto = {
         ...vehiculoData,
         patente: vehiculoData.license,
@@ -250,29 +355,16 @@ export const AuthProvider = ({ children }) => {
       setUsuario(usuarioActualizado);
       localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
       
-      // Sincronizar con almacenamiento separado (ESTO SE ELIMINA)
-      // const vehiculosGuardados = JSON.parse(localStorage.getItem('vehiculos') || '{}');
-      // vehiculosGuardados[usuario.id] = vehiculosActualizados;
-      // localStorage.setItem('vehiculos', JSON.stringify(vehiculosGuardados));
-      
-      // ACTUALIZAR LA LISTA COMPLETA DE USUARIOS (ESTO SE ELIMINA O REVISA)
-      // const usuariosActualizados = usuarios.map(u => 
-      //   u.id === usuario.id ? usuarioActualizado : u
-      // );
-      // setUsuarios(usuariosActualizados);
-      // localStorage.setItem('usuarios', JSON.stringify(usuariosActualizados));
-      
       return { exito: true };
     } catch (error) {
       console.error('Error al actualizar estado del vehículo:', error);
       return { exito: false, error: error.message };
     }
-  }, [usuario, usuarios]);
+  }, [usuario]);
 
   // Función para actualizar vehículo
   const actualizarVehiculo = useCallback(async (vehiculoId, nuevosDatos) => {
     try {
-      // Transformar datos para el backend - solo incluir campos que están presentes
       const vehiculoParaBackend = {};
       
       if (nuevosDatos.patente) vehiculoParaBackend.license = nuevosDatos.patente;
@@ -282,18 +374,13 @@ export const AuthProvider = ({ children }) => {
       if (nuevosDatos.color) vehiculoParaBackend.color = nuevosDatos.color;
       if (nuevosDatos.estado) vehiculoParaBackend.status = nuevosDatos.estado;
 
-      // Actualizar vehículo en el backend
       const response = await apiService.updateVehicle(vehiculoId, vehiculoParaBackend);
-      
-      // El backend devuelve { success: true, data: {...} }
       const vehiculoData = response.data;
       
-      // Actualizar usuario local - solo actualizar campos que están presentes en vehiculoData
       const vehiculosActualizados = usuario?.vehiculos?.map(v =>
         v.id === vehiculoId ? { 
           ...v, 
           ...nuevosDatos,
-          // Solo actualizar campos si vehiculoData los contiene
           ...(vehiculoData.license && { patente: vehiculoData.license }),
           ...(vehiculoData.brand && { marca: vehiculoData.brand }),
           ...(vehiculoData.model && { modelo: vehiculoData.model }),
@@ -317,10 +404,8 @@ export const AuthProvider = ({ children }) => {
   // Función para eliminar vehículo
   const eliminarVehiculo = useCallback(async (vehiculoId) => {
     try {
-      // Eliminar vehículo en el backend
       await apiService.deleteVehicle(vehiculoId);
       
-      // Actualizar usuario local
       const vehiculosActualizados = usuario?.vehiculos?.filter(v => v.id !== vehiculoId) || [];
       const usuarioActualizado = { ...usuario, vehiculos: vehiculosActualizados };
       
@@ -341,14 +426,12 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Usuario no autenticado para crear reserva');
       }
 
-      // Obtener el ID del vehículo a partir de la patente en datosReserva
       const vehiculoEncontrado = usuario.vehiculos.find(v => v.patente === datosReserva.patente);
       if (!vehiculoEncontrado) {
         throw new Error('Vehículo no encontrado para la patente proporcionada.');
       }
       const vehicleId = vehiculoEncontrado.id;
 
-      // Obtener el ID del servicio a partir del nombre en datosReserva
       const servicioEncontrado = servicios.find(s => s.name === datosReserva.servicio);
       if (!servicioEncontrado) {
         throw new Error('Servicio no encontrado.');
@@ -359,31 +442,28 @@ export const AuthProvider = ({ children }) => {
         userId: usuario.id,
         vehicleId: vehicleId,
         serviceId: serviceId,
-        date: datosReserva.fecha, // Asegúrate de que este formato sea YYYY-MM-DD
-        time: datosReserva.hora,   // Asegúrate de que este formato sea HH:MM
+        date: datosReserva.fecha,
+        time: datosReserva.hora,
         notes: datosReserva.observaciones
       };
 
-      // Llamar al backend para crear la reserva
       const response = await apiService.createReservation(reservaParaBackend);
-      const reservaCreada = response.data; // Asumiendo que el backend devuelve la reserva creada en response.data
+      const reservaCreada = response.data;
 
-      // Transformar reservaCreada para que tenga los campos de las relaciones directamente accesibles
       const reservaTransformada = {
         ...reservaCreada,
-        servicio: reservaCreada.service?.name, // Nombre del servicio
-        patente: reservaCreada.vehicle?.license, // Patente del vehículo
+        servicio: reservaCreada.service?.name,
+        patente: reservaCreada.vehicle?.license,
         marca: reservaCreada.vehicle?.brand,
         modelo: reservaCreada.vehicle?.model,
         año: reservaCreada.vehicle?.year,
-        nombre: reservaCreada.user?.name,   // Nombre del usuario
-        apellido: reservaCreada.user?.name?.split(' ').slice(1).join(' ') || '', // Asumiendo apellido después del primer nombre
-        // Aquí puedes añadir más campos si los necesitas directamente
+        nombre: reservaCreada.user?.name,
+        apellido: reservaCreada.user?.name?.split(' ').slice(1).join(' ') || '',
       };
 
       const reservasActualizadas = [...reservas, reservaTransformada];
       setReservas(reservasActualizadas);
-      localStorage.setItem('reservas', JSON.stringify(reservasActualizadas)); // Actualizar localStorage también
+      localStorage.setItem('reservas', JSON.stringify(reservasActualizadas));
       
       return { exito: true, reserva: reservaTransformada };
     } catch (error) {
@@ -391,35 +471,6 @@ export const AuthProvider = ({ children }) => {
       return { exito: false, error: error.message };
     }
   }, [usuario, reservas, servicios]);
-
-  // Función para obtener reservas del usuario
-  const obtenerReservasUsuario = useCallback(async () => {
-    if (!usuario?.id) {
-      return [];
-    }
-    try {
-      const response = await apiService.getReservations(usuario.id);
-      const loadedReservas = response.data.reservations || []; // Asumiendo que el backend devuelve en data.reservations
-
-      // Transformar loadedReservas para que tenga los campos de las relaciones directamente accesibles
-      const reservasTransformadas = loadedReservas.map(reserva => ({
-        ...reserva,
-        servicio: reserva.service?.name, // Nombre del servicio
-        patente: reserva.vehicle?.license, // Patente del vehículo
-        marca: reserva.vehicle?.brand,
-        modelo: reserva.vehicle?.model,
-        año: reserva.vehicle?.year,
-        nombre: reserva.user?.name,   // Nombre del usuario
-        apellido: reserva.user?.name?.split(' ').slice(1).join(' ') || '', // Asumiendo apellido después del primer nombre
-      }));
-
-      setReservas(reservasTransformadas); // Actualizar el estado global de reservas con las transformadas
-      return reservasTransformadas.filter(reserva => reserva.userId === usuario.id); // Filtrar por userId si es necesario (el backend ya debería hacerlo)
-    } catch (error) {
-      console.error('Error al obtener reservas del usuario:', error);
-      return [];
-    }
-  }, [usuario, setReservas]); // setReservas añadido como dependencia
 
   // Función para cancelar reserva
   const cancelarReserva = useCallback(async (reservaId) => {
@@ -442,13 +493,12 @@ export const AuthProvider = ({ children }) => {
   // Función para obtener vehículos activos
   const obtenerVehiculosActivos = useCallback(() => {
     return usuario?.vehiculos?.filter(v => 
-      v.estado === 'ACTIVO' || !v.estado // Incluir vehículos activos y sin estado definido
+      v.estado === 'ACTIVO' || !v.estado
     ) || [];
   }, [usuario]);
 
   // Función para cambiar rol
   const cambiarRol = useCallback((nuevoRol) => {
-    // Permitir cambiar el rol siempre (para DevTool)
     if (usuario) {
       const usuarioActualizado = { ...usuario, rol: nuevoRol };
       setUsuario(usuarioActualizado);
@@ -465,53 +515,6 @@ export const AuthProvider = ({ children }) => {
   const estaAutenticado = useCallback(() => {
     return !!usuario;
   }, [usuario]);
-
-  // Función para cargar vehículos del usuario desde la API
-  const cargarVehiculosUsuario = useCallback(async (userId, statusFilter = null) => {
-    if (!userId) {
-      return [];
-    }
-    
-    try {
-      console.log('🔍 cargarVehiculosUsuario: Llamando a getVehicles para userId:', userId, 'statusFilter:', statusFilter); // Debug: userId
-      
-      const response = await apiService.getVehicles(userId, statusFilter); // Pasar statusFilter
-      
-      console.log('🚗 cargarVehiculosUsuario: Respuesta de la API:', response); // Debug: respuesta de la API
-      // El backend devuelve { success: true, data: [...] }
-      const vehiculos = response.data || [];
-      
-      console.log('🚗 cargarVehiculosUsuario: Vehículos transformados:', vehiculos); // Debug: vehículos transformados
-      // Transformar datos del backend al formato del frontend
-      const vehiculosTransformados = vehiculos.map(vehiculo => ({
-        ...vehiculo,
-        patente: vehiculo.license,
-        marca: vehiculo.brand,
-        modelo: vehiculo.model,
-        año: vehiculo.year,
-        color: vehiculo.color,
-        estado: vehiculo.status || 'ACTIVE'
-      }));
-
-      return vehiculosTransformados;
-    } catch (error) {
-      console.error('❌ cargarVehiculosUsuario: Error al cargar vehículos:', error);
-      return [];
-    }
-  }, []);
-
-  // Función para cargar servicios desde la API
-  const cargarServicios = useCallback(async () => {
-    try {
-      const response = await apiService.getServices();
-      const loadedServices = response.data.services || []; // Acceder a la propiedad 'services'
-      setServicios(loadedServices);
-      return loadedServices; // Devolver los servicios cargados
-    } catch (error) {
-      console.error('❌ cargarServicios: Error al cargar servicios:', error);
-      return [];
-    }
-  }, []);
 
   // Función para buscar usuarios
   const buscarUsuarios = useCallback((termino) => {
@@ -533,17 +536,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Función para refrescar datos del usuario desde localStorage
-  const refrescarUsuario = useCallback(async () => { // Hacer async para await
+  const refrescarUsuario = useCallback(async () => {
     try {
-      console.log('🔄 refrescarUsuario: Iniciando refresco de datos...'); // Debug: inicio
-      const usuarioGuardado = localStorage.getItem('usuario');
+      const usuarioGuardadoStr = localStorage.getItem('usuario');
       const reservasGuardadas = localStorage.getItem('reservas');
       
-      if (usuarioGuardado) {
-        const usuarioData = JSON.parse(usuarioGuardado);
-        console.log('🔄 refrescarUsuario: Usuario cargado de localStorage:', usuarioData); // Debug: usuario
+      if (usuarioGuardadoStr) {
+        const usuarioData = JSON.parse(usuarioGuardadoStr);
         
-        // Cargar vehículos después de establecer el usuario
         const vehiculosCargados = await cargarVehiculosUsuario(usuarioData.id);
         const usuarioCompleto = { ...usuarioData, vehiculos: vehiculosCargados };
         setUsuario(usuarioCompleto);
@@ -552,29 +552,11 @@ export const AuthProvider = ({ children }) => {
       
       if (reservasGuardadas) {
         setReservas(JSON.parse(reservasGuardadas));
-        console.log('🔄 refrescarUsuario: Reservas cargadas de localStorage:', JSON.parse(reservasGuardadas)); // Debug: reservas
       }
-      
-      // if (usuariosGuardados) { // Eliminar
-      //   let usuariosData = JSON.parse(usuariosGuardados);
-      //   
-      //   // Sincronizar vehículos de todos los usuarios desde el almacenamiento separado
-      //   usuariosData = usuariosData.map(u => {
-      //     if (vehiculosGuardados[u.id]) {
-      //       return { ...u, vehiculos: vehiculosGuardados[u.id] };
-      //     }
-      //     return u;
-      //   });
-      //   
-      //   setUsuarios(usuariosData);
-      //   localStorage.setItem('usuarios', JSON.stringify(usuariosData));
-      //   console.log('🔄 refrescarUsuario: Usuarios (con vehículos) cargados de localStorage:', usuariosData); // Debug: todos los usuarios
-      // }
-      console.log('🔄 refrescarUsuario: Refresco de datos completado.'); // Debug: fin
     } catch (error) {
       console.error('❌ Error al refrescar datos del usuario:', error);
     }
-  }, []);
+  }, [cargarVehiculosUsuario]);
 
   // Función para limpiar reservas (solo admin)
   const limpiarReservas = useCallback(() => {
@@ -585,7 +567,6 @@ export const AuthProvider = ({ children }) => {
   // Permitir al admin cambiar el estado de cualquier vehículo de cualquier usuario
   const actualizarEstadoVehiculoGlobal = useCallback((usuarioId, vehiculoId, nuevoEstado) => {
     try {
-      // Actualizar en la lista de usuarios
       const usuariosActualizados = usuarios.map(u => {
         if (u.id === usuarioId) {
           const vehiculosActualizados = (u.vehiculos || []).map(v =>
@@ -598,7 +579,6 @@ export const AuthProvider = ({ children }) => {
       setUsuarios(usuariosActualizados);
       localStorage.setItem('usuarios', JSON.stringify(usuariosActualizados));
 
-      // Si el usuario autenticado es el mismo, actualizar también su estado
       if (usuario?.id === usuarioId) {
         setUsuario(usuariosActualizados.find(u => u.id === usuarioId));
         localStorage.setItem('usuario', JSON.stringify(usuariosActualizados.find(u => u.id === usuarioId)));
@@ -610,6 +590,85 @@ export const AuthProvider = ({ children }) => {
     }
   }, [usuarios, usuario]);
 
+  // --- Fin de definiciones de funciones useCallback ---
+
+  // Verificar si hay un usuario guardado al cargar la app
+  useEffect(() => {
+    const verificarUsuarioGuardado = async () => {
+      console.log('🔄 AuthContext: Iniciando verificación de usuario guardado...');
+      try {
+        setCargando(true);
+        setError(null);
+        
+        const token = localStorage.getItem('token');
+        const usuarioGuardadoStr = localStorage.getItem('usuario');
+        
+        console.log('🔄 AuthContext: Token en localStorage:', token ? 'Encontrado' : 'No encontrado');
+        console.log('🔄 AuthContext: Usuario en localStorage:', usuarioGuardadoStr ? 'Encontrado' : 'No encontrado');
+        
+        if (token && usuarioGuardadoStr) {
+          console.log('🔄 AuthContext: Token y usuario guardado encontrados. Intentando validar perfil...');
+          try {
+            const perfilActualizado = await apiService.getUserProfile();
+            console.log('✅ AuthContext: Perfil de usuario validado con éxito:', perfilActualizado);
+            
+            if (!perfilActualizado.data || !perfilActualizado.data.id) {
+              throw new Error('ID de usuario no encontrado en el perfil actualizado.');
+            }
+            const userId = perfilActualizado.data.id;
+            const userRole = perfilActualizado.data.role || perfilActualizado.data.rol; // Obtener el rol del usuario
+
+            const vehiculosCargados = await cargarVehiculosUsuario(userId);
+            const reservasCargadas = await obtenerReservasUsuario(userId);
+            const reservasTransformadasUsuario = reservasCargadas.map(reserva => ({
+              ...reserva,
+              fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
+              hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
+            }));
+            const usuarioCompleto = { ...perfilActualizado.data, vehiculos: vehiculosCargados, reservas: reservasTransformadasUsuario };
+            setUsuario(usuarioCompleto);
+            localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
+            console.log('🎉 AuthContext: Usuario establecido y guardado en localStorage (completo).', usuarioCompleto);
+
+            // Si el usuario es administrador, cargar todos los datos globales
+            if (userRole === 'ADMIN') {
+              console.log('👑 AuthContext: Usuario es ADMIN. Cargando datos globales...');
+              await cargarTodosLosUsuarios();
+              await cargarTodasLasReservas();
+              await cargarTodosLosVehiculos();
+              console.log('👑 AuthContext: Datos globales cargados para ADMIN.');
+            }
+
+          } catch (apiError) {
+            console.error('❌ AuthContext: Token inválido o expirado. Limpiando sesión:', apiError);
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            setUsuario(null);
+            setReservas([]);
+            console.log('🗑️ AuthContext: Sesión limpiada.');
+          }
+        } else {
+          console.log('⚠️ AuthContext: No hay token o usuario guardado. Asegurando sesión limpia.');
+          localStorage.removeItem('token');
+          localStorage.removeItem('usuario');
+          setUsuario(null);
+          setReservas([]);
+          console.log('🗑️ AuthContext: Sesión limpia forzada.');
+        }
+        
+        await cargarServicios();
+      } catch (error) {
+        console.error('❌ AuthContext: Error en verificarUsuarioGuardado:', error);
+        setError('Error al cargar datos de sesión');
+      } finally {
+        setCargando(false);
+        console.log('🏁 AuthContext: Verificación de usuario guardado finalizada. Cargando:', false);
+      }
+    };
+
+    verificarUsuarioGuardado();
+  }, [cargarVehiculosUsuario, obtenerReservasUsuario, cargarServicios, cargarTodosLosUsuarios, cargarTodasLasReservas, cargarTodosLosVehiculos]);
+
   // Valor del contexto
   const valor = {
     // Estados
@@ -619,6 +678,14 @@ export const AuthProvider = ({ children }) => {
     reservas,
     usuarios,
     servicios, // Exportar servicios
+    
+    // Nuevos estados y funciones para el administrador
+    allReservations,
+    allUsers,
+    allVehicles,
+    cargarTodosLosUsuarios,
+    cargarTodasLasReservas,
+    cargarTodosLosVehiculos,
     
     // Funciones de autenticación
     iniciarSesion,

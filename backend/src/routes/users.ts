@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProfile, updateProfile } from '../controllers/userController';
+import { getProfile, updateProfile, getAllUsers } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/auth';
 
 // Crear un router para las rutas de usuarios
@@ -15,6 +15,9 @@ router.get('/profile', getProfile);
 
 // PUT /api/users/profile - Actualizar perfil del usuario logueado
 router.put('/profile', updateProfile);
+
+// GET /api/users - Obtener todos los usuarios (requiere autenticación y posiblemente rol de admin)
+router.get('/', getAllUsers);
 
 // Exportar el router para usarlo en app.ts
 export default router;

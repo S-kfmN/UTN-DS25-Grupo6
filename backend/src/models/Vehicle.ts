@@ -120,7 +120,13 @@ class VehicleModel {
   // READ - Obtener todos los vehículos (para admin)
   async findAll(): Promise<Vehicle[]> {
     // return [...this.vehicles];
-    return await prisma.vehicle.findMany();
+    return await prisma.vehicle.findMany({
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, phone: true }
+        }
+      }
+    });
   }
 
   // Verificar si un vehículo pertenece a un usuario

@@ -57,13 +57,41 @@ class ReservationModel {
     // return this.reservations.find(reservation => reservation.id === id) || null;
     return await prisma.reservation.findUnique({
       where: { id: id },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, phone: true }
+        },
+        vehicle: {
+          select: { id: true, license: true, brand: true, model: true, year: true, color: true }
+        },
+        service: {
+          select: { id: true, name: true, description: true, price: true }
+        }
+      }
     });
   }
 
   // READ - Obtener todas las reservas (para admin)
   async findAll(): Promise<Reservation[]> {
     // return this.reservations;
-    return await prisma.reservation.findMany();
+    return await prisma.reservation.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          }
+        },
+        vehicle: {
+          select: { id: true, license: true, brand: true, model: true, year: true, color: true }
+        },
+        service: {
+          select: { id: true, name: true, description: true, price: true }
+        }
+      }
+    });
   }
 
   // READ - Obtener reservas por fecha
@@ -71,6 +99,17 @@ class ReservationModel {
     // return this.reservations.filter(reservation => reservation.date === date);
     return await prisma.reservation.findMany({
       where: { date: date },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, phone: true }
+        },
+        vehicle: {
+          select: { id: true, license: true, brand: true, model: true, year: true, color: true }
+        },
+        service: {
+          select: { id: true, name: true, description: true, price: true }
+        }
+      }
     });
   }
 

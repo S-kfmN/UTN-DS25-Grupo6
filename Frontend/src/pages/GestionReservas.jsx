@@ -14,15 +14,17 @@ export default function GestionReservas() {
   const [filtroDNI, setFiltroDNI] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
 
-  const { reservas, usuarios } = usarAuth();
+  const { allReservations, allUsers } = usarAuth();
   const navigate = useNavigate();
+  // Eliminar la declaración duplicada de historial
+  // const { historial, loading: historialLoading, error: historialError } = useHistorial(reservaDetalle?.patente || '', mostrarModal && !!reservaDetalle);
 
   // Modal de detalle
   const [reservaDetalle, setReservaDetalle] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
 
-  // Filtrado avanzado
-  const reservasFiltradas = reservas.filter(r => {
+  // Filtrado avanzado - usar allReservations
+  const reservasFiltradas = allReservations.filter(r => {
     const coincideFecha = !filtroFecha || r.fecha === filtroFecha;
     const coincidePeriodo = !filtroPeriodo || (filtroPeriodo === 'manana' ? (r.hora < '13:00') : (r.hora >= '13:00'));
     const coincidePatente = !filtroPatente || (r.patente && r.patente.toLowerCase().includes(filtroPatente.toLowerCase()));
@@ -34,10 +36,10 @@ export default function GestionReservas() {
   });
 
   // Obtener historial del vehículo para el modal
-  const historial = useHistorial(reservaDetalle?.patente || '', mostrarModal && !!reservaDetalle);
+  const { historial, loading: historialLoading, error: historialError } = useHistorial(reservaDetalle?.patente || '', mostrarModal && !!reservaDetalle);
 
-  // Obtener datos del cliente
-  const cliente = reservaDetalle && usuarios.find(u => u.id === reservaDetalle.userId);
+  // Obtener datos del cliente - usar allUsers
+  const cliente = reservaDetalle && allUsers.find(u => u.id === reservaDetalle.userId);
 
   return (
     <div className="contenedor-gestion-reservas">

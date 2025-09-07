@@ -65,13 +65,20 @@ export const createVehicle = async (req: Request, res: Response) => {
 export const getUserVehicles = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
+    const userRole = (req as any).userRole; // Obtener el rol del usuario
     
-    // Obtener el parámetro de consulta 'status'
-    const statusFilter = req.query.status === 'active' ? VehicleStatus.ACTIVE : undefined; // Si es 'active', filtrar; de lo contrario, no filtrar.
+    const statusFilter = req.query.status === 'active' ? VehicleStatus.ACTIVE : undefined; 
     
-    console.log('🔍 getUserVehicles - userId:', userId, 'statusFilter:', statusFilter);
+    let vehicles;
 
-    const vehicles = await VehicleModel.findByUserId(userId, statusFilter);
+    if (userRole === 'ADMIN') {
+      console.log('👑 vehicleController: ADMIN detectado, obteniendo todos los vehículos...');
+      vehicles = await VehicleModel.findAll();
+    } else {
+      console.log('👤 vehicleController: Usuario normal detectado, obteniendo vehículos para userId:', userId);
+      vehicles = await VehicleModel.findByUserId(userId, statusFilter);
+    }
+
     console.log('🚗 getUserVehicles - vehicles found:', vehicles.length);
 
     res.json({
