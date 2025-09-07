@@ -54,7 +54,7 @@ export interface AdminVehicleSummary {
   brand: string;
   model: string;
   year: number;
-  color: string;
+  color: string | null;
   isActive: boolean;
   createdAt: Date; // Cambiado a Date
   // Datos del propietario

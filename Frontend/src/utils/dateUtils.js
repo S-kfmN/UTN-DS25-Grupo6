@@ -87,6 +87,25 @@ export const formatearFechaParaMostrar = (fecha) => {
   return fechaLocal.toLocaleDateString('es-ES', opciones);
 };
 
+/**
+ * Formatear fecha y hora para mostrar al usuario
+ * @param {string} fecha - Fecha en formato YYYY-MM-DD
+ * @param {string} hora - Hora en formato HH:MM
+ * @returns {string} Fecha y hora formateada para mostrar
+ */
+export const formatearFechaHoraParaMostrar = (fecha, hora) => {
+  if (!fecha || !hora) return 'Fecha no especificada - Hora no especificada';
+
+  const fechaHora = new Date(`${fecha}T${hora}`);
+  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const opcionesHora = { hour: '2-digit', minute: '2-digit', hour12: false };
+  
+  const fechaFormateada = fechaHora.toLocaleDateString('es-ES', opcionesFecha);
+  const horaFormateada = fechaHora.toLocaleTimeString('es-ES', opcionesHora);
+  
+  return `${fechaFormateada} - ${horaFormateada}`;
+};
+
 // ===== UTILIDADES PARA MANEJO DE NOMBRES =====
 
 /**

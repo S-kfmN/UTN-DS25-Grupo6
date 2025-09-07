@@ -62,7 +62,7 @@ export default function Reservar() {
     const cargarDatos = async () => {
       if (usuario?.id) {
         // Cargar vehículos desde el backend
-        const loadedVehiculos = await cargarVehiculosUsuario();
+        const loadedVehiculos = await cargarVehiculosUsuario(usuario.id, 'active'); // Solicitar solo vehículos activos
         console.log('✅ Reservar.jsx - Vehículos cargados:', loadedVehiculos); // Debug: ver vehículos cargados
         
         // Obtener vehículos activos después de cargar

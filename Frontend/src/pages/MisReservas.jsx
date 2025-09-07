@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button, Badge, Alert, Collapse, Modal } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
+import { formatearFechaHoraParaMostrar } from '../utils/dateUtils';
 
 export default function MisReservas() {
   const { usuario, obtenerReservasUsuario, cancelarReserva } = usarAuth();
@@ -13,19 +14,26 @@ export default function MisReservas() {
 
   // Obtener reservas del usuario desde el contexto
   useEffect(() => {
-    if (usuario) {
-      const reservas = obtenerReservasUsuario();
-      setReservasUsuario(reservas);
-  
-    }
+    const cargarReservas = async () => {
+      if (usuario) {
+        const reservas = await obtenerReservasUsuario(); // Ahora es asíncrona
+        console.log('MisReservas: Reservas cargadas en useEffect:', reservas); // Debugging
+        setReservasUsuario(reservas);
+      }
+    };
+    cargarReservas();
   }, [usuario, obtenerReservasUsuario]);
 
   // Efecto para sincronizar cuando cambien las reservas en el contexto
   useEffect(() => {
-    if (usuario) {
-      const reservas = obtenerReservasUsuario();
-      setReservasUsuario(reservas);
-    }
+    const cargarReservas = async () => {
+      if (usuario) {
+        const reservas = await obtenerReservasUsuario(); // Ahora es asíncrona
+        console.log('MisReservas: Reservas sincronizadas en useEffect:', reservas); // Debugging
+        setReservasUsuario(reservas);
+      }
+    };
+    cargarReservas();
   }, [usuario, obtenerReservasUsuario]);
 
 
@@ -159,7 +167,7 @@ export default function MisReservas() {
                   <div key={reserva.id} className="reserva-card">
                     <div className="reserva-header">
                       <div className="reserva-hora">
-                        <strong>{reserva.fecha ? formatearFechaParaMostrar(reserva.fecha) : 'Fecha no especificada'} - {reserva.hora || 'Hora no especificada'}</strong>
+                        <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
                       </div>
                       <div className="reserva-estado">
                         <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>
@@ -225,7 +233,7 @@ export default function MisReservas() {
                       <div key={reserva.id} className="reserva-card" style={{ opacity: 0.7 }}>
                         <div className="reserva-header">
                           <div className="reserva-hora">
-                            <strong>{reserva.fecha ? formatearFechaParaMostrar(reserva.fecha) : 'Fecha no especificada'} - {reserva.hora || 'Hora no especificada'}</strong>
+                            <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
                           </div>
                           <div className="reserva-estado">
                             <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>

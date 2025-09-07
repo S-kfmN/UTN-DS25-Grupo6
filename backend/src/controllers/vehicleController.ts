@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import VehicleModel from '../models/Vehicle';
 import { CreateVehicleRequest, UpdateVehicleRequest } from '../types/vehicle';
+import { VehicleStatus } from '../types/vehicle'; // Added import for VehicleStatus
 
 // CREATE - Crear vehículo
 export const createVehicle = async (req: Request, res: Response) => {
@@ -64,9 +65,13 @@ export const createVehicle = async (req: Request, res: Response) => {
 export const getUserVehicles = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    console.log('🔍 getUserVehicles - userId:', userId);
+    
+    // Obtener el parámetro de consulta 'status'
+    const statusFilter = req.query.status === 'active' ? VehicleStatus.ACTIVE : undefined; // Si es 'active', filtrar; de lo contrario, no filtrar.
+    
+    console.log('🔍 getUserVehicles - userId:', userId, 'statusFilter:', statusFilter);
 
-    const vehicles = await VehicleModel.findByUserId(userId);
+    const vehicles = await VehicleModel.findByUserId(userId, statusFilter);
     console.log('🚗 getUserVehicles - vehicles found:', vehicles.length);
 
     res.json({

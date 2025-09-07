@@ -38,6 +38,17 @@ class ReservationModel {
     // return this.reservations.filter(reservation => reservation.userId === userId);
     return await prisma.reservation.findMany({
       where: { userId: userId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, phone: true }
+        },
+        vehicle: {
+          select: { id: true, license: true, brand: true, model: true, year: true, color: true }
+        },
+        service: {
+          select: { id: true, name: true, description: true, price: true }
+        }
+      }
     });
   }
 

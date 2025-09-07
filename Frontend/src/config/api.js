@@ -55,7 +55,7 @@ export const API_ENDPOINTS = {
     CREATE: '/reservations',
     UPDATE: (id) => `/reservations/${id}`,
     DELETE: (id) => `/reservations/${id}`,
-    BY_USER: (userId) => `/users/${userId}/reservations`,
+    BY_USER: (userId) => '/reservations',
     BY_DATE: (date) => `/reservations/date/${date}`,
     CANCEL: (id) => `/reservations/${id}/cancel`
   },

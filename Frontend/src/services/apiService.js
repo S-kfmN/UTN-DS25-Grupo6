@@ -115,8 +115,13 @@ class ApiService {
   }
 
   // Métodos para vehículos
-  async getVehicles(userId = null) {
-    const endpoint = userId ? API_ENDPOINTS.VEHICLES.BY_USER(userId) : API_ENDPOINTS.VEHICLES.LIST;
+  async getVehicles(userId = null, statusFilter = null) {
+    let endpoint = userId ? API_ENDPOINTS.VEHICLES.BY_USER(userId) : API_ENDPOINTS.VEHICLES.LIST;
+    
+    if (statusFilter) {
+      endpoint += `?status=${statusFilter}`;
+    }
+    
     return this.request(endpoint);
   }
 

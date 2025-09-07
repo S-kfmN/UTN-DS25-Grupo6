@@ -337,28 +337,89 @@ export const AuthProvider = ({ children }) => {
   // Función para crear reserva
   const crearReserva = useCallback(async (datosReserva) => {
     try {
-      const reservaCompleta = {
-        ...datosReserva,
-        id: Date.now(),
-        userId: usuario?.id,
-        estado: 'pendiente'
+      if (!usuario?.id) {
+        throw new Error('Usuario no autenticado para crear reserva');
+      }
+
+      // Obtener el ID del vehículo a partir de la patente en datosReserva
+      const vehiculoEncontrado = usuario.vehiculos.find(v => v.patente === datosReserva.patente);
+      if (!vehiculoEncontrado) {
+        throw new Error('Vehículo no encontrado para la patente proporcionada.');
+      }
+      const vehicleId = vehiculoEncontrado.id;
+
+      // Obtener el ID del servicio a partir del nombre en datosReserva
+      const servicioEncontrado = servicios.find(s => s.name === datosReserva.servicio);
+      if (!servicioEncontrado) {
+        throw new Error('Servicio no encontrado.');
+      }
+      const serviceId = servicioEncontrado.id;
+
+      const reservaParaBackend = {
+        userId: usuario.id,
+        vehicleId: vehicleId,
+        serviceId: serviceId,
+        date: datosReserva.fecha, // Asegúrate de que este formato sea YYYY-MM-DD
+        time: datosReserva.hora,   // Asegúrate de que este formato sea HH:MM
+        notes: datosReserva.observaciones
       };
 
-      const reservasActualizadas = [...reservas, reservaCompleta];
+      // Llamar al backend para crear la reserva
+      const response = await apiService.createReservation(reservaParaBackend);
+      const reservaCreada = response.data; // Asumiendo que el backend devuelve la reserva creada en response.data
+
+      // Transformar reservaCreada para que tenga los campos de las relaciones directamente accesibles
+      const reservaTransformada = {
+        ...reservaCreada,
+        servicio: reservaCreada.service?.name, // Nombre del servicio
+        patente: reservaCreada.vehicle?.license, // Patente del vehículo
+        marca: reservaCreada.vehicle?.brand,
+        modelo: reservaCreada.vehicle?.model,
+        año: reservaCreada.vehicle?.year,
+        nombre: reservaCreada.user?.name,   // Nombre del usuario
+        apellido: reservaCreada.user?.name?.split(' ').slice(1).join(' ') || '', // Asumiendo apellido después del primer nombre
+        // Aquí puedes añadir más campos si los necesitas directamente
+      };
+
+      const reservasActualizadas = [...reservas, reservaTransformada];
       setReservas(reservasActualizadas);
-      localStorage.setItem('reservas', JSON.stringify(reservasActualizadas));
+      localStorage.setItem('reservas', JSON.stringify(reservasActualizadas)); // Actualizar localStorage también
       
-      return { exito: true, reserva: reservaCompleta };
+      return { exito: true, reserva: reservaTransformada };
     } catch (error) {
       console.error('Error al crear reserva:', error);
       return { exito: false, error: error.message };
     }
-  }, [usuario, reservas]);
+  }, [usuario, reservas, servicios]);
 
   // Función para obtener reservas del usuario
-  const obtenerReservasUsuario = useCallback(() => {
-    return reservas.filter(reserva => reserva.userId === usuario?.id);
-  }, [reservas, usuario]);
+  const obtenerReservasUsuario = useCallback(async () => {
+    if (!usuario?.id) {
+      return [];
+    }
+    try {
+      const response = await apiService.getReservations(usuario.id);
+      const loadedReservas = response.data.reservations || []; // Asumiendo que el backend devuelve en data.reservations
+
+      // Transformar loadedReservas para que tenga los campos de las relaciones directamente accesibles
+      const reservasTransformadas = loadedReservas.map(reserva => ({
+        ...reserva,
+        servicio: reserva.service?.name, // Nombre del servicio
+        patente: reserva.vehicle?.license, // Patente del vehículo
+        marca: reserva.vehicle?.brand,
+        modelo: reserva.vehicle?.model,
+        año: reserva.vehicle?.year,
+        nombre: reserva.user?.name,   // Nombre del usuario
+        apellido: reserva.user?.name?.split(' ').slice(1).join(' ') || '', // Asumiendo apellido después del primer nombre
+      }));
+
+      setReservas(reservasTransformadas); // Actualizar el estado global de reservas con las transformadas
+      return reservasTransformadas.filter(reserva => reserva.userId === usuario.id); // Filtrar por userId si es necesario (el backend ya debería hacerlo)
+    } catch (error) {
+      console.error('Error al obtener reservas del usuario:', error);
+      return [];
+    }
+  }, [usuario, setReservas]); // setReservas añadido como dependencia
 
   // Función para cancelar reserva
   const cancelarReserva = useCallback(async (reservaId) => {
@@ -406,14 +467,15 @@ export const AuthProvider = ({ children }) => {
   }, [usuario]);
 
   // Función para cargar vehículos del usuario desde la API
-  const cargarVehiculosUsuario = useCallback(async (userId) => {
+  const cargarVehiculosUsuario = useCallback(async (userId, statusFilter = null) => {
     if (!userId) {
       return [];
     }
     
     try {
-      console.log('🔍 cargarVehiculosUsuario: Llamando a getVehicles para userId:', userId); // Debug: userId
-      const response = await apiService.getVehicles(userId); // Usar userId del parámetro
+      console.log('🔍 cargarVehiculosUsuario: Llamando a getVehicles para userId:', userId, 'statusFilter:', statusFilter); // Debug: userId
+      
+      const response = await apiService.getVehicles(userId, statusFilter); // Pasar statusFilter
       
       console.log('🚗 cargarVehiculosUsuario: Respuesta de la API:', response); // Debug: respuesta de la API
       // El backend devuelve { success: true, data: [...] }
@@ -431,19 +493,12 @@ export const AuthProvider = ({ children }) => {
         estado: vehiculo.status || 'ACTIVE'
       }));
 
-      // Actualizar el estado del usuario con los vehículos cargados
-      // setUsuario(prevUsuario => {
-      //   const usuarioActualizado = { ...prevUsuario, vehiculos: vehiculosTransformados };
-      //   localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
-      //   return usuarioActualizado;
-      // });
-      
       return vehiculosTransformados;
     } catch (error) {
       console.error('❌ cargarVehiculosUsuario: Error al cargar vehículos:', error);
       return [];
     }
-  }, []); // Dependencias: ya no depende de 'usuario' directamente, sino del userId pasado
+  }, []);
 
   // Función para cargar servicios desde la API
   const cargarServicios = useCallback(async () => {
