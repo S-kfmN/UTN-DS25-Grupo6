@@ -18,7 +18,9 @@ export default function MisVehiculos() {
       if (usuario?.id) {
         setCargando(true);
         try {
-          const vehiculosDelBackend = await cargarVehiculosUsuario();
+          console.log('🔍 MisVehiculos.jsx: usuario.id', usuario.id); // Debug: id del usuario
+          const vehiculosDelBackend = await cargarVehiculosUsuario(usuario.id); // Pasar userId
+          console.log('🚗 MisVehiculos.jsx: Vehículos del backend', vehiculosDelBackend); // Debug: vehículos recibidos
           setVehiculos(vehiculosDelBackend || []);
         } catch (error) {
           console.error('Error al cargar vehículos:', error);

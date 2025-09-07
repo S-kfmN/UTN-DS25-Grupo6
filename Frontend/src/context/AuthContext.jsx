@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [reservas, setReservas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [servicios, setServicios] = useState([]); // Nuevo estado para servicios
 
   // Verificar si hay un usuario guardado al cargar la app
   useEffect(() => {
@@ -36,22 +37,31 @@ export const AuthProvider = ({ children }) => {
           // Verificar si el token es válido con la API
           try {
             const perfilActualizado = await apiService.getUserProfile();
-            setUsuario(perfilActualizado);
+            const vehiculosCargados = await cargarVehiculosUsuario(perfilActualizado.id); // Cargar vehículos
+            const usuarioCompleto = { ...perfilActualizado, vehiculos: vehiculosCargados };
+            setUsuario(usuarioCompleto);
+            localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
           } catch (apiError) {
             // Si falla la API, usar datos del localStorage
             const usuarioData = JSON.parse(usuarioGuardado);
-            
-            // Cargar vehículos desde almacenamiento separado
-            const vehiculosGuardados = JSON.parse(localStorage.getItem('vehiculos') || '{}');
-            if (vehiculosGuardados[usuarioData.id]) {
-              usuarioData.vehiculos = vehiculosGuardados[usuarioData.id];
-            }
-            
-            setUsuario(usuarioData);
+            const vehiculosCargados = await cargarVehiculosUsuario(usuarioData.id); // Cargar vehículos
+            const usuarioCompleto = { ...usuarioData, vehiculos: vehiculosCargados };
+            setUsuario(usuarioCompleto);
+            localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
           }
+        } else if (usuarioGuardado) {
+          // Si no hay token válido pero hay usuario en localStorage, intentar cargarlo
+          const usuarioData = JSON.parse(usuarioGuardado);
+          const vehiculosCargados = await cargarVehiculosUsuario(usuarioData.id); // Cargar vehículos
+          const usuarioCompleto = { ...usuarioData, vehiculos: vehiculosCargados };
+          setUsuario(usuarioCompleto);
+          localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
         }
         
         // Los usuarios se cargarán desde la API cuando sea necesario
+        
+        // Cargar servicios al iniciar la aplicación
+        await cargarServicios(); // Añadir llamada para cargar servicios
       } catch (error) {
         console.error('Error al cargar datos:', error);
         setError('Error al cargar datos de sesión');
@@ -87,13 +97,13 @@ export const AuthProvider = ({ children }) => {
       
       // Guardar token y datos del usuario
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('usuario', JSON.stringify(usuarioTransformado));
-      setUsuario(usuarioTransformado);
       
       // Cargar vehículos del usuario desde la API
-      setTimeout(() => {
-        cargarVehiculosUsuario();
-      }, 100);
+      const vehiculosCargados = await cargarVehiculosUsuario(usuarioTransformado.id);
+      const usuarioCompleto = { ...usuarioTransformado, vehiculos: vehiculosCargados };
+      
+      localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
+      setUsuario(usuarioCompleto);
       
       return { exito: true };
     } catch (error) {
@@ -240,17 +250,17 @@ export const AuthProvider = ({ children }) => {
       setUsuario(usuarioActualizado);
       localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
       
-      // Sincronizar con almacenamiento separado
-      const vehiculosGuardados = JSON.parse(localStorage.getItem('vehiculos') || '{}');
-      vehiculosGuardados[usuario.id] = vehiculosActualizados;
-      localStorage.setItem('vehiculos', JSON.stringify(vehiculosGuardados));
+      // Sincronizar con almacenamiento separado (ESTO SE ELIMINA)
+      // const vehiculosGuardados = JSON.parse(localStorage.getItem('vehiculos') || '{}');
+      // vehiculosGuardados[usuario.id] = vehiculosActualizados;
+      // localStorage.setItem('vehiculos', JSON.stringify(vehiculosGuardados));
       
-      // ACTUALIZAR LA LISTA COMPLETA DE USUARIOS
-      const usuariosActualizados = usuarios.map(u => 
-        u.id === usuario.id ? usuarioActualizado : u
-      );
-      setUsuarios(usuariosActualizados);
-      localStorage.setItem('usuarios', JSON.stringify(usuariosActualizados));
+      // ACTUALIZAR LA LISTA COMPLETA DE USUARIOS (ESTO SE ELIMINA O REVISA)
+      // const usuariosActualizados = usuarios.map(u => 
+      //   u.id === usuario.id ? usuarioActualizado : u
+      // );
+      // setUsuarios(usuariosActualizados);
+      // localStorage.setItem('usuarios', JSON.stringify(usuariosActualizados));
       
       return { exito: true };
     } catch (error) {
@@ -396,17 +406,20 @@ export const AuthProvider = ({ children }) => {
   }, [usuario]);
 
   // Función para cargar vehículos del usuario desde la API
-  const cargarVehiculosUsuario = useCallback(async () => {
-    if (!usuario?.id) {
+  const cargarVehiculosUsuario = useCallback(async (userId) => {
+    if (!userId) {
       return [];
     }
     
     try {
-      const response = await apiService.getVehicles(usuario.id);
+      console.log('🔍 cargarVehiculosUsuario: Llamando a getVehicles para userId:', userId); // Debug: userId
+      const response = await apiService.getVehicles(userId); // Usar userId del parámetro
       
+      console.log('🚗 cargarVehiculosUsuario: Respuesta de la API:', response); // Debug: respuesta de la API
       // El backend devuelve { success: true, data: [...] }
       const vehiculos = response.data || [];
       
+      console.log('🚗 cargarVehiculosUsuario: Vehículos transformados:', vehiculos); // Debug: vehículos transformados
       // Transformar datos del backend al formato del frontend
       const vehiculosTransformados = vehiculos.map(vehiculo => ({
         ...vehiculo,
@@ -418,16 +431,32 @@ export const AuthProvider = ({ children }) => {
         estado: vehiculo.status || 'ACTIVE'
       }));
 
-      const usuarioActualizado = { ...usuario, vehiculos: vehiculosTransformados };
-      setUsuario(usuarioActualizado);
-      localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+      // Actualizar el estado del usuario con los vehículos cargados
+      // setUsuario(prevUsuario => {
+      //   const usuarioActualizado = { ...prevUsuario, vehiculos: vehiculosTransformados };
+      //   localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+      //   return usuarioActualizado;
+      // });
       
       return vehiculosTransformados;
     } catch (error) {
       console.error('❌ cargarVehiculosUsuario: Error al cargar vehículos:', error);
       return [];
     }
-  }, [usuario]);
+  }, []); // Dependencias: ya no depende de 'usuario' directamente, sino del userId pasado
+
+  // Función para cargar servicios desde la API
+  const cargarServicios = useCallback(async () => {
+    try {
+      const response = await apiService.getServices();
+      const loadedServices = response.data.services || []; // Acceder a la propiedad 'services'
+      setServicios(loadedServices);
+      return loadedServices; // Devolver los servicios cargados
+    } catch (error) {
+      console.error('❌ cargarServicios: Error al cargar servicios:', error);
+      return [];
+    }
+  }, []);
 
   // Función para buscar usuarios
   const buscarUsuarios = useCallback((termino) => {
@@ -449,56 +478,46 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Función para refrescar datos del usuario desde localStorage
-  const refrescarUsuario = useCallback(() => {
+  const refrescarUsuario = useCallback(async () => { // Hacer async para await
     try {
+      console.log('🔄 refrescarUsuario: Iniciando refresco de datos...'); // Debug: inicio
       const usuarioGuardado = localStorage.getItem('usuario');
       const reservasGuardadas = localStorage.getItem('reservas');
-      const usuariosGuardados = localStorage.getItem('usuarios');
-      const vehiculosGuardados = JSON.parse(localStorage.getItem('vehiculos') || '{}');
       
       if (usuarioGuardado) {
         const usuarioData = JSON.parse(usuarioGuardado);
+        console.log('🔄 refrescarUsuario: Usuario cargado de localStorage:', usuarioData); // Debug: usuario
         
-        // Cargar vehículos desde almacenamiento separado si existen
-        if (vehiculosGuardados[usuarioData.id]) {
-          usuarioData.vehiculos = vehiculosGuardados[usuarioData.id];
-        }
-        
-        // Actualizar vehículos sin estado definido
-        if (usuarioData.vehiculos) {
-          const vehiculosActualizados = usuarioData.vehiculos.map(v => 
-            !v.estado ? { ...v, estado: 'ACTIVO' } : v
-          );
-          
-          if (vehiculosActualizados.some(v => !v.estado)) {
-            usuarioData.vehiculos = vehiculosActualizados;
-            localStorage.setItem('usuario', JSON.stringify(usuarioData));
-          }
-        }
-        
-        setUsuario(usuarioData);
+        // Cargar vehículos después de establecer el usuario
+        const vehiculosCargados = await cargarVehiculosUsuario(usuarioData.id);
+        const usuarioCompleto = { ...usuarioData, vehiculos: vehiculosCargados };
+        setUsuario(usuarioCompleto);
+        localStorage.setItem('usuario', JSON.stringify(usuarioCompleto));
       }
       
       if (reservasGuardadas) {
         setReservas(JSON.parse(reservasGuardadas));
+        console.log('🔄 refrescarUsuario: Reservas cargadas de localStorage:', JSON.parse(reservasGuardadas)); // Debug: reservas
       }
       
-      if (usuariosGuardados) {
-        let usuariosData = JSON.parse(usuariosGuardados);
-        
-        // Sincronizar vehículos de todos los usuarios desde el almacenamiento separado
-        usuariosData = usuariosData.map(u => {
-          if (vehiculosGuardados[u.id]) {
-            return { ...u, vehiculos: vehiculosGuardados[u.id] };
-          }
-          return u;
-        });
-        
-        setUsuarios(usuariosData);
-        localStorage.setItem('usuarios', JSON.stringify(usuariosData));
-      }
+      // if (usuariosGuardados) { // Eliminar
+      //   let usuariosData = JSON.parse(usuariosGuardados);
+      //   
+      //   // Sincronizar vehículos de todos los usuarios desde el almacenamiento separado
+      //   usuariosData = usuariosData.map(u => {
+      //     if (vehiculosGuardados[u.id]) {
+      //       return { ...u, vehiculos: vehiculosGuardados[u.id] };
+      //     }
+      //     return u;
+      //   });
+      //   
+      //   setUsuarios(usuariosData);
+      //   localStorage.setItem('usuarios', JSON.stringify(usuariosData));
+      //   console.log('🔄 refrescarUsuario: Usuarios (con vehículos) cargados de localStorage:', usuariosData); // Debug: todos los usuarios
+      // }
+      console.log('🔄 refrescarUsuario: Refresco de datos completado.'); // Debug: fin
     } catch (error) {
-      console.error('Error al refrescar datos del usuario:', error);
+      console.error('❌ Error al refrescar datos del usuario:', error);
     }
   }, []);
 
@@ -544,6 +563,7 @@ export const AuthProvider = ({ children }) => {
     error,
     reservas,
     usuarios,
+    servicios, // Exportar servicios
     
     // Funciones de autenticación
     iniciarSesion,
@@ -558,6 +578,7 @@ export const AuthProvider = ({ children }) => {
     eliminarVehiculo,
     obtenerVehiculosActivos,
     cargarVehiculosUsuario,
+    cargarServicios, // Exportar función para cargar servicios
     
     // Funciones de reservas
     crearReserva,

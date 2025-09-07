@@ -48,10 +48,12 @@ class VehicleModel {
 
   // READ - Obtener vehículos de un usuario específico
   async findByUserId(userId: number): Promise<Vehicle[]> {
-    // return this.vehicles.filter(vehicle => vehicle.userId === userId);
-    return await prisma.vehicle.findMany({
+    console.log('🔍 VehicleModel.findByUserId - buscando vehículos para userId:', userId); // Añadido para depuración
+    const vehicles = await prisma.vehicle.findMany({
       where: { userId: userId },
     });
+    console.log('🚗 VehicleModel.findByUserId - vehículos encontrados:', vehicles.length, vehicles); // Añadido para depuración
+    return vehicles;
   }
 
   // READ - Obtener vehículo por ID

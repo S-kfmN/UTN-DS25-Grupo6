@@ -108,6 +108,7 @@ export const login = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    console.error('Error en el login de usuario:', error); // Añadido para imprimir el error completo
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -165,4 +166,13 @@ export const updateProfile = async (req: Request, res: Response) => {
       message: 'Error interno del servidor'
     });
   }
+};
+
+export const logout = (req: Request, res: Response) => {
+  // En un sistema con tokens JWT, el logout es principalmente manejado en el cliente
+  // al eliminar el token. Aquí solo confirmamos que la operación fue exitosa.
+  res.json({
+    success: true,
+    message: 'Sesión cerrada exitosamente'
+  });
 };

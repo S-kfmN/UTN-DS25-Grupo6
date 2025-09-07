@@ -2,6 +2,7 @@ import { RegisterRequest } from '../types/user';
 import { PrismaClient, User, UserRole } from '../generated/prisma';
 
 // Usar la instancia compartida de Prisma
+const prisma = new PrismaClient();
 
 // Por ahora usaremos un array en memoria, después lo conectaremos a una base de datos
 class UserModel {
