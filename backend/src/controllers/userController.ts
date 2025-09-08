@@ -177,6 +177,48 @@ export const logout = (req: Request, res: Response) => {
   });
 };
 
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const { oldPassword, newPassword } = req.body; // Estos ya están validados por Zod
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado.'
+      });
+    }
+
+    // Verificar la contraseña antigua
+    const isValidPassword = await bcrypt.compare(oldPassword, user.password as string);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Contraseña actual incorrecta.'
+      });
+    }
+
+    // Hashear la nueva contraseña
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña en la base de datos
+    await UserModel.update(userId, { password: hashedNewPassword });
+
+    res.json({
+      success: true,
+      message: 'Contraseña actualizada exitosamente.'
+    });
+
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await UserModel.findAll();
@@ -186,6 +228,31 @@ export const getAllUsers = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error al obtener todos los usuarios:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado.'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error al obtener usuario por ID:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'

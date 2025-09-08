@@ -325,14 +325,16 @@ export const AuthProvider = ({ children }) => {
   }, [usuario]);
 
   // Función para agregar vehículo
-  const agregarVehiculo = useCallback(async (nuevoVehiculo) => {
+  const agregarVehiculo = useCallback(async (vehiculoDataFromFrontend) => {
     try {
+      console.log('🔍 AuthContext: Datos de vehículo recibidos de MisVehiculos:', vehiculoDataFromFrontend);
       const vehiculoParaBackend = {
-        license: nuevoVehiculo.patente.toUpperCase(),
-        brand: nuevoVehiculo.marca,
-        model: nuevoVehiculo.modelo,
-        year: parseInt(nuevoVehiculo.año),
-        color: nuevoVehiculo.color
+        license: vehiculoDataFromFrontend.license.toUpperCase(), // Usar license directamente y convertir a mayúsculas
+        brand: vehiculoDataFromFrontend.brand,
+        model: vehiculoDataFromFrontend.model,
+        year: vehiculoDataFromFrontend.year, // Ya viene como número
+        color: vehiculoDataFromFrontend.color,
+        userId: vehiculoDataFromFrontend.userId // Ya viene incluido
       };
 
       const response = await apiService.createVehicle(vehiculoParaBackend);

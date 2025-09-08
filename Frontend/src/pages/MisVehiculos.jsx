@@ -145,7 +145,16 @@ export default function MisVehiculos() {
     try {
       if (modoEdicion && vehiculoAEditar) {
         // Editar vehículo existente
-        const resultado = await actualizarVehiculo(vehiculoAEditar.id, nuevoVehiculo);
+        // Los campos para edición ya deberían coincidir o manejarse de forma similar
+        const vehicleDataToSend = {
+          license: nuevoVehiculo.patente, // Mapear patente a license
+          brand: nuevoVehiculo.marca,
+          model: nuevoVehiculo.modelo,
+          year: parseInt(nuevoVehiculo.año), // Convertir año a número
+          color: nuevoVehiculo.color,
+          // No necesitamos userId para actualizar, ya que se asocia al vehículo existente
+        };
+        const resultado = await actualizarVehiculo(vehiculoAEditar.id, vehicleDataToSend);
         if (resultado.exito) {
           setMostrarExito(true);
           setTimeout(() => setMostrarExito(false), 3000);
@@ -155,7 +164,16 @@ export default function MisVehiculos() {
         }
       } else {
         // Agregar nuevo vehículo
-        const resultado = await agregarVehiculo(nuevoVehiculo);
+        const vehicleDataToSend = {
+          license: nuevoVehiculo.patente, // Mapear patente a license
+          brand: nuevoVehiculo.marca,
+          model: nuevoVehiculo.modelo,
+          year: parseInt(nuevoVehiculo.año), // Convertir año a número
+          color: nuevoVehiculo.color,
+          userId: usuario.id, // Añadir el userId del usuario autenticado
+        };
+        console.log('🚗 MisVehiculos.jsx: Datos del vehículo a enviar:', vehicleDataToSend); // Debug para verificar
+        const resultado = await agregarVehiculo(vehicleDataToSend);
         if (resultado.exito) {
           setMostrarExito(true);
           setTimeout(() => setMostrarExito(false), 3000);

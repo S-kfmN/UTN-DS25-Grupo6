@@ -52,7 +52,8 @@ class ApiService {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido del servidor' }));
+        console.error('❌ ApiService: Error en la respuesta no-OK:', JSON.stringify(errorData, null, 2));
         throw new Error(errorData.message || `Error ${response.status}`);
       }
 
