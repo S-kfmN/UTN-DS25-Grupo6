@@ -1,10 +1,10 @@
 
-import { AnyZodObject, ZodError } from 'zod';
+import { ZodObject, ZodError } from 'zod';
 import { Request, Response, NextFunction } from 'express';
 
 type ValidatedRequestSource = 'body' | 'query' | 'params';
 
-export const validate = (schema: AnyZodObject, source: ValidatedRequestSource = 'body') => 
+export const validate = <T extends ZodObject<any, any>>(schema: T, source: ValidatedRequestSource = 'body') => 
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await schema.parseAsync(req[source]);

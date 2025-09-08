@@ -4,7 +4,7 @@ import { PrismaClient, User, UserRole } from '../generated/prisma';
 // Usar la instancia compartida de Prisma
 const prisma = new PrismaClient();
 
-// Por ahora usaremos un array en memoria, después lo conectaremos a una base de datos
+// Implementación inicial con un array en memoria, pendiente de conexión a base de datos.
 class UserModel {
   // private users: User[] = [];        // Array en memoria para almacenar usuarios
   // private nextId = 1;               // Contador para generar IDs únicos
@@ -25,7 +25,7 @@ class UserModel {
       data: {
         name: userData.name,
         email: userData.email,
-        password: userData.password, // ! IMPORTANTE: Hashear la contraseña antes de guardar en un entorno real
+        password: userData.password, // Consideración: Hashear la contraseña antes de guardar en un entorno de producción.
         phone: userData.phone,
         role: UserRole.USER, // Cambiado a UserRole.USER
       },

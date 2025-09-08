@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
       // Llamar a getReservations con forAdminAll para la nueva ruta que obtiene todas las reservas
       const response = await apiService.getReservations(null, true); 
       const loadedReservas = response.data.reservations || [];
-      console.log('🔍 AuthContext: loadedReservas (antes de transformar):', loadedReservas[0]); // Log de una reserva cruda
+      console.log('AuthContext: loadedReservas (antes de transformar):', loadedReservas[0]); // Registro de una reserva sin transformar
       // Transformar loadedReservas para que tenga los campos de las relaciones directamente accesibles
       const reservasTransformadas = loadedReservas.map(reserva => ({
         ...reserva,
@@ -689,7 +689,8 @@ export const AuthProvider = ({ children }) => {
     error,
     reservas,
     usuarios,
-    servicios, // Exportar servicios
+    servicios, // Propiedad que contiene la lista de servicios disponibles.
+    userRole: usuario?.rol, // Definir userRole derivado del estado usuario
     
     // Nuevos estados y funciones para el administrador
     allReservations,

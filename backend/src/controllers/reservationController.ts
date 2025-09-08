@@ -339,7 +339,7 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en getReservationsByDate:', error); // Añadido para imprimir el error completo
+    console.error('Error en getReservationsByDate:', error); // Añadido para imprimir el error completo
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

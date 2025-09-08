@@ -72,7 +72,7 @@ export const getUserVehicles = async (req: Request, res: Response) => {
     let vehicles;
 
     // Si se proporciona un userId (es decir, la solicitud viene de MisVehiculos o similar)
-    // SIEMPRE debe devolver los vehículos de ESE usuario, independientemente de su rol.
+    // La función debe devolver los vehículos asociados a este usuario, sin importar su rol.
     // La lógica para que los administradores vean TODOS los vehículos se maneja en cargarTodosLosVehiculos
     // en el frontend, que llama a la API sin un userId específico.
     if (userId) {
