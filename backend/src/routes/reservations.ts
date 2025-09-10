@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { 
-  createReservation, 
-  getUserReservations, 
-  getReservation, 
-  updateReservation, 
+import {
+  createReservation,
+  getUserReservations,
+  getReservation,
+  updateReservation,
   cancelReservation,
-  getReservationsByDate
+  getReservationsByDate,
+  getAllReservations // Importar la nueva función
 } from '../controllers/reservationController';
 import { authenticateToken } from '../middlewares/auth';
 
@@ -20,8 +21,11 @@ router.use(authenticateToken);
 // POST /api/reservations - Crear nueva reserva
 router.post('/', createReservation);
 
-// GET /api/reservations - Obtener reservas del usuario
-router.get('/', getUserReservations);
+// GET /api/reservations - Obtener TODAS las reservas (solo para admin)
+router.get('/', getAllReservations);
+
+// GET /api/reservations/user/:userId - Obtener reservas de un usuario específico
+router.get('/user/:userId', getUserReservations);
 
 // GET /api/reservations/date/:date - Obtener reservas por fecha (para ver disponibilidad)
 router.get('/date/:date', getReservationsByDate);

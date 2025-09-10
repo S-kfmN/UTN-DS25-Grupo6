@@ -7,11 +7,12 @@ export default function GestionVehiculos() {
   const [filtroPatente, setFiltroPatente] = useState('');
   const [vehiculoDetalle, setVehiculoDetalle] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
-  const { usuarios } = usarAuth();
+  const { allVehicles, cargarTodosLosVehiculos, allUsers } = usarAuth(); // Obtener allVehicles y cargarTodosLosVehiculos
   const navigate = useNavigate();
 
-  // Obtener todos los vehículos del sistema (de todos los usuarios)
-  const vehiculos = usuarios.flatMap(u => (u.vehiculos || []).map(v => ({ ...v, usuario: u })));
+  // Eliminar la lógica de aplanar vehículos de usuarios, usar allVehicles directamente
+  // const vehiculos = usuarios.flatMap(u => (u.vehiculos || []).map(v => ({ ...v, usuario: u })));
+  const vehiculos = allVehicles; // Ahora vehiculos contiene todos los vehículos del contexto
 
   // Filtrar por patente
   const vehiculosFiltrados = vehiculos.filter(v =>
@@ -23,6 +24,20 @@ export default function GestionVehiculos() {
       <div className="header-gestion-reservas">
         <h1>Gestión de Vehículos</h1>
         <p>Consulta y administra todos los vehículos registrados por patente</p>
+        <Button 
+          variant="outline-primary" 
+          size="sm"
+          onClick={cargarTodosLosVehiculos} // Llamar a la función de carga global
+          style={{
+            borderColor: 'var(--color-acento)',
+            color: 'var(--color-acento)',
+            fontSize: '0.8rem',
+            marginBottom: '1rem'
+          }}
+        >
+          <i className="bi bi-arrow-clockwise me-1"></i>
+          Refrescar Vehículos
+        </Button>
       </div>
       <div className="filtros-gestion">
         <div className="filtro-grupo">
@@ -57,7 +72,7 @@ export default function GestionVehiculos() {
                     <td>{v.modelo}</td>
                     <td>{v.marca}</td>
                     <td>{v.año || '-'}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{v.estado || 'activo'}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{v.estado || 'ACTIVO'}</td>
                     <td>{v.usuario?.nombre} {v.usuario?.apellido}</td>
                     <td>
                       <Button 
@@ -91,7 +106,7 @@ export default function GestionVehiculos() {
                 <li><b>Modelo:</b> {vehiculoDetalle.modelo}</li>
                 <li><b>Marca:</b> {vehiculoDetalle.marca}</li>
                 <li><b>Año:</b> {vehiculoDetalle.año || '-'}</li>
-                <li><b>Estado:</b> {vehiculoDetalle.estado || 'activo'}</li>
+                <li><b>Estado:</b> {vehiculoDetalle.estado || 'ACTIVO'}</li>
               </ul>
               <h5 className="mt-3">Dueño Actual</h5>
               {vehiculoDetalle.usuario ? (

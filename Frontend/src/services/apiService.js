@@ -52,7 +52,8 @@ class ApiService {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido del servidor' }));
+        console.error('❌ ApiService: Error en la respuesta no-OK:', JSON.stringify(errorData, null, 2));
         throw new Error(errorData.message || `Error ${response.status}`);
       }
 
@@ -114,9 +115,34 @@ class ApiService {
     return this.request(`${API_ENDPOINTS.USERS.SEARCH}?q=${encodeURIComponent(query)}`);
   }
 
+  async getAllUsers() {
+    console.log('🔍 ApiService: Llamando a getAllUsers...');
+    try {
+      const response = await this.request(API_ENDPOINTS.USERS.LIST);
+      console.log('👥 ApiService: Respuesta de getAllUsers:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ ApiService: Error en getAllUsers:', error);
+      throw error; // Re-lanzar el error para que sea manejado por el AuthContext
+    }
+  }
+
   // Métodos para vehículos
-  async getVehicles(userId = null) {
-    const endpoint = userId ? API_ENDPOINTS.VEHICLES.BY_USER(userId) : API_ENDPOINTS.VEHICLES.LIST;
+  async getVehicles(userId = null, statusFilter = null, forAdminAll = false) {
+    let endpoint;
+
+    if (forAdminAll) {
+      endpoint = API_ENDPOINTS.VEHICLES.ALL_FOR_ADMIN; // Usar el nuevo endpoint para admin
+    } else if (userId) {
+      endpoint = API_ENDPOINTS.VEHICLES.BY_USER(userId);
+    } else {
+      endpoint = API_ENDPOINTS.VEHICLES.LIST;
+    }
+    
+    if (statusFilter) {
+      endpoint += `?status=${statusFilter}`;
+    }
+    
     return this.request(endpoint);
   }
 
@@ -141,8 +167,15 @@ class ApiService {
   }
 
   // Métodos para reservas
-  async getReservations(userId = null) {
-    const endpoint = userId ? API_ENDPOINTS.RESERVATIONS.BY_USER(userId) : API_ENDPOINTS.RESERVATIONS.LIST;
+  async getReservations(userId = null, forAdminAll = false) {
+    let endpoint;
+    if (forAdminAll) {
+      endpoint = API_ENDPOINTS.RESERVATIONS.LIST; // Esta es ahora la ruta para que el admin obtenga TODAS las reservas
+    } else if (userId) {
+      endpoint = API_ENDPOINTS.RESERVATIONS.BY_USER(userId); // Esta es para las reservas de un usuario específico
+    } else {
+      throw new Error('Debe proporcionar un userId o especificar forAdminAll para obtener reservas.');
+    }
     return this.request(endpoint);
   }
 

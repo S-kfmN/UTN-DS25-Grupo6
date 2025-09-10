@@ -2,32 +2,43 @@ import { useState, useEffect } from 'react';
 import { Button, Badge, Alert, Collapse, Modal } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
+import { formatearFechaHoraParaMostrar } from '../utils/dateUtils';
 
 export default function MisReservas() {
-  const { usuario, obtenerReservasUsuario, cancelarReserva } = usarAuth();
+  const { usuario, obtenerReservasUsuario, cancelarReserva, reservas } = usarAuth();
   
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [reservasUsuario, setReservasUsuario] = useState([]);
+  // Eliminar el estado local `reservasUsuario` y el `useEffect` para cargarlas
+  // const [reservasUsuario, setReservasUsuario] = useState([]);
   const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
   const [modalCancelar, setModalCancelar] = useState({ show: false, reserva: null, error: '' });
 
-  // Obtener reservas del usuario desde el contexto
-  useEffect(() => {
-    if (usuario) {
-      const reservas = obtenerReservasUsuario();
-      setReservasUsuario(reservas);
-  
-    }
-  }, [usuario, obtenerReservasUsuario]);
+  // Usar las reservas directamente del contexto, ya cargadas por AuthProvider
+  // Si necesitas filtrar o manipular, hazlo sobre el array `reservas` directamente
+  const reservasUsuario = reservas; // Asignar directamente las reservas del contexto
 
-  // Efecto para sincronizar cuando cambien las reservas en el contexto
-  useEffect(() => {
-    if (usuario) {
-      const reservas = obtenerReservasUsuario();
-      setReservasUsuario(reservas);
-    }
-  }, [usuario, obtenerReservasUsuario]);
+  // Eliminar los useEffects que cargaban reservas aquí, ya que AuthContext se encarga
+  // useEffect(() => {
+  //   const cargarReservas = async () => {
+  //     if (usuario) {
+  //       const reservas = await obtenerReservasUsuario(); 
+  //       console.log('MisReservas: Reservas cargadas en useEffect:', reservas); 
+  //       setReservasUsuario(reservas);
+  //     }
+  //   };
+  //   cargarReservas();
+  // }, [usuario, obtenerReservasUsuario]);
 
+  // useEffect(() => {
+  //   const cargarReservas = async () => {
+  //     if (usuario) {
+  //       const reservas = await obtenerReservasUsuario(); 
+  //       console.log('MisReservas: Reservas sincronizadas en useEffect:', reservas); 
+  //       setReservasUsuario(reservas);
+  //     }
+  //   };
+  //   cargarReservar();
+  // }, [usuario, obtenerReservasUsuario]);
 
 
   // Filtrar reservas según el estado seleccionado
@@ -159,7 +170,7 @@ export default function MisReservas() {
                   <div key={reserva.id} className="reserva-card">
                     <div className="reserva-header">
                       <div className="reserva-hora">
-                        <strong>{reserva.fecha ? formatearFechaParaMostrar(reserva.fecha) : 'Fecha no especificada'} - {reserva.hora || 'Hora no especificada'}</strong>
+                        <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
                       </div>
                       <div className="reserva-estado">
                         <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>
@@ -225,7 +236,7 @@ export default function MisReservas() {
                       <div key={reserva.id} className="reserva-card" style={{ opacity: 0.7 }}>
                         <div className="reserva-header">
                           <div className="reserva-hora">
-                            <strong>{reserva.fecha ? formatearFechaParaMostrar(reserva.fecha) : 'Fecha no especificada'} - {reserva.hora || 'Hora no especificada'}</strong>
+                            <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
                           </div>
                           <div className="reserva-estado">
                             <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import VehicleModel from '../models/Vehicle';
 import { CreateVehicleRequest, UpdateVehicleRequest } from '../types/vehicle';
+import { VehicleStatus } from '../types/vehicle'; // Added import for VehicleStatus
 
 // CREATE - Crear vehículo
 export const createVehicle = async (req: Request, res: Response) => {
@@ -9,10 +10,19 @@ export const createVehicle = async (req: Request, res: Response) => {
     const vehicleData: CreateVehicleRequest = req.body;
 
     // Validaciones básicas
-    if (!vehicleData.license || !vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.color) {
+    if (!vehicleData.license || !vehicleData.brand || !vehicleData.model || !vehicleData.year) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos'
+        message: 'Los campos patente, marca, modelo y año son requeridos'
+      });
+    }
+
+    // Validar formato de patente
+    const patenteRegex = /^[A-Z]{3}-?[0-9]{3}$/;
+    if (!patenteRegex.test(vehicleData.license)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de patente inválido. Use: ABC-123 o ABC123'
       });
     }
 
@@ -24,9 +34,9 @@ export const createVehicle = async (req: Request, res: Response) => {
       });
     }
 
-    // Verificar si la patente ya existe
-    const existingVehicle = await VehicleModel.findByLicense(vehicleData.license);
-    if (existingVehicle) {
+    // Verificar si la patente ya existe (validación centralizada)
+    const esPatenteUnica = await VehicleModel.validarPatenteUnica(vehicleData.license);
+    if (!esPatenteUnica) {
       return res.status(400).json({
         success: false,
         message: 'Ya existe un vehículo con esa patente'
@@ -42,9 +52,11 @@ export const createVehicle = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    console.error('❌ Error en createVehicle:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Error interno del servidor',
+      error: (error as Error).message
     });
   }
 };
@@ -53,8 +65,30 @@ export const createVehicle = async (req: Request, res: Response) => {
 export const getUserVehicles = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
+    const userRole = (req as any).userRole; // Obtener el rol del usuario
+    
+    const statusFilter = req.query.status === 'active' ? VehicleStatus.ACTIVE : undefined; 
+    
+    let vehicles;
 
-    const vehicles = await VehicleModel.findByUserId(userId);
+    // Si se proporciona un userId (es decir, la solicitud viene de MisVehiculos o similar)
+    // La función debe devolver los vehículos asociados a este usuario, sin importar su rol.
+    // La lógica para que los administradores vean TODOS los vehículos se maneja en cargarTodosLosVehiculos
+    // en el frontend, que llama a la API sin un userId específico.
+    if (userId) {
+      console.log('👤 vehicleController: Obteniendo vehículos para userId:', userId);
+      vehicles = await VehicleModel.findByUserId(userId, statusFilter);
+    } else if (userRole === 'ADMIN') {
+      // Si NO se proporciona userId y es admin, entonces se pide ALLVehicles
+      console.log('👑 vehicleController: ADMIN detectado, obteniendo todos los vehículos...');
+      vehicles = await VehicleModel.findAll();
+    } else {
+      // Caso por defecto para usuarios normales sin userId (esto no debería ocurrir con el middleware)
+      console.log('⚠️ vehicleController: Caso no esperado: No userId y no ADMIN. Devolviendo vacío.');
+      vehicles = [];
+    }
+
+    console.log('🚗 getUserVehicles - vehicles found:', vehicles.length);
 
     res.json({
       success: true,
@@ -62,6 +96,7 @@ export const getUserVehicles = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
+    console.error('❌ Error en getUserVehicles:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -105,6 +140,36 @@ export const getVehicle = async (req: Request, res: Response) => {
   }
 };
 
+// READ - Obtener todos los vehículos (para admin)
+export const getAllVehicles = async (req: Request, res: Response) => {
+  try {
+    const userRole = (req as any).userRole;
+
+    if (userRole !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver todos los vehículos.'
+      });
+    }
+
+    const vehicles = await VehicleModel.findAll();
+    
+    console.log('👑 vehicleController: ADMIN - Obteniendo TODOS los vehículos. Encontrados:', vehicles.length);
+
+    res.json({
+      success: true,
+      data: vehicles
+    });
+
+  } catch (error) {
+    console.error('❌ Error en getAllVehicles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
 // UPDATE - Actualizar vehículo
 export const updateVehicle = async (req: Request, res: Response) => {
   try {
@@ -130,8 +195,9 @@ export const updateVehicle = async (req: Request, res: Response) => {
 
     // Si se está actualizando la patente, verificar que no exista
     if (updateData.license && updateData.license !== vehicle.license) {
-      const existingVehicle = await VehicleModel.findByLicense(updateData.license);
-      if (existingVehicle) {
+      // Verificar si la patente ya existe (validación centralizada)
+      const esPatenteUnica = await VehicleModel.validarPatenteUnica(updateData.license, vehicleId);
+      if (!esPatenteUnica) {
         return res.status(400).json({
           success: false,
           message: 'Ya existe un vehículo con esa patente'

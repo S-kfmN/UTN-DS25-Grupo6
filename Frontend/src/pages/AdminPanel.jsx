@@ -8,7 +8,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
 
 export default function AdminPanel() {
-  const { usuario, esAdmin, reservas, usuarios, refrescarUsuario, limpiarReservas } = usarAuth();
+  const { usuario, esAdmin, allReservations: reservas, usuarios, refrescarUsuario, limpiarReservas } = usarAuth();
   
   // Usar el hook de sincronización de reservas
   const { sincronizarReservas } = useReservasSync();
@@ -62,9 +62,9 @@ export default function AdminPanel() {
     // Calcular estadísticas
     const stats = {
         totalReservas: reservas?.length || 0,
-        reservasPendientes: reservas?.filter(r => r.estado === 'pendiente').length || 0,
-        reservasConfirmadas: reservas?.filter(r => r.estado === 'confirmado').length || 0,
-        reservasCanceladas: reservas?.filter(r => r.estado === 'cancelado').length || 0,
+        reservasPendientes: reservas?.filter(r => r.status === 'PENDING').length || 0,
+        reservasConfirmadas: reservas?.filter(r => r.status === 'CONFIRMED').length || 0,
+        reservasCanceladas: reservas?.filter(r => r.status === 'CANCELLED').length || 0,
         totalUsuarios: usuarios?.length || 0
     };
     setEstadisticas(stats);
@@ -89,6 +89,8 @@ export default function AdminPanel() {
       </div>
     );
   }
+
+  console.log('🔍 Debug AdminPanel: Reservas (allReservations) en AdminPanel:', reservas);
 
   return (
     <ErrorBoundary>
@@ -307,9 +309,9 @@ export default function AdminPanel() {
                 </div>
                 <div className="reserva-info">
                   <div className="cliente-info">
-                    <h4>{reserva.servicio}</h4>
-                    <p><strong>Cliente:</strong> {reserva.nombre} {reserva.apellido}</p>
-                      <p><strong>Vehículo:</strong> {reserva.patente} - {reserva.marca} {reserva.modelo}</p>
+                    <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
+                    <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                      <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.marca || 'N/A'} {reserva.modelo || 'N/A'}</p>
                       {reserva.observaciones && (
                         <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
                       )}

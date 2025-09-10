@@ -1,13 +1,7 @@
-// Interfaces de Usuario
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    role: 'user' | 'admin' | 'mechanic';
-    createdAt: string;
-    updatedAt: string;
-  }
+import { User, UserRole } from "../generated/prisma";
+
+// Re-exportar el tipo User de Prisma para mantener compatibilidad
+export { User, UserRole };
   
   export interface LoginRequest {
     email: string;
@@ -34,5 +28,7 @@ export interface User {
   export interface UpdateProfileRequest {
     name?: string;
     email?: string;
-    phone?: string;
+    phone?: string | null; // Cambiado a string | null
+    role?: UserRole; // Añadido campo role para actualización
+    isActive?: boolean; // Añadido campo isActive
   }

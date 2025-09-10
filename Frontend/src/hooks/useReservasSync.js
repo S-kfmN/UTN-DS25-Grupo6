@@ -5,21 +5,18 @@ export const useReservasSync = () => {
   const { refrescarUsuario, reservas } = usarAuth();
 
   const sincronizarReservas = useCallback(() => {
-    console.log('Sincronizando reservas...');
     refrescarUsuario();
   }, [refrescarUsuario]);
 
   useEffect(() => {
     // Escuchar eventos de reservas actualizadas
     const manejarReservasActualizadas = (e) => {
-      console.log('Evento de reservas actualizadas recibido:', e.detail);
       sincronizarReservas();
     };
 
     // Escuchar cambios en localStorage
     const manejarCambioLocalStorage = (e) => {
       if (e.key === 'reservas') {
-        console.log('Cambio detectado en localStorage - reservas');
         sincronizarReservas();
       }
     };
@@ -30,7 +27,6 @@ export const useReservasSync = () => {
       if (reservasGuardadas) {
         const reservasParseadas = JSON.parse(reservasGuardadas);
         if (reservasParseadas.length !== (reservas?.length || 0)) {
-          console.log('Cambio detectado en reservas - actualizando...');
           sincronizarReservas();
         }
       }

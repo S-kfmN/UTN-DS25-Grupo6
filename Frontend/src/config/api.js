@@ -2,7 +2,7 @@
 const API_CONFIG = {
   // URLs base para diferentes entornos
   development: {
-    baseURL: 'http://localhost:3001/api',
+    baseURL: 'http://localhost:3000/api',
     timeout: 5000
   },
   production: {
@@ -37,7 +37,8 @@ export const API_ENDPOINTS = {
     PROFILE: '/users/profile',
     UPDATE_PROFILE: '/users/profile',
     CHANGE_PASSWORD: '/users/change-password',
-    SEARCH: '/users/search'
+    SEARCH: '/users/search',
+    LIST: '/users' // Nuevo endpoint para obtener todos los usuarios
   },
   
   // Vehículos
@@ -46,7 +47,8 @@ export const API_ENDPOINTS = {
     CREATE: '/vehicles',
     UPDATE: (id) => `/vehicles/${id}`,
     DELETE: (id) => `/vehicles/${id}`,
-    BY_USER: (userId) => `/users/${userId}/vehicles`
+    BY_USER: (userId) => '/vehicles', // El backend obtiene vehículos del usuario autenticado
+    ALL_FOR_ADMIN: '/vehicles/all' // Nuevo endpoint para que el admin obtenga TODOS los vehículos
   },
   
   // Reservas
@@ -55,7 +57,7 @@ export const API_ENDPOINTS = {
     CREATE: '/reservations',
     UPDATE: (id) => `/reservations/${id}`,
     DELETE: (id) => `/reservations/${id}`,
-    BY_USER: (userId) => `/users/${userId}/reservations`,
+    BY_USER: (userId) => `/reservations/user/${userId}`, // Nuevo endpoint para obtener reservas de un usuario específico
     BY_DATE: (date) => `/reservations/date/${date}`,
     CANCEL: (id) => `/reservations/${id}/cancel`
   },

@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { Form, Button, Alert, Row, Col, Card } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
+import { dividirNombreCompleto, combinarNombreCompleto } from '../utils/dateUtils';
 
 export default function MiPerfil() {
   const { usuario, actualizarUsuario } = usarAuth();
   
+  // Obtener nombre y apellido del usuario
+  const { nombre: nombreUsuario, apellido: apellidoUsuario } = dividirNombreCompleto(usuario?.name);
+  
   const [datosPerfil, setDatosPerfil] = useState({
-    nombre: usuario?.nombre || '',
-    apellido: usuario?.apellido || '',
+    nombre: nombreUsuario || '',
+    apellido: apellidoUsuario || '',
     email: usuario?.email || '',
-    telefono: usuario?.telefono || ''
+    telefono: usuario?.phone || ''
   });
 
   const [errores, setErrores] = useState({});
@@ -68,10 +72,17 @@ export default function MiPerfil() {
     setEstaGuardando(true);
 
     try {
+      // Combinar nombre y apellido para enviar al backend
+      const datosPerfilParaBackend = {
+        name: combinarNombreCompleto(datosPerfil.nombre, datosPerfil.apellido),
+        email: datosPerfil.email,
+        phone: datosPerfil.telefono
+      };
+      
       // Simular delay de guardado
       await new Promise(resolver => setTimeout(resolver, 1000));
       
-      actualizarUsuario(datosPerfil);
+      actualizarUsuario(datosPerfilParaBackend);
       setMostrarExito(true);
       
       // Ocultar mensaje de éxito después de 3 segundos
@@ -112,7 +123,7 @@ export default function MiPerfil() {
           <Row>
             <Col md={6}>
               <p><strong style={{ color: 'var(--color-acento)' }}>ID de Usuario:</strong> {usuario?.id}</p>
-              <p><strong style={{ color: 'var(--color-acento)' }}>Rol:</strong> {usuario?.rol === 'admin' ? 'Administrador' : 'Cliente'}</p>
+              <p><strong style={{ color: 'var(--color-acento)' }}>Rol:</strong> {usuario?.role === 'ADMIN' ? 'Administrador' : 'Cliente'}</p>
             </Col>
             <Col md={6}>
               <p><strong style={{ color: 'var(--color-acento)' }}>Vehículos Registrados:</strong> {usuario?.vehiculos?.length || 0}</p>

@@ -3,9 +3,17 @@ import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
 import { crearFecha, formatearFechaParaMostrar, esFechaPasada } from '../utils/dateUtils';
+import apiService from '../services/apiService'; // Importar apiService
 
 export default function Reservar() {
-  const { usuario, crearReserva, obtenerVehiculosActivos, refrescarUsuario } = usarAuth();
+  const { 
+    usuario, 
+    crearReserva, 
+    obtenerVehiculosActivos, 
+    refrescarUsuario, 
+    cargarVehiculosUsuario, 
+    servicios // Importar servicios desde el contexto
+  } = usarAuth();
   
 
   useLocalStorageSync();
@@ -14,6 +22,7 @@ export default function Reservar() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [vehiculosActivos, setVehiculosActivos] = useState([]);
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
+  const [reservasDelDia, setReservasDelDia] = useState([]); // Nuevo estado para reservas del día
   
 
   const [mesActual, setMesActual] = useState(() => {
@@ -31,7 +40,7 @@ export default function Reservar() {
     telefono: usuario?.telefono || '',
     email: usuario?.email || '',
     patente: '',
-    marca: '',
+    marca: 'RENAULT',
     modelo: '',
     año: '',
     servicio: '',
@@ -50,31 +59,94 @@ export default function Reservar() {
 
 
   useEffect(() => {
+    const cargarDatos = async () => {
+      if (usuario?.id) {
+        // Cargar vehículos desde el backend
+        const loadedVehiculos = await cargarVehiculosUsuario(usuario.id, 'active'); // Solicitar solo vehículos activos
+        console.log('✅ Reservar.jsx - Vehículos cargados:', loadedVehiculos); // Debug: ver vehículos cargados
+        
+        // Obtener vehículos activos después de cargar
+        const vehiculos = loadedVehiculos.filter(v => 
+          v.estado === 'ACTIVE' || !v.estado // Incluir vehículos activos y sin estado definido
+        );
+        console.log('✅ Reservar.jsx - Vehículos activos (filtrados):', vehiculos); // Debug: ver vehículos activos
+        setVehiculosActivos(vehiculos);
+
+        if (vehiculos.length > 0) {
+          setVehiculoSeleccionado(vehiculos[0]);
+          setDatosReserva(prev => ({
+            ...prev,
+            patente: vehiculos[0].patente,
+            marca: vehiculos[0].marca,
+            modelo: vehiculos[0].modelo,
+            año: vehiculos[0].año
+          }));
+        }
+
+        // Cargar reservas existentes
+        const reservasGuardadas = localStorage.getItem('reservas');
+        if (reservasGuardadas) {
+          setReservasExistentes(JSON.parse(reservasGuardadas));
+        }
+      }
+    };
+
+    cargarDatos();
+  }, [usuario?.id]);
+
+  // Efecto para cargar las reservas de la fecha seleccionada
+  useEffect(() => {
+    const cargarReservasDelDia = async () => {
+      if (fechaSeleccionada) {
+        try {
+          const response = await apiService.getReservationsByDate(fechaSeleccionada);
+          // Asegúrate de que response.data.reservations es un array
+          setReservasDelDia(response.data.reservations || []);
+        } catch (error) {
+          console.error('Error al cargar reservas del día:', error);
+          setReservasDelDia([]);
+        }
+      } else {
+        setReservasDelDia([]);
+      }
+    };
+    cargarReservasDelDia();
+  }, [fechaSeleccionada]); // Dependencia: se ejecuta cuando cambia la fecha seleccionada
+
+  // Dividir nombre completo en nombre y apellido
+  useEffect(() => {
     if (usuario) {
-      const vehiculos = obtenerVehiculosActivos();
+      setDatosReserva(prev => {
+        let newNombre = usuario.nombre || '';
+        let newApellido = usuario.apellido || '';
 
-      setVehiculosActivos(vehiculos);
-      
+        // Aplicar la lógica existente para dividir el nombre si el apellido no está presente
+        if (usuario.nombre && !usuario.apellido) {
+          const nombreCompleto = usuario.nombre.trim();
+          const espacioIndex = nombreCompleto.indexOf(' ');
+          if (espacioIndex !== -1) {
+            newNombre = nombreCompleto.substring(0, espacioIndex);
+            newApellido = nombreCompleto.substring(espacioIndex + 1);
+          } else {
+            newNombre = nombreCompleto;
+            newApellido = '';
+          }
+        } else if (usuario.nombre && usuario.apellido) {
+          // Si ambos están explícitamente proporcionados, usarlos directamente
+          newNombre = usuario.nombre;
+          newApellido = usuario.apellido;
+        }
 
-      if (vehiculos.length > 0) {
-        setVehiculoSeleccionado(vehiculos[0]);
-        setDatosReserva(prev => ({
+        return {
           ...prev,
-          patente: vehiculos[0].patente,
-          marca: vehiculos[0].marca,
-          modelo: vehiculos[0].modelo,
-          año: vehiculos[0].año
-        }));
-      }
-      
-
-      const reservasGuardadas = localStorage.getItem('reservas');
-      if (reservasGuardadas) {
-        setReservasExistentes(JSON.parse(reservasGuardadas));
-      }
+          nombre: newNombre,
+          apellido: newApellido,
+          telefono: usuario.phone || '', // Pre-llenar teléfono del usuario
+          email: usuario.email || '',     // Pre-llenar email del usuario
+        };
+      });
     }
-  }, [usuario, obtenerVehiculosActivos, usuario?.vehiculos]);
-
+  }, [usuario]);
 
   useEffect(() => {
     const reservasGuardadas = localStorage.getItem('reservas');
@@ -235,6 +307,8 @@ export default function Reservar() {
 
     if (!datosReserva.hora) {
       nuevosErrores.hora = 'Debe seleccionar una hora';
+    } else if (reservasDelDia.some(reserva => reserva.time === datosReserva.hora && reserva.date === datosReserva.fecha)) { // Validar si la hora ya está ocupada
+      nuevosErrores.hora = 'Este horario ya está ocupado';
     }
 
     setErrores(nuevosErrores);
@@ -286,7 +360,7 @@ export default function Reservar() {
           telefono: usuario?.telefono || '',
           email: usuario?.email || '',
           patente: vehiculoSeleccionado?.patente || '',
-          marca: vehiculoSeleccionado?.marca || '',
+          marca: 'RENAULT', // Siempre RENAULT
           modelo: vehiculoSeleccionado?.modelo || '',
           año: vehiculoSeleccionado?.año || '',
           servicio: '',
@@ -322,15 +396,15 @@ export default function Reservar() {
   ];
 
 
-  const serviciosDisponibles = [
-    'Cambio de Aceite',
-    'Limpieza de Filtro',
-    'Revisión de Niveles',
-    'Cambio de Bujías',
-    'Revisión de Frenos',
-    'Cambio de Filtro de Aire',
-    'Revisión General'
-  ];
+  // const serviciosDisponibles = [
+  //   'Cambio de Aceite',
+  //   'Limpieza de Filtro',
+  //   'Revisión de Niveles',
+  //   'Cambio de Bujías',
+  //   'Revisión de Frenos',
+  //   'Cambio de Filtro de Aire',
+  //   'Revisión General'
+  // ];
 
   return (
     <div className="contenedor-reservas" style={{
@@ -605,10 +679,10 @@ export default function Reservar() {
                     <Form.Control
                       type="text"
                       value={datosReserva.marca}
-                      onChange={(e) => manejarCambioFormulario('marca', e.target.value)}
-                      placeholder="Renault"
+                      placeholder="RENAULT"
                       className="form-control-custom"
-                      readOnly={vehiculosActivos.length > 0}
+                      readOnly={true}
+                      style={{ opacity: 0.7 }}
                     />
                   </Form.Group>
                 </Col>
@@ -660,9 +734,9 @@ export default function Reservar() {
                       className="form-control-custom"
                     >
                       <option value="">Selecciona un servicio</option>
-                      {serviciosDisponibles.map(servicio => (
-                        <option key={servicio} value={servicio}>
-                          {servicio}
+                      {servicios.map(servicio => (
+                        <option key={servicio.id} value={servicio.name}>
+                          {servicio.name}
                         </option>
                       ))}
                     </Form.Select>
@@ -707,11 +781,14 @@ export default function Reservar() {
                       className="form-control-custom"
                     >
                       <option value="">Selecciona una hora</option>
-                      {horariosDisponibles.map(hora => (
-                        <option key={hora} value={hora}>
-                          {hora}
-                        </option>
-                      ))}
+                      {horariosDisponibles.map(hora => {
+                        const isOcupado = reservasDelDia.some(reserva => reserva.time === hora);
+                        return (
+                          <option key={hora} value={hora} disabled={isOcupado}>
+                            {hora} {isOcupado && '(Ocupado)'}
+                          </option>
+                        );
+                      })}
                     </Form.Select>
                     <Form.Control.Feedback type="invalid">
                       {errores.hora}

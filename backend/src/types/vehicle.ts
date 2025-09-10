@@ -1,16 +1,7 @@
-// Interfaces de Vehículo
-export interface Vehicle {
-  id: number;
-  license: string;        // Patente del vehículo
-  brand: string;          // Marca (Renault, Ford, etc.)
-  model: string;          // Modelo específico
-  year: number;           // Año de fabricación
-  color: string;          // Color del vehículo
-  userId: number;         // ID del usuario propietario
-  status: 'active' | 'inactive';  // Estado del vehículo
-  createdAt: string;
-  updatedAt: string;
-}
+import { Vehicle, VehicleStatus } from "../generated/prisma";
+
+// Re-exportar el tipo Vehicle de Prisma para mantener compatibilidad
+export { Vehicle, VehicleStatus };
 
 export interface CreateVehicleRequest {
   license: string;
@@ -26,7 +17,7 @@ export interface UpdateVehicleRequest {
   model?: string;
   year?: number;
   color?: string;
-  status?: 'active' | 'inactive';
+  status?: VehicleStatus;  // Estado del vehículo (cambiado a VehicleStatus)
 }
 
 export interface VehicleResponse {

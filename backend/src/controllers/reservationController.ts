@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import ReservationModel from '../models/Reservation';
 import VehicleModel from '../models/Vehicle';
 import { CreateReservationRequest, UpdateReservationRequest } from '../types/reservation';
+import { ReservationStatus } from '@prisma/client'; // Importar el enum de Prisma
 
 // CREATE - Crear reserva
 export const createReservation = async (req: Request, res: Response) => {
@@ -10,10 +11,10 @@ export const createReservation = async (req: Request, res: Response) => {
     const reservationData: CreateReservationRequest = req.body;
 
     // Validaciones básicas
-    if (!reservationData.vehicleId || !reservationData.serviceType || !reservationData.date || !reservationData.time) {
+    if (!reservationData.vehicleId || !reservationData.serviceId || !reservationData.date || !reservationData.time) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos'
+        message: 'Todos los campos son requeridos (vehicleId, serviceId, date, time)'
       });
     }
 
@@ -88,18 +89,67 @@ export const createReservation = async (req: Request, res: Response) => {
 // READ - Obtener reservas del usuario
 export const getUserReservations = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
-    const reservations = await ReservationModel.findByUserId(userId);
+    const userIdFromParams = parseInt(req.params.userId); // Obtener userId de los parámetros de la ruta
+    const userRole = (req as any).userRole; // Obtener el rol del usuario autenticado
+    const authenticatedUserId = (req as any).userId; // Obtener el ID del usuario autenticado
+
+    // Un usuario normal solo puede ver sus propias reservas
+    if (userRole === 'USER' && userIdFromParams !== authenticatedUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver las reservas de otro usuario.'
+      });
+    }
+
+    // Un administrador puede ver las reservas de cualquier usuario si se especifica userId
+    // Si es un administrador y se está pidiendo una lista por userId (no /reservations/all)
+    let reservations;
+    if (userRole === 'ADMIN' && userIdFromParams) {
+      console.log('👑 reservationController: ADMIN - Obteniendo reservas para userId de params:', userIdFromParams);
+      reservations = await ReservationModel.findByUserId(userIdFromParams);
+    } else {
+      // Para usuarios normales o admin pidiendo sus propias reservas (cuando no hay /all)
+      console.log('👤 reservationController: Obteniendo reservas para userId autenticado:', authenticatedUserId);
+      reservations = await ReservationModel.findByUserId(authenticatedUserId);
+    }
 
     res.json({
       success: true,
-      data: {
-        reservations
-      }
+      data: { reservations }
     });
 
   } catch (error) {
-    console.error('Error al obtener reservas:', error);
+    console.error('❌ Error en getUserReservations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+// Nueva función para obtener TODAS las reservas (solo para administradores)
+export const getAllReservations = async (req: Request, res: Response) => {
+  try {
+    const userRole = (req as any).userRole;
+
+    if (userRole !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para ver todas las reservas.'
+      });
+    }
+
+    const reservations = await ReservationModel.findAll();
+
+    console.log('👑 reservationController: ADMIN - Obteniendo TODAS las reservas. Encontradas:', reservations.length);
+
+    res.json({
+      success: true,
+      data: { reservations }
+    });
+
+  } catch (error) {
+    console.error('❌ Error en getAllReservations:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -170,7 +220,7 @@ export const updateReservation = async (req: Request, res: Response) => {
     }
 
     // Si se está cambiando fecha/hora, validar disponibilidad
-    if ((updateData.date || updateData.time) && existingReservation.status !== 'pending') {
+    if ((updateData.date || updateData.time) && existingReservation.status !== ReservationStatus.PENDING) {
       return res.status(400).json({
         success: false,
         message: 'Solo se pueden modificar reservas pendientes'
@@ -240,7 +290,7 @@ export const cancelReservation = async (req: Request, res: Response) => {
     }
 
     // Solo se pueden cancelar reservas pendientes o confirmadas
-    if (existingReservation.status === 'completed') {
+    if (existingReservation.status === ReservationStatus.COMPLETED) {
       return res.status(400).json({
         success: false,
         message: 'No se pueden cancelar reservas completadas'
@@ -248,7 +298,7 @@ export const cancelReservation = async (req: Request, res: Response) => {
     }
 
     // Cambiar estado a cancelada
-    const updatedReservation = await ReservationModel.updateStatus(reservationId, 'cancelled');
+    const updatedReservation = await ReservationModel.updateStatus(reservationId, ReservationStatus.CANCELLED);
 
     res.json({
       success: true,
@@ -285,17 +335,15 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: {
-        date,
-        reservations
-      }
+      data: reservations
     });
 
   } catch (error) {
-    console.error('Error al obtener reservas por fecha:', error);
+    console.error('Error en getReservationsByDate:', error); // Añadido para imprimir el error completo
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: 'Error interno del servidor',
+      error: (error as Error).message // Opcional: enviar el mensaje de error al cliente
     });
   }
 };

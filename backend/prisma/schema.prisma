@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../src/generated/prisma" 
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ServiceCategory {
+  MANTENIMIENTO
+  REPARACION
+  DIAGNOSTICO
+  LIMPIEZA
+  OTROS
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MECHANIC
+}
+
+// Modelo de Usuario
+model User {
+  id           Int        @id @default(autoincrement())
+  name         String
+  email        String     @unique
+  phone        String? // Permitir null para el teléfono
+  password     String     // Se asume que se almacenará la contraseña hasheada
+  role         UserRole   @default(USER) // Cambiado a UserRole
+  isActive     Boolean    @default(true) // Añadido campo isActive
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  vehicles     Vehicle[]  // Un usuario puede tener múltiples vehículos
+  reservations Reservation[] // Un usuario puede tener múltiples reservas
+}
+
+// Modelo de Vehículo
+model Vehicle {
+  id           Int        @id @default(autoincrement())
+  license      String     @unique // Patente del vehículo
+  brand        String
+  model        String
+  year         Int
+  color        String?
+  status       VehicleStatus @default(ACTIVE) // Cambiado a VehicleStatus
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id]) // Relación con el usuario propietario
+  reservations Reservation[] // Un vehículo puede tener múltiples reservas
+}
+
+// Modelo de Servicio
+model Service {
+  id           Int            @id @default(autoincrement())
+  name         String
+  description  String
+  category     ServiceCategory // Cambiado a ServiceCategory
+  price        Float
+  duration     Int            // Duración en minutos
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  reservations Reservation[]  // Un servicio puede estar en múltiples reservas
+}
+
+// Modelo de Reserva
+model Reservation {
+  id          Int              @id @default(autoincrement())
+  date        String           // Fecha de la reserva (YYYY-MM-DD)
+  time        String           // Hora de la reserva (HH:MM)
+  status      ReservationStatus @default(PENDING) // Cambiado a ReservationStatus
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  userId      Int
+  user        User             @relation(fields: [userId], references: [id]) // Relación con el usuario que hace la reserva
+  
+  vehicleId   Int
+  vehicle     Vehicle          @relation(fields: [vehicleId], references: [id]) // Relación con el vehículo de la reserva
+  
+  serviceId   Int // Cambiado de serviceType a serviceId para relacionar con el modelo Service
+  service     Service          @relation(fields: [serviceId], references: [id]) // Relación con el servicio reservado
+}

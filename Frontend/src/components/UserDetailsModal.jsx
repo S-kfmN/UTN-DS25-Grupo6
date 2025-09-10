@@ -47,8 +47,8 @@ export default function UserDetailsModal({ show, onHide, usuario, reservas }) {
               <p><strong>Fecha de registro:</strong> {formatearFechaParaMostrar(usuario.fechaRegistro)}</p>
               <p>
                 <strong>Rol:</strong> 
-                <Badge bg={usuario.rol === 'admin' ? 'danger' : 'success'} className="ms-2">
-                  {usuario.rol === 'admin' ? 'Administrador' : 'Cliente'}
+                <Badge bg={usuario.role === 'ADMIN' ? 'danger' : 'success'} className="ms-2">
+                  {usuario.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
                 </Badge>
               </p>
             </Col>

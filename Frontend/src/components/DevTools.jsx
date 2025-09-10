@@ -138,7 +138,7 @@ export default function DevTools() {
                   onClick={() => {
                     const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
 
-                    alert(`Usuarios disponibles: ${usuarios.length}\n\n${usuarios.map(u => `${u.email} (${u.rol})`).join('\n')}`);
+                    alert(`Usuarios disponibles: ${usuarios.length}\n\n${usuarios.map(u => `${u.email} (${u.role})`).join('\n')}`);
                   }}
                   variant="secondary"
                   size="sm"
