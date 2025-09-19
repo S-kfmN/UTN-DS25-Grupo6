@@ -53,11 +53,11 @@ export const API_ENDPOINTS = {
   
   // Reservas
   RESERVATIONS: {
-    LIST: '/reservations',
+    LIST: '/reservations', // Obtiene reservas del usuario autenticado o todas si es admin
     CREATE: '/reservations',
     UPDATE: (id) => `/reservations/${id}`,
     DELETE: (id) => `/reservations/${id}`,
-    BY_USER: (userId) => `/reservations/user/${userId}`, // Nuevo endpoint para obtener reservas de un usuario específico
+    BY_USER: (userId) => `/reservations/user/${userId}`, // Endpoint para admin obtener reservas de un usuario específico
     BY_DATE: (date) => `/reservations/date/${date}`,
     CANCEL: (id) => `/reservations/${id}/cancel`
   },

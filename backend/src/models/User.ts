@@ -1,5 +1,5 @@
 import { RegisterRequest } from '../types/user';
-import { PrismaClient, User, UserRole } from '../generated/prisma';
+import { PrismaClient, User, UserRole } from '@prisma/client';
 
 // Usar la instancia compartida de Prisma
 const prisma = new PrismaClient();

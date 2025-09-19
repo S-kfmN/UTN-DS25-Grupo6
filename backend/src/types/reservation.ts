@@ -1,4 +1,4 @@
-import { Reservation, ReservationStatus } from "../generated/prisma";
+import { Reservation, ReservationStatus } from "@prisma/client";
 
 // Re-exportar el tipo Reservation de Prisma para mantener compatibilidad
 export { Reservation, ReservationStatus };

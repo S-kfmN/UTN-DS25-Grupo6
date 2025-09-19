@@ -23,7 +23,7 @@ body {
 
 /* Personalizacion de Bootstrap */
 
-/* Navbar */
+/* ===== NAVBAR ROBUSTO ===== */
 .navbar {
   background-color: var(--color-fondo) !important;
   border-bottom: 1px solid var(--color-acento) !important;
@@ -36,17 +36,6 @@ body {
   font-size: 1.3rem;
 }
 
-.navbar-nav .nav-link {
-  color: var(--color-texto) !important;
-  font-weight: bold;
-  margin: 0 2rem;
-  transition: color 0.3s;
-}
-
-.navbar-nav .nav-link:hover {
-  color: var(--color-acento) !important;
-}
-
 .navbar-toggler {
   border-color: var(--color-acento) !important;
 }
@@ -55,19 +44,215 @@ body {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 204, 0, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
 }
 
-/* Boton de login */
-.btn-outline-light {
-  background-color: var(--color-acento) !important;
-  color: var(--color-fondo) !important;
-  border: none !important;
-  padding: 1rem 1rem !important;
+/* Contenedor principal del navbar - Flexbox robusto */
+.navbar-nav-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Modo centrado cuando no hay enlaces de usuario */
+.navbar-centered {
+  justify-content: space-between !important;
+  gap: 2rem !important;
+}
+
+.navbar-centered .navbar-main-links {
+  margin: 0 !important;
+  flex: 1 !important;
+  justify-content: center !important;
+}
+
+.navbar-centered .navbar-auth-section {
+  margin: 0 !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
+/* Enlaces principales - siempre a la izquierda */
+.navbar-main-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex: 0 0 auto !important;
+}
+
+/* Enlaces específicos del usuario - centro */
+.navbar-user-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex: 0 0 auto !important;
+  margin: 0 1rem !important;
+}
+
+/* Sección de autenticación - siempre a la derecha */
+.navbar-auth-section {
+  display: flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
+/* Estilos para todos los nav-links */
+.navbar-nav-container .nav-link {
+  color: var(--color-texto) !important;
+  font-weight: bold !important;
+  padding: 0.5rem 1rem !important;
+  margin: 0 !important;
+  transition: color 0.3s !important;
+  white-space: nowrap !important;
+}
+
+.navbar-nav-container .nav-link:hover {
+  color: var(--color-acento) !important;
+}
+
+/* Enlace de administración especial */
+.navbar-admin-link {
+  color: var(--color-acento) !important;
   font-weight: bold !important;
 }
 
-.btn-outline-light:hover {
+.navbar-admin-link:hover {
+  color: #e6b800 !important;
+}
+
+/* Botones de autenticación */
+.navbar-auth-buttons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.navbar-register-btn {
+  background-color: var(--color-acento) !important;
+  color: var(--color-fondo) !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: bold !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.3s !important;
+  min-width: 100px !important;
+}
+
+.navbar-register-btn:hover {
+  background-color: #e6b800 !important;
+  color: var(--color-fondo) !important;
+  transform: translateY(-1px) !important;
+}
+
+.navbar-login-btn {
+  background-color: transparent !important;
+  color: var(--color-texto) !important;
+  border: 1px solid var(--color-acento) !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: bold !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.3s !important;
+  min-width: 100px !important;
+}
+
+.navbar-login-btn:hover {
+  background-color: var(--color-acento) !important;
+  color: var(--color-fondo) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Dropdown del usuario */
+.navbar-user-dropdown {
+  background-color: transparent !important;
+  color: var(--color-texto) !important;
+  border: 1px solid var(--color-acento) !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: bold !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.3s !important;
+  min-width: 140px !important;
+}
+
+.navbar-user-dropdown:hover,
+.navbar-user-dropdown:focus {
+  background-color: var(--color-acento) !important;
+  color: var(--color-fondo) !important;
+  border-color: var(--color-acento) !important;
+  box-shadow: none !important;
+}
+
+.navbar-user-dropdown:active {
   background-color: #e6b800 !important;
   color: var(--color-fondo) !important;
 }
+
+/* Menú dropdown */
+.navbar-dropdown-menu {
+  background-color: var(--color-gris) !important;
+  border: 1px solid var(--color-acento) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  padding: 0.5rem 0 !important;
+  min-width: 200px !important;
+}
+
+.navbar-dropdown-header {
+  color: var(--color-acento) !important;
+  font-weight: bold !important;
+  font-size: 0.9rem !important;
+  padding: 0.5rem 1rem !important;
+  margin-bottom: 0.25rem !important;
+  border-bottom: 1px solid rgba(255, 204, 0, 0.3) !important;
+}
+
+.navbar-dropdown-divider {
+  border-color: var(--color-acento) !important;
+  margin: 0.5rem 0 !important;
+}
+
+/* Items del dropdown */
+.dropdown-item-custom {
+  color: var(--color-texto) !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s !important;
+  border: none !important;
+  background: none !important;
+}
+
+.dropdown-item-custom:hover {
+  background-color: var(--color-acento) !important;
+  color: var(--color-fondo) !important;
+}
+
+.dropdown-item-custom:active {
+  background-color: rgba(255, 204, 0, 0.2) !important;
+  color: var(--color-texto) !important;
+}
+
+/* Items de administración en dropdown */
+.navbar-admin-dropdown-item {
+  color: var(--color-acento) !important;
+  font-weight: 500 !important;
+}
+
+.navbar-admin-dropdown-item:hover {
+  background-color: var(--color-acento) !important;
+  color: var(--color-fondo) !important;
+}
+
+/* Item de cerrar sesión */
+.navbar-logout-item {
+  color: #dc3545 !important;
+  font-weight: 500 !important;
+}
+
+.navbar-logout-item:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
 
 /* ===== HEADER ===== */
 .header-component {
@@ -579,6 +764,7 @@ body {
 .seccion-formulario {
   background-color: var(--color-gris);
   padding: 2rem;
+  margin-bottom: 1rem;
   border-radius: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -689,6 +875,54 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  /* Navbar responsive */
+  .navbar-nav-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+  
+  .navbar-centered {
+    gap: 1rem !important;
+  }
+  
+  .navbar-main-links {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    margin: 0 !important;
+  }
+  
+  .navbar-user-links {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    margin: 0 !important;
+  }
+  
+  .navbar-auth-section {
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+  
+  .navbar-auth-buttons {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .navbar-login-btn {
+    min-width: 80px !important;
+  }
+  
+  .navbar-user-dropdown {
+    min-width: 160px !important;
+  }
+  
+  .navbar-dropdown-menu {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+
   .seccion-principal h1 {
     font-size: 2rem;
   }
@@ -768,7 +1002,7 @@ body {
 /* ===== VISTA DE ADMIN - RESERVAS ===== */
 .contenedor-admin-reservas {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   min-height: 100vh;
@@ -971,7 +1205,7 @@ body {
 .cliente-info h4 {
   color: var(--color-texto);
   margin-bottom: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .cliente-info p,
@@ -1083,6 +1317,38 @@ body {
   box-sizing: border-box;
 }
 
+/* ===== ESTILOS PARA GESTION DE RESERVAS Y VEHICULOS ===== */
+.contenedor-admin-reservas {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-admin-reservas {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, var(--color-gris) 0%, rgba(255, 204, 0, 0.1) 100%);
+  border-radius: 15px;
+  border: 1px solid var(--color-acento);
+}
+
+.header-admin-reservas h1 {
+  color: var(--color-acento);
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-admin-reservas h3 {
+  color: var(--color-texto);
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-bottom: 0;
+  opacity: 0.9;
+}
+
 .busqueda-formulario {
   display: flex;
   gap: 1rem;
@@ -1121,7 +1387,7 @@ body {
 }
 
 .usuario-nombre {
-  font-size: 1.08rem;
+  font-size: 1.4rem;
   color: var(--color-acento);
   font-weight: bold;
 }
@@ -1150,8 +1416,8 @@ body {
 .cliente-info p {
   color: var(--color-texto);
   margin-bottom: 0.05rem;
-  font-size: 0.92rem;
-  line-height: 1.1;
+  font-size: 1.2rem;
+  line-height: 1.3;
 }
 
 .cliente-info strong {
@@ -1375,4 +1641,55 @@ input::placeholder,
 /* ===== ESTILO PARA BOTON TURNOS DEL DIA ===== */
 a:has(.boton-turnos-dia-principal) {
   text-decoration: none !important;
+}
+
+/* ===== ESTILOS PARA CAMPOS READONLY ===== */
+.form-control[readonly]:focus {
+  background-color: var(--color-gris) !important;
+  border-color: var(--color-acento) !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 204, 0, 0.25) !important;
+  color: var(--color-texto) !important;
+}
+
+.form-control[readonly] {
+  background-color: var(--color-gris) !important;
+  color: var(--color-texto) !important;
+  border-color: var(--color-acento) !important;
+  cursor: default !important;
+}
+
+/* Evitar que los campos readonly cambien de color al hacer clic */
+.form-control[readonly]:hover {
+  background-color: var(--color-gris) !important;
+  color: var(--color-texto) !important;
+}
+
+.form-control[readonly]:active {
+  background-color: var(--color-gris) !important;
+  color: var(--color-texto) !important;
+}
+
+/* ===== ESTILOS PARA TEXTAREAS ===== */
+.form-control-custom:focus {
+  background-color: #404040 !important;
+  border-color: var(--color-acento) !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 204, 0, 0.25) !important;
+  color: var(--color-texto) !important;
+}
+
+.form-control-custom {
+  background-color: var(--color-gris) !important;
+  color: var(--color-texto) !important;
+  border-color: var(--color-acento) !important;
+}
+
+/* al pasar el mouse */
+.form-control-custom:hover {
+  background-color: #3a3a3a !important;
+  color: var(--color-texto) !important;
+}
+
+.form-control-custom:active {
+  background-color: #404040 !important;
+  color: var(--color-texto) !important;
 }

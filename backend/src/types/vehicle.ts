@@ -1,4 +1,4 @@
-import { Vehicle, VehicleStatus } from "../generated/prisma";
+import { Vehicle, VehicleStatus } from "@prisma/client";
 
 // Re-exportar el tipo Vehicle de Prisma para mantener compatibilidad
 export { Vehicle, VehicleStatus };

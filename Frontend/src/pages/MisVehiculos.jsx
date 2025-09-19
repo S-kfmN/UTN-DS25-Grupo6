@@ -159,7 +159,7 @@ export default function MisVehiculos() {
           setMostrarExito(true);
           setTimeout(() => setMostrarExito(false), 3000);
           // Recargar vehículos desde el backend
-          const vehiculosActualizados = await cargarVehiculosUsuario();
+          const vehiculosActualizados = await cargarVehiculosUsuario(usuario.id);
           setVehiculos(vehiculosActualizados || []);
         }
       } else {
@@ -178,7 +178,7 @@ export default function MisVehiculos() {
           setMostrarExito(true);
           setTimeout(() => setMostrarExito(false), 3000);
           // Recargar vehículos desde el backend
-          const vehiculosActualizados = await cargarVehiculosUsuario();
+          const vehiculosActualizados = await cargarVehiculosUsuario(usuario.id);
           setVehiculos(vehiculosActualizados || []);
         }
       }
@@ -213,7 +213,7 @@ export default function MisVehiculos() {
           setMostrarConfirmacion(false);
           setVehiculoAEliminar(null);
           // Recargar vehículos desde el backend
-          const vehiculosActualizados = await cargarVehiculosUsuario();
+          const vehiculosActualizados = await cargarVehiculosUsuario(usuario.id);
           setVehiculos(vehiculosActualizados || []);
         }
       } catch (error) {
@@ -352,7 +352,7 @@ export default function MisVehiculos() {
                         try {
                           await actualizarVehiculo(vehiculo.id, { estado: e.target.value });
                           // Recargar vehículos desde el backend
-                          const vehiculosActualizados = await cargarVehiculosUsuario();
+                          const vehiculosActualizados = await cargarVehiculosUsuario(usuario.id);
                           setVehiculos(vehiculosActualizados || []);
                         } catch (error) {
                           console.error('Error al actualizar estado:', error);

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import apiService from '../services/apiService';
+import { dividirNombreCompleto } from '../utils/dateUtils'; // Importar la función utilitaria
 
 // Crear el contexto
 const AuthContext = createContext();
@@ -70,19 +71,24 @@ export const AuthProvider = ({ children }) => {
       const response = await apiService.getReservations(userId); 
       console.log('📅 obtenerReservasUsuario: Respuesta de la API para reservas:', response);
       const loadedReservas = response.data.reservations || [];
-      const reservasTransformadas = loadedReservas.map(reserva => ({
-        ...reserva,
-        fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
-        hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
-        servicio: reserva.service?.name,
-        patente: reserva.vehicle?.license,
-        marca: reserva.vehicle?.brand,
-        modelo: reserva.vehicle?.model,
-        año: reserva.vehicle?.year,
-        nombre: reserva.user?.name,   
-        apellido: reserva.user?.name?.split(' ').slice(1).join(' ') || '',
-        dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
-      }));
+      console.log('🔍 obtenerReservasUsuario: Reserva bruta del backend:', loadedReservas[0]);
+      const reservasTransformadas = loadedReservas.map(reserva => {
+        const { nombre, apellido } = dividirNombreCompleto(reserva.user?.name || '');
+        console.log(`🔍 obtenerReservasUsuario: Procesando user.name: "${reserva.user?.name}" -> Nombre: "${nombre}", Apellido: "${apellido}"`);
+        return {
+          ...reserva,
+          fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
+          hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
+          servicio: reserva.service?.name, 
+          patente: reserva.vehicle?.license, 
+          marca: reserva.vehicle?.brand,
+          modelo: reserva.vehicle?.model,
+          año: reserva.vehicle?.year,
+          nombre: nombre,   
+          apellido: apellido,
+          dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
+        };
+      });
       setReservas(reservasTransformadas); 
       console.log('📅 obtenerReservasUsuario: Reservas transformadas devueltas:', reservasTransformadas);
       return reservasTransformadas; 
@@ -154,8 +160,8 @@ export const AuthProvider = ({ children }) => {
         marca: reserva.vehicle?.brand,
         modelo: reserva.vehicle?.model,
         año: reserva.vehicle?.year,
-        nombre: reserva.user?.name,   
-        apellido: reserva.user?.name?.split(' ').slice(1).join(' ') || '',
+        nombre: dividirNombreCompleto(reserva.user?.name || '').nombre,   
+        apellido: dividirNombreCompleto(reserva.user?.name || '').apellido,
         dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
       }));
 
@@ -186,8 +192,8 @@ export const AuthProvider = ({ children }) => {
         // Mapear la información del usuario propietario al campo 'usuario' esperado por el frontend
         usuario: vehiculo.user ? {
           id: vehiculo.user.id,
-          nombre: vehiculo.user.name, // El backend envía 'name', el frontend espera 'nombre'
-          apellido: vehiculo.user.name?.split(' ').slice(1).join(' ') || '', // Dividir el nombre para obtener el apellido
+          nombre: dividirNombreCompleto(vehiculo.user.name).nombre, // Usar la función para extraer el nombre
+          apellido: dividirNombreCompleto(vehiculo.user.name).apellido, // Usar la función para extraer el apellido
           email: vehiculo.user.email,
           phone: vehiculo.user.phone
         } : undefined,
@@ -487,15 +493,23 @@ export const AuthProvider = ({ children }) => {
   // Función para cancelar reserva
   const cancelarReserva = useCallback(async (reservaId) => {
     try {
-      const ahora = new Date();
-      const reservasActualizadas = reservas.map(r =>
-        r.id === reservaId
-          ? { ...r, estado: 'cancelado', fechaCancelacion: ahora.toISOString() }
-          : r
-      );
-      setReservas(reservasActualizadas);
-      localStorage.setItem('reservas', JSON.stringify(reservasActualizadas));
-      return { exito: true };
+      // Llamar al backend para cancelar la reserva
+      const response = await apiService.cancelReservation(reservaId);
+      
+      if (response.success) {
+        // Actualizar el estado local
+        const ahora = new Date();
+        const reservasActualizadas = reservas.map(r =>
+          r.id === reservaId
+            ? { ...r, estado: 'cancelado', fechaCancelacion: ahora.toISOString() }
+            : r
+        );
+        setReservas(reservasActualizadas);
+        localStorage.setItem('reservas', JSON.stringify(reservasActualizadas));
+        return { exito: true };
+      } else {
+        return { exito: false, error: response.message || 'Error al cancelar la reserva' };
+      }
     } catch (error) {
       console.error('Error al cancelar reserva:', error);
       return { exito: false, error: error.message };
