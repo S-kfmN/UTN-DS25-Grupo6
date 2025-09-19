@@ -128,14 +128,33 @@ export default function Reservas() {
 
 
   const eliminarReserva = async (id) => {
-    const credencial = window.prompt('Ingrese credencial de ADMIN para eliminar la reserva:');
+    const credencial = window.prompt('Ingrese credencial de ADMIN para cancelar la reserva:');
     if (credencial && credencial.toLowerCase() === 'admin123') {
       const resultado = await cancelarReserva(id);
       if (resultado.exito) {
-        refrescarUsuario();
+        // Recargar las reservas del día después de cancelar
+        const responseReservas = await apiService.getReservationsByDate(fechaSeleccionada);
+        if (responseReservas.success) {
+          const reservasTransformadas = responseReservas.data.map(reserva => ({
+            ...reserva,
+            fecha: reserva.date,
+            hora: reserva.time,
+            estado: reserva.status,
+            nombre: reserva.user ? reserva.user.name : 'N/A',
+            telefono: reserva.user ? reserva.user.phone : 'N/A',
+            patente: reserva.vehicle ? reserva.vehicle.license : 'N/A',
+            modelo: reserva.vehicle ? `${reserva.vehicle.brand} ${reserva.vehicle.model}` : 'N/A',
+            servicio: reserva.service ? reserva.service.name : 'N/A',
+            observaciones: reserva.notes || '',
+          }));
+          setReservasDelDia(reservasTransformadas);
+        }
+        alert('Reserva cancelada exitosamente');
+      } else {
+        alert('Error al cancelar la reserva: ' + resultado.error);
       }
     } else {
-      alert('Credencial incorrecta. Solo el admin puede eliminar reservas.');
+      alert('Credencial incorrecta. Solo el admin puede cancelar reservas.');
     }
   };
 
@@ -145,7 +164,7 @@ export default function Reservas() {
       case 'COMPLETED': return 'success';
       case 'PENDING': return 'warning';
       case 'CANCELLED': return 'danger';
-      case 'CONFIRMED': return 'primary'; // Añadido para el estado CONFIRMED
+      case 'CONFIRMED': return 'primary';
       default: return 'secondary';
     }
   };
@@ -189,15 +208,15 @@ export default function Reservas() {
         </div>
         <div className="stat-card">
           <h3>Completadas</h3>
-          <p className="stat-numero completada">{reservasDelDia.filter(r => r.estado === 'completado').length}</p>
+          <p className="stat-numero completada">{reservasDelDia.filter(r => r.estado === 'COMPLETED').length}</p>
         </div>
         <div className="stat-card">
           <h3>Pendientes</h3>
-          <p className="stat-numero pendiente">{reservasDelDia.filter(r => r.estado === 'pendiente').length}</p>
+          <p className="stat-numero pendiente">{reservasDelDia.filter(r => r.estado === 'PENDING').length}</p>
         </div>
         <div className="stat-card">
           <h3>Canceladas</h3>
-          <p className="stat-numero cancelado">{reservasDelDia.filter(r => r.estado === 'cancelado').length}</p>
+          <p className="stat-numero cancelado">{reservasDelDia.filter(r => r.estado === 'CANCELLED').length}</p>
         </div>
       </div>
 
@@ -230,8 +249,8 @@ export default function Reservas() {
                           <strong>{reserva.hora}</strong>
                         </div>
                         <div className="reserva-estado">
-                          <span className={`badge bg-${obtenerColorEstado(reserva.status)}`}>
-                            {reserva.status}
+                          <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>
+                            {reserva.estado}
                           </span>
                         </div>
                       </div>
@@ -239,7 +258,6 @@ export default function Reservas() {
                       <div className="reserva-info">
                         <div className="cliente-info">
                           <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
-                          <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
                           <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'}</p>
                         </div>
 
@@ -256,7 +274,7 @@ export default function Reservas() {
                       </div>
 
                       <div className="reserva-acciones">
-                        {reserva.estado === 'pendiente' && (
+                        {reserva.estado === 'PENDING' && (
                           <Button 
                             variant="success"
                             size="sm"
@@ -271,7 +289,7 @@ export default function Reservas() {
                           onClick={() => eliminarReserva(reserva.id)}
                           className="btn btn-danger btn-sm"
                         >
-                          Eliminar
+                          Cancelar
                         </button>
                       </div>
                     </div>
@@ -310,7 +328,6 @@ export default function Reservas() {
                   <div className="reserva-info">
                     <div className="cliente-info">
                       <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
-                      <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
                       <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'}</p>
                     </div>
                     {reserva.observaciones && (

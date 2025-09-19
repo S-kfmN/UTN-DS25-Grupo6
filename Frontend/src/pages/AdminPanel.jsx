@@ -8,7 +8,16 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
 
 export default function AdminPanel() {
-  const { usuario, esAdmin, allReservations: reservas, usuarios, refrescarUsuario, limpiarReservas } = usarAuth();
+  const { 
+    usuario, 
+    esAdmin, 
+    allReservations: reservas, 
+    allUsers: usuarios, // Renombrar usuarios para evitar conflicto con el estado local
+    refrescarUsuario,
+    cargarTodosLosUsuarios,
+    cargarTodasLasReservas,
+    cargarTodosLosVehiculos
+  } = usarAuth();
   
   // Usar el hook de sincronización de reservas
   const { sincronizarReservas } = useReservasSync();
@@ -49,6 +58,15 @@ export default function AdminPanel() {
   });
 
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
+
+  // Cargar todos los datos administrativos al montar el componente
+  useEffect(() => {
+    if (esAdmin()) {
+      cargarTodosLosUsuarios();
+      cargarTodasLasReservas();
+      cargarTodosLosVehiculos();
+    }
+  }, [esAdmin, cargarTodosLosUsuarios, cargarTodasLasReservas, cargarTodosLosVehiculos]);
 
   // Usar useFetch para obtener datos adicionales del sistema
   const { data: datosSistema, loading: loadingSistema, error: errorSistema } = useFetch(
@@ -95,16 +113,6 @@ export default function AdminPanel() {
   return (
     <ErrorBoundary>
     <div className="contenedor-admin-reservas">
-      {/* Header */}
-      <div className="header-admin-reservas">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-        <h1>Panel de Control</h1>
-        <p>Gestiona el sistema del lubricentro</p>
-          </div>
-                      
-        </div>
-      </div>
 
       {/* Información del administrador */}
       <div className="mb-4" style={{

@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usarAuth } from '../context/AuthContext';
-import { Modal, Button, Table, Badge } from 'react-bootstrap';
+import { Modal, Button, Table, Badge, Card, Form, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useHistorial } from '../hooks/useHistorial';
+import apiService from '../services/apiService'; // <-- IMPORTANTE
 
 export default function GestionReservas() {
   // Estados para filtros
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroPeriodo, setFiltroPeriodo] = useState('');
-  const [filtroPatente, setFiltroPatente] = useState('');
-  const [filtroNombre, setFiltroNombre] = useState('');
-  const [filtroApellido, setFiltroApellido] = useState('');
-  const [filtroDNI, setFiltroDNI] = useState('');
+  const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
 
-  const { allReservations, allUsers } = usarAuth();
+  const { allReservations, allUsers, esAdmin, cargarTodasLasReservas } = usarAuth();
   const navigate = useNavigate();
   // Eliminar la declaración duplicada de historial
   // const { historial, loading: historialLoading, error: historialError } = useHistorial(reservaDetalle?.patente || '', mostrarModal && !!reservaDetalle);
@@ -23,16 +21,45 @@ export default function GestionReservas() {
   const [reservaDetalle, setReservaDetalle] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
 
-  // Filtrado avanzado - usar allReservations
+  // NUEVO: Estado para controlar actualización local
+  const [actualizando, setActualizando] = useState(null);
+
+  // NUEVO: Función para cambiar el estado de una reserva
+  const handleEstadoChange = async (reservaId, nuevoEstado) => {
+    setActualizando(reservaId);
+    try {
+      await apiService.updateReservation(reservaId, { status: nuevoEstado });
+      // Recargar todas las reservas para reflejar el cambio
+      await cargarTodasLasReservas();
+    } catch (error) {
+      alert('Error al actualizar el estado');
+    } finally {
+      setActualizando(null);
+    }
+  };
+
+  // Cargar todas las reservas al montar el componente (para admin)
+  useEffect(() => {
+    if (esAdmin()) {
+      cargarTodasLasReservas();
+    }
+  }, [esAdmin, cargarTodasLasReservas]);
+
+  // Filtrado simplificado - usar allReservations
   const reservasFiltradas = allReservations.filter(r => {
     const coincideFecha = !filtroFecha || r.fecha === filtroFecha;
     const coincidePeriodo = !filtroPeriodo || (filtroPeriodo === 'manana' ? (r.hora < '13:00') : (r.hora >= '13:00'));
-    const coincidePatente = !filtroPatente || (r.patente && r.patente.toLowerCase().includes(filtroPatente.toLowerCase()));
-    const coincideNombre = !filtroNombre || (r.nombre && r.nombre.toLowerCase().includes(filtroNombre.toLowerCase()));
-    const coincideApellido = !filtroApellido || (r.apellido && r.apellido.toLowerCase().includes(filtroApellido.toLowerCase()));
-    const coincideDNI = !filtroDNI || (r.dni && r.dni.includes(filtroDNI));
     const coincideEstado = filtroEstado === 'todos' || r.estado === filtroEstado;
-    return coincideFecha && coincidePeriodo && coincidePatente && coincideNombre && coincideApellido && coincideDNI && coincideEstado;
+    
+    // Búsqueda múltiple en un solo campo
+    const coincideBusqueda = !filtroBusqueda || (
+      (r.patente && r.patente.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
+      (r.dni && r.dni.includes(filtroBusqueda)) ||
+      (r.nombre && r.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
+      (r.apellido && r.apellido.toLowerCase().includes(filtroBusqueda.toLowerCase()))
+    );
+    
+    return coincideFecha && coincidePeriodo && coincideEstado && coincideBusqueda;
   });
 
   // Obtener historial del vehículo para el modal
@@ -42,109 +69,174 @@ export default function GestionReservas() {
   const cliente = reservaDetalle && allUsers.find(u => u.id === reservaDetalle.userId);
 
   return (
-    <div className="contenedor-gestion-reservas">
-      <div className="header-gestion-reservas">
-        <h1>Gestión de Reservas</h1>
-        <p>Consulta y administra los turnos con filtros avanzados</p>
-      </div>
-      <div className="filtros-gestion">
-        <div className="filtro-grupo">
-          <label>Fecha:</label>
-          <input type="date" value={filtroFecha} onChange={e => setFiltroFecha(e.target.value)} className="form-control" />
-        </div>
-        <div className="filtro-grupo">
-          <label>Periodo:</label>
-          <select value={filtroPeriodo} onChange={e => setFiltroPeriodo(e.target.value)} className="form-select">
-            <option value="">Todos</option>
-            <option value="manana">Mañana</option>
-            <option value="tarde">Tarde</option>
-          </select>
-        </div>
-        <div className="filtro-grupo">
-          <label>Patente:</label>
-          <input type="text" value={filtroPatente} onChange={e => setFiltroPatente(e.target.value)} className="form-control" placeholder="Ej: ABC123" />
-        </div>
-        <div className="filtro-grupo">
-          <label>Nombre:</label>
-          <input type="text" value={filtroNombre} onChange={e => setFiltroNombre(e.target.value)} className="form-control" />
-        </div>
-        <div className="filtro-grupo">
-          <label>Apellido:</label>
-          <input type="text" value={filtroApellido} onChange={e => setFiltroApellido(e.target.value)} className="form-control" />
-        </div>
-        <div className="filtro-grupo">
-          <label>DNI:</label>
-          <input type="text" value={filtroDNI} onChange={e => setFiltroDNI(e.target.value)} className="form-control" />
-        </div>
-        <div className="filtro-grupo">
-          <label>Estado:</label>
-          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="form-select">
-            <option value="todos">Todos</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="completado">Completado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
+    <div className="contenedor-admin-reservas">
+      {/* Header */}
+      <div className="header-admin-reservas">
+        <div className="d-flex justify-content-center align-items-center">
+          <div className="text-center">
+            <h1>Gestión de Reservas</h1>
+            <h3>Consulta y administra los turnos con filtros avanzados</h3>
+          </div>
         </div>
       </div>
-      <div className="resultados-gestion">
-        {reservasFiltradas.length === 0 ? (
-          <div className="alert alert-warning mt-3">
-            <i className="bi bi-exclamation-triangle me-2"></i>
-            No se encontraron reservas con los filtros seleccionados.
-          </div>
-        ) : (
-          <div className="tabla-gestion-reservas-wrapper">
-            <Table className="tabla-gestion-reservas" responsive>
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Hora</th>
-                  <th>Servicio</th>
-                  <th>Vehículo</th>
-                  <th>Cliente</th>
-                  <th>DNI</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reservasFiltradas.map(r => {
-                  console.log('🔍 Debug GestionReservas: Reserva en tabla:', r);
-                  return (
-                    <tr key={r.id}>
-                      <td>{r.fecha}</td>
-                      <td>{r.hora}</td>
-                      <td>{r.servicio}</td>
-                      <td>{r.patente} - {r.modelo}</td>
-                      <td>{r.nombre} {r.apellido}</td>
-                      <td>{r.dni}</td>
-                      <td>
-                        <Badge bg={
-                          r.status === 'CONFIRMED' ? 'success' :
-                          r.status === 'PENDING' ? 'warning' :
-                          r.status === 'CANCELLED' ? 'danger' : 'secondary'
-                        }>
-                          {r.status}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm" 
-                          onClick={() => { setReservaDetalle(r); setMostrarModal(true); }}
-                          style={{ fontWeight: 'bold' }}
-                        >
-                          <i className="bi bi-eye me-1"></i>
-                          Ver Detalle
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </div>
-        )}
+
+      {/* Formulario de búsqueda */}
+      <Card style={{
+        backgroundColor: 'var(--color-gris)',
+        border: '1px solid var(--color-acento)',
+        borderRadius: '10px',
+        marginBottom: '2rem'
+      }}>
+        <Card.Body>
+          <Form>
+            <Row>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                    <i className="bi bi-search me-2"></i>
+                    Buscar atributos
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={filtroBusqueda}
+                    onChange={e => setFiltroBusqueda(e.target.value)}
+                    placeholder="Ej: ABC123, 12345678, Juan Pérez"
+                    className="form-control-custom"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                    <i className="bi bi-calendar me-2"></i>
+                    Fecha
+                  </Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={filtroFecha}
+                    onChange={e => setFiltroFecha(e.target.value)}
+                    className="form-control-custom"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                    <i className="bi bi-clock me-2"></i>
+                    Período
+                  </Form.Label>
+                  <Form.Select
+                    value={filtroPeriodo}
+                    onChange={e => setFiltroPeriodo(e.target.value)}
+                    className="form-control-custom"
+                  >
+                    <option value="">Todos</option>
+                    <option value="manana">Mañana</option>
+                    <option value="tarde">Tarde</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                    <i className="bi bi-check-circle me-2"></i>
+                    Estado
+                  </Form.Label>
+                  <Form.Select
+                    value={filtroEstado}
+                    onChange={e => setFiltroEstado(e.target.value)}
+                    className="form-control-custom"
+                  >
+                    <option value="todos">Todos</option>
+                    <option value="PENDING">Pendiente</option>
+                    <option value="CONFIRMED">Confirmada</option>
+                    <option value="COMPLETED">Completada</option>
+                    <option value="CANCELLED">Cancelada</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Card.Body>
+      </Card>
+      {/* Resultados de búsqueda */}
+      <div className="busqueda-usuarios">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h3 style={{ color: 'var(--color-acento)' }}>
+            <i className="bi bi-calendar-check me-2"></i>
+            Resultados ({reservasFiltradas.length} reservas)
+          </h3>
+          {(filtroBusqueda || filtroFecha || filtroPeriodo || filtroEstado !== 'todos') && (
+            <Badge bg="info" className="fs-6">
+              Filtros activos
+            </Badge>
+          )}
+        </div>
+
+        <div className="resultados-usuarios">
+          {reservasFiltradas.length === 0 ? (
+            <Alert variant="info">
+              <i className="bi bi-info-circle me-2"></i>
+              No se encontraron reservas con los filtros seleccionados.
+            </Alert>
+          ) : (
+            <div className="d-flex flex-column gap-3">
+              {reservasFiltradas.map(r => (
+                <div key={r.id} className="usuario-card">
+                  <div className="usuario-header">
+                    <div className="usuario-nombre">
+                      <strong>{r.nombre} {r.apellido}</strong>
+                    </div>
+                    <div className="usuario-rol">
+                      <Badge bg={
+                        r.status === 'CONFIRMED' ? 'success' :
+                        r.status === 'PENDING' ? 'warning' :
+                        r.status === 'CANCELLED' ? 'danger' : 'secondary'
+                      } className="fs-6">
+                        {{
+                          CONFIRMED: 'Completado',
+                          PENDING: 'Pendiente',
+                          CANCELLED: 'Cancelado'
+                        }[r.status] || r.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="usuario-info">
+                    <div className="cliente-info">
+                      <Row className="g-2">
+                        <Col md={3}>
+                          <p><strong>Fecha:</strong> {r.fecha}</p>
+                          <p><strong>Hora:</strong> {r.hora}</p>
+                        </Col>
+                        <Col md={3}>
+                          <p><strong>Servicio:</strong> {r.servicio}</p>
+                          <p><strong>Vehículo:</strong> {r.patente} - {r.modelo}</p>
+                        </Col>
+                        <Col md={3}>
+                          {/*<p><strong>DNI:</strong> {r.dni}</p>*/}
+                        </Col>
+                        <Col md={3} className="d-flex align-items-center justify-content-end">
+                          <div className="usuario-acciones">
+                            <Button 
+                              variant="outline-primary" 
+                              size="sm"
+                              onClick={() => { setReservaDetalle(r); setMostrarModal(true); }}
+                              title="Ver Detalle"
+                            >
+                              <i className="bi bi-eye"></i>
+                            </Button>
+                            
+                          </div>
+                        </Col>
+                      </Row>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       {/* Modal de detalle de reserva */}
       <Modal show={mostrarModal} onHide={() => setMostrarModal(false)} size="lg" centered>
@@ -224,4 +316,4 @@ export default function GestionReservas() {
       </Modal>
     </div>
   );
-} 
+}

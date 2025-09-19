@@ -1,12 +1,20 @@
 import { Request, Response } from 'express';
 import VehicleModel from '../models/Vehicle';
-import { CreateVehicleRequest, UpdateVehicleRequest } from '../types/vehicle';
+import { CreateVehicleRequest, UpdateVehicleRequest, Vehicle } from '../types/vehicle';
 import { VehicleStatus } from '../types/vehicle'; // Added import for VehicleStatus
 
 // CREATE - Crear vehículo
 export const createVehicle = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId; // Del middleware de autenticación
+    const userId = req.user?.id; // Del middleware de autenticación
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
+    
     const vehicleData: CreateVehicleRequest = req.body;
 
     // Validaciones básicas
@@ -64,12 +72,19 @@ export const createVehicle = async (req: Request, res: Response) => {
 // READ - Obtener vehículos del usuario
 export const getUserVehicles = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId;
-    const userRole = (req as any).userRole; // Obtener el rol del usuario
+    const userId = req.user?.id;
+    const userRole = req.user?.role; // Obtener el rol del usuario
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
     
     const statusFilter = req.query.status === 'active' ? VehicleStatus.ACTIVE : undefined; 
     
-    let vehicles;
+    let vehicles: Vehicle[];
 
     // Si se proporciona un userId (es decir, la solicitud viene de MisVehiculos o similar)
     // La función debe devolver los vehículos asociados a este usuario, sin importar su rol.
@@ -107,7 +122,15 @@ export const getUserVehicles = async (req: Request, res: Response) => {
 // READ - Obtener vehículo específico
 export const getVehicle = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
+    
     const vehicleId = parseInt(req.params.id);
 
     const vehicle = await VehicleModel.findById(vehicleId);
@@ -143,7 +166,14 @@ export const getVehicle = async (req: Request, res: Response) => {
 // READ - Obtener todos los vehículos (para admin)
 export const getAllVehicles = async (req: Request, res: Response) => {
   try {
-    const userRole = (req as any).userRole;
+    const userRole = req.user?.role;
+
+    if (!userRole) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
 
     if (userRole !== 'ADMIN') {
       return res.status(403).json({
@@ -173,7 +203,15 @@ export const getAllVehicles = async (req: Request, res: Response) => {
 // UPDATE - Actualizar vehículo
 export const updateVehicle = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
+    
     const vehicleId = parseInt(req.params.id);
     const updateData: UpdateVehicleRequest = req.body;
 
@@ -224,7 +262,15 @@ export const updateVehicle = async (req: Request, res: Response) => {
 // DELETE - Eliminar vehículo
 export const deleteVehicle = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuario no autenticado'
+      });
+    }
+    
     const vehicleId = parseInt(req.params.id);
 
     // Verificar que el vehículo existe y pertenece al usuario

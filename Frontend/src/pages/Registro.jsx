@@ -65,8 +65,11 @@ export default function Registro() {
 
     if (!datosFormulario.telefono) {
       nuevosErrores.telefono = 'El teléfono es requerido';
-    } else if (!/^\d{10}$/.test(datosFormulario.telefono.replace(/\D/g, ''))) {
-      nuevosErrores.telefono = 'Ingrese un teléfono válido (10 dígitos)';
+    } else if (
+      datosFormulario.telefono.replace(/\D/g, '').length < 10 ||
+      datosFormulario.telefono.replace(/\D/g, '').length > 15
+    ) {
+      nuevosErrores.telefono = 'Ingrese un teléfono válido (10 a 15 dígitos)';
     }
 
 
@@ -74,6 +77,11 @@ export default function Registro() {
       nuevosErrores.contraseña = 'La contraseña es requerida';
     } else if (datosFormulario.contraseña.length < 6) {
       nuevosErrores.contraseña = 'La contraseña debe tener al menos 6 caracteres';
+    /*} else if (!/[A-Z]/.test(datosFormulario.contraseña)) {
+      nuevosErrores.contraseña = 'Debe contener al menos una mayúscula';
+    } else if (!/[0-9]/.test(datosFormulario.contraseña)) {
+      nuevosErrores.contraseña = 'Debe contener al menos un número';
+    */
     }
 
 
@@ -428,4 +436,4 @@ export default function Registro() {
       </div>
     </div>
   );
-} 
+}

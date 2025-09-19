@@ -18,6 +18,11 @@ export default function BuscarUsuarios() {
   const [mostrarEditar, setMostrarEditar] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
 
+  // Cargar todos los usuarios al montar el componente
+  useEffect(() => {
+    cargarTodosLosUsuarios();
+  }, [cargarTodosLosUsuarios]); // Dependencia del contexto para evitar re-renders innecesarios
+
   // Verificar si el usuario es admin
   if (!esAdmin()) {
     return (
@@ -111,24 +116,11 @@ export default function BuscarUsuarios() {
     <div className="contenedor-admin-reservas">
       {/* Header */}
       <div className="header-admin-reservas">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-        <h1>Buscar Usuarios</h1>
-        <p>Busca y gestiona usuarios registrados en el sistema</p>
+        <div className="d-flex justify-content-center align-items-center">
+          <div className="text-center">
+            <h1>Buscar Usuarios</h1>
+            <h3>Busca y gestiona usuarios registrados en el sistema</h3>
           </div>
-          <Button 
-            variant="outline-primary" 
-            size="sm"
-            onClick={cargarTodosLosUsuarios}
-            style={{
-              borderColor: 'var(--color-acento)',
-              color: 'var(--color-acento)',
-              fontSize: '0.8rem'
-            }}
-          >
-            <i className="bi bi-arrow-clockwise me-1"></i>
-            Refrescar Usuarios
-          </Button>
         </div>
       </div>
 
@@ -156,26 +148,6 @@ export default function BuscarUsuarios() {
                     className="form-control-custom"
                   />
                 </Form.Group>
-              </Col>
-              <Col md={4} className="d-flex align-items-end">
-                <div className="d-grid gap-2 w-100">
-                  <Button 
-                    type="submit" 
-                    variant="warning"
-                    className="mb-2"
-                  >
-                    <i className="bi bi-search me-2"></i>
-                    Buscar
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline-secondary"
-                    onClick={limpiarBusqueda}
-                  >
-                    <i className="bi bi-x-circle me-2"></i>
-                    Limpiar
-                  </Button>
-                </div>
               </Col>
             </Row>
           </Form>
@@ -214,7 +186,7 @@ export default function BuscarUsuarios() {
                     <strong>{usuario.nombre} {usuario.apellido}</strong>
                   </div>
                   <div className="usuario-rol">
-                    <Badge bg={usuario.role === 'ADMIN' ? 'danger' : 'success'}>
+                    <Badge bg={usuario.role === 'ADMIN' ? 'danger' : 'success'} className="fs-6">
                       {usuario.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
                     </Badge>
                   </div>
@@ -223,39 +195,31 @@ export default function BuscarUsuarios() {
                 <div className="usuario-info">
                   <div className="cliente-info">
                     <Row className="g-2">
-                      <Col md={3}>
+                      <Col md={4} className="text-flex-start">
                         <p><strong>Email:</strong> {usuario.email}</p>
                         <p><strong>Telefono:</strong> {usuario.telefono}</p>
                       </Col>
-                      <Col md={3}>
+                      <Col md={4}>
                         <p><strong>DNI:</strong> {usuario.dni}</p>
                         <p><strong>Fecha de registro:</strong> {formatearFecha(usuario.fechaRegistro)}</p>
                       </Col>
-                      <Col md={6} className="d-flex align-items-center justify-content-end">
+                      <Col md={4} className="d-flex align-items-center justify-content-end">
                         <div className="usuario-acciones">
                           <Button 
                             variant="outline-primary" 
                             size="sm"
                             onClick={() => abrirDetalles(usuario)}
+                            title="Ver Detalles"
                           >
-                            <i className="bi bi-eye me-1"></i>
-                            Ver Detalles
+                            <i className="bi bi-eye"></i>
                           </Button>
                           <Button 
                             variant="outline-warning" 
                             size="sm"
                             onClick={() => abrirEditar(usuario)}
+                            title="Editar Usuario"
                           >
-                            <i className="bi bi-pencil me-1"></i>
-                            Editar
-                          </Button>
-                          <Button 
-                            variant="outline-info" 
-                            size="sm"
-                            onClick={() => abrirDetalles(usuario)}
-                          >
-                            <i className="bi bi-calendar me-1"></i>
-                            Ver Reservas
+                            <i className="bi bi-pencil"></i>
                           </Button>
                           {usuario.role === 'USER' && (
                             <Button 
@@ -266,9 +230,9 @@ export default function BuscarUsuarios() {
                                   alert(`Función de eliminar usuario - En desarrollo`);
                                 }
                               }}
+                              title="Eliminar Usuario"
                             >
-                              <i className="bi bi-trash me-1"></i>
-                              Eliminar
+                              <i className="bi bi-trash"></i>
                             </Button>
                           )}
                         </div>

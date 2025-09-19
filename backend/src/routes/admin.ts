@@ -1,35 +1,34 @@
 import { Router } from 'express';
-import { 
+import {
   // Gestión de usuarios
   getUsersList,           // READ - Lista de usuarios
   getUserDetails,         // READ - Detalles de usuario
   updateUser,             // UPDATE - Actualizar usuario
   deactivateUser,         // DELETE - Desactivar usuario
-  
+
   // Gestión de vehículos
   getVehiclesList,        // READ - Lista de vehículos
-  
+
   // Gestión de reservas
   getReservationsList,    // READ - Lista de reservas
   updateReservation,      // UPDATE - Actualizar reserva
-  
+
   // Gestión de servicios
   getServicesList,        // READ - Lista de servicios
-  
+
   // Estadísticas y sistema
   getSystemStats,         // READ - Estadísticas del sistema
   getSystemInfo           // READ - Información del sistema
 } from '../controllers/adminController';
+import { authenticate, authorize } from '../middlewares/auth.middleware'; // Importar middlewares de autenticación y autorización
 
 // Crear el router para las rutas de administración
 const router = Router();
 
 console.log('🏢 Router de administración registrado');
 
-// NOTA: Por ahora no aplicamos middleware de autenticación
-// En el futuro se debe agregar middleware requireAdmin para todas las rutas
-// import { requireAdmin } from '../middlewares/auth';
-// router.use(requireAdmin);
+// Aplicar middlewares de autenticación y autorización para todas las rutas de administración
+router.use(authenticate, authorize('ADMIN'));
 
 // ========================================
 // GESTIÓN DE USUARIOS (ADMIN)
@@ -111,7 +110,7 @@ router.get('/system', getSystemInfo);
 // ORDEN DE LAS RUTAS - MUY IMPORTANTE
 // ========================================
 // Las rutas más específicas deben ir ANTES que las más genéricas
-// 
+//
 // ✅ CORRECTO:
 // 1. /users (específica)
 // 2. /users/:id (específica con parámetro)

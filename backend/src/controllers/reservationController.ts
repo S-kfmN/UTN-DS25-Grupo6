@@ -7,7 +7,7 @@ import { ReservationStatus } from '@prisma/client'; // Importar el enum de Prism
 // CREATE - Crear reserva
 export const createReservation = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!; // Del middleware de autenticación
+    const userId = req.user!.id; // Del middleware de autenticación
     const reservationData: CreateReservationRequest = req.body;
 
     // Validaciones básicas
@@ -46,10 +46,23 @@ export const createReservation = async (req: Request, res: Response) => {
     }
 
     // Validar que la fecha no sea en el pasado
-    const reservationDate = new Date(reservationData.date);
+    // Crear fecha de reserva en zona horaria local (Argentina UTC-3)
+    const [year, month, day] = reservationData.date.split('-').map(Number);
+    const reservationDate = new Date(year, month - 1, day); // mes - 1 porque Date usa 0-indexado
+    reservationDate.setHours(0, 0, 0, 0);
+    
+    // Crear fecha de hoy en zona horaria local
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Debug logs
+    console.log(' Validación de fecha:');
+    console.log(' Fecha recibida:', reservationData.date);
+    console.log(' Fecha de reserva (local):', reservationDate.toISOString());
+    console.log(' Fecha de hoy (local):', today.toISOString());
+    console.log(' Es fecha pasada?', reservationDate < today);
+    
+    // Comparar solo las fechas (sin hora)
     if (reservationDate < today) {
       return res.status(400).json({
         success: false,
@@ -90,8 +103,8 @@ export const createReservation = async (req: Request, res: Response) => {
 export const getUserReservations = async (req: Request, res: Response) => {
   try {
     const userIdFromParams = parseInt(req.params.userId); // Obtener userId de los parámetros de la ruta
-    const userRole = (req as any).userRole; // Obtener el rol del usuario autenticado
-    const authenticatedUserId = (req as any).userId; // Obtener el ID del usuario autenticado
+    const userRole = req.user!.role; // Obtener el rol del usuario autenticado
+    const authenticatedUserId = req.user!.id; // Obtener el ID del usuario autenticado
 
     // Un usuario normal solo puede ver sus propias reservas
     if (userRole === 'USER' && userIdFromParams !== authenticatedUserId) {
@@ -130,7 +143,7 @@ export const getUserReservations = async (req: Request, res: Response) => {
 // Nueva función para obtener TODAS las reservas (solo para administradores)
 export const getAllReservations = async (req: Request, res: Response) => {
   try {
-    const userRole = (req as any).userRole;
+    const userRole = req.user!.role;
 
     if (userRole !== 'ADMIN') {
       return res.status(403).json({
@@ -160,7 +173,7 @@ export const getAllReservations = async (req: Request, res: Response) => {
 // READ - Obtener reserva específica
 export const getReservation = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    const userId = req.user!.id;
     const reservationId = parseInt(req.params.id);
 
     const reservation = await ReservationModel.findById(reservationId);
@@ -199,7 +212,7 @@ export const getReservation = async (req: Request, res: Response) => {
 // UPDATE - Actualizar reserva
 export const updateReservation = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    const userId = req.user!.id;
     const reservationId = parseInt(req.params.id);
     const updateData: UpdateReservationRequest = req.body;
 
@@ -212,7 +225,7 @@ export const updateReservation = async (req: Request, res: Response) => {
       });
     }
 
-    if (existingReservation.userId !== userId) {
+    if (existingReservation.userId !== userId && req.user!.role !== 'ADMIN') {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para modificar esta reserva'
@@ -270,7 +283,7 @@ export const updateReservation = async (req: Request, res: Response) => {
 // DELETE - Cancelar reserva
 export const cancelReservation = async (req: Request, res: Response) => {
   try {
-    const userId = req.userId!;
+    const userId = req.user!.id;
     const reservationId = parseInt(req.params.id);
 
     // Verificar que la reserva exista y pertenezca al usuario
@@ -282,7 +295,9 @@ export const cancelReservation = async (req: Request, res: Response) => {
       });
     }
 
-    if (existingReservation.userId !== userId) {
+    //solo el propietario o un admin pueden cancelar
+    const userRole = req.user!.role;
+    if (existingReservation.userId !== userId && userRole !== 'ADMIN') {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para cancelar esta reserva'
@@ -347,3 +362,4 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
     });
   }
 };
+

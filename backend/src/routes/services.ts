@@ -10,6 +10,7 @@ import {
   hardDeleteService,       // DELETE - Eliminación física (solo admin)
   getServiceStats          // READ - Obtener estadísticas
 } from '../controllers/serviceController';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 // Crear el router para las rutas de servicios
 const router = Router();
@@ -52,25 +53,24 @@ router.get('/:id', getServiceById);
 // ========================================
 // RUTAS PROTEGIDAS (requieren autenticación)
 // ========================================
-// NOTA: En el futuro se puede agregar middleware de autenticación aquí
 
-// POST /api/services - Crear nuevo servicio
+// POST /api/services - Crear nuevo servicio (solo para roles Admin)
 // Body requerido: name, description, price, duration, category
 // Body opcional: isActive
-router.post('/', createService);
+router.post('/', authenticate, authorize('ADMIN'), createService);
 
-// PUT /api/services/:id - Actualizar servicio existente
+// PUT /api/services/:id - Actualizar servicio existente (solo para roles Admin)
 // Body opcional: name, description, price, duration, category, isActive
 // Ejemplo: /api/services/1
-router.put('/:id', updateService);
+router.put('/:id', authenticate, authorize('ADMIN'), updateService);
 
-// DELETE /api/services/:id - Eliminar servicio (cambiar a inactivo)
+// DELETE /api/services/:id - Eliminar servicio (cambiar a inactivo) (solo para roles Admin)
 // Ejemplo: /api/services/1
-router.delete('/:id', deleteService);
+router.delete('/:id', authenticate, authorize('ADMIN'), deleteService);
 
-// DELETE /api/services/:id/hard - Eliminación física (solo para admin)
+// DELETE /api/services/:id/hard - Eliminación física (solo para roles Admin)
 // Ejemplo: /api/services/1/hard
-router.delete('/:id/hard', hardDeleteService);
+router.delete('/:id/hard', authenticate, authorize('ADMIN'), hardDeleteService);
 
 // ========================================
 // ORDEN DE LAS RUTAS - MUY IMPORTANTE
@@ -88,4 +88,4 @@ router.delete('/:id/hard', hardDeleteService);
 // 1. /:id (genérica) - Esto capturaría /stats, /search, etc.
 // 2. /stats (específica) - Nunca se ejecutaría
 
-export default router;
+export const serviceRoutes = router;

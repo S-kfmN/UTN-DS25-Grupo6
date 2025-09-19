@@ -170,9 +170,10 @@ class ApiService {
   async getReservations(userId = null, forAdminAll = false) {
     let endpoint;
     if (forAdminAll) {
-      endpoint = API_ENDPOINTS.RESERVATIONS.LIST; // Esta es ahora la ruta para que el admin obtenga TODAS las reservas
+      endpoint = API_ENDPOINTS.RESERVATIONS.LIST;
     } else if (userId) {
-      endpoint = API_ENDPOINTS.RESERVATIONS.BY_USER(userId); // Esta es para las reservas de un usuario específico
+      // Agrega el userId como query param
+      endpoint = `${API_ENDPOINTS.RESERVATIONS.LIST}?userId=${userId}`;
     } else {
       throw new Error('Debe proporcionar un userId o especificar forAdminAll para obtener reservas.');
     }
@@ -238,4 +239,4 @@ class ApiService {
 
 // Instancia singleton del servicio
 const apiService = new ApiService();
-export default apiService; 
+export default apiService;

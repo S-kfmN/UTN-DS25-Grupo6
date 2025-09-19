@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button, Badge, Alert, Collapse, Modal } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
-import { formatearFechaHoraParaMostrar } from '../utils/dateUtils';
+import { formatearFechaHoraParaMostrar, combinarNombreCompleto } from '../utils/dateUtils';
 
 export default function MisReservas() {
   const { usuario, obtenerReservasUsuario, cancelarReserva, reservas } = usarAuth();
@@ -16,30 +16,13 @@ export default function MisReservas() {
   // Usar las reservas directamente del contexto, ya cargadas por AuthProvider
   // Si necesitas filtrar o manipular, hazlo sobre el array `reservas` directamente
   const reservasUsuario = reservas; // Asignar directamente las reservas del contexto
+  console.log('🔍 MisReservas: reservasUsuario del contexto (completo):', reservasUsuario);
 
-  // Eliminar los useEffects que cargaban reservas aquí, ya que AuthContext se encarga
-  // useEffect(() => {
-  //   const cargarReservas = async () => {
-  //     if (usuario) {
-  //       const reservas = await obtenerReservasUsuario(); 
-  //       console.log('MisReservas: Reservas cargadas en useEffect:', reservas); 
-  //       setReservasUsuario(reservas);
-  //     }
-  //   };
-  //   cargarReservas();
-  // }, [usuario, obtenerReservasUsuario]);
-
-  // useEffect(() => {
-  //   const cargarReservas = async () => {
-  //     if (usuario) {
-  //       const reservas = await obtenerReservasUsuario(); 
-  //       console.log('MisReservas: Reservas sincronizadas en useEffect:', reservas); 
-  //       setReservasUsuario(reservas);
-  //     }
-  //   };
-  //   cargarReservar();
-  // }, [usuario, obtenerReservasUsuario]);
-
+  useEffect(() => {
+    if (usuario?.id) {
+      obtenerReservasUsuario(usuario.id); // Esto asegura que siempre se pase el userId
+    }
+  }, [usuario, obtenerReservasUsuario]);
 
   // Filtrar reservas según el estado seleccionado
   const reservasFiltradas = filtroEstado === 'todos' 
@@ -104,9 +87,18 @@ export default function MisReservas() {
   // Estadísticas
   const estadisticas = {
     total: reservasUsuario.length,
-    confirmadas: reservasUsuario.filter(r => r.estado === 'confirmado').length,
-    pendientes: reservasUsuario.filter(r => r.estado === 'pendiente').length,
-    canceladas: reservasUsuario.filter(r => r.estado === 'cancelado').length
+    confirmadas: reservasUsuario.filter(r => {
+      console.log('🔍 MisReservas: Estado de reserva para filtro confirmado:', r.estado);
+      return r.estado === 'confirmado';
+    }).length,
+    pendientes: reservasUsuario.filter(r => {
+      console.log('🔍 MisReservas: Estado de reserva para filtro pendiente:', r.estado);
+      return r.estado === 'pendiente';
+    }).length,
+    canceladas: reservasUsuario.filter(r => {
+      console.log('🔍 MisReservas: Estado de reserva para filtro cancelado:', r.estado);
+      return r.estado === 'cancelado';
+    }).length
   };
 
   return (
@@ -180,7 +172,7 @@ export default function MisReservas() {
                       <div className="cliente-info">
                         <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                         <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                        <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                        <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
                       </div>
                       {reserva.observaciones && (
                         <div className="observaciones">
@@ -246,7 +238,7 @@ export default function MisReservas() {
                           <div className="cliente-info">
                             <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
                             <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
+                            <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
                           </div>
                           {reserva.observaciones && (
                             <div className="observaciones">
@@ -282,7 +274,7 @@ export default function MisReservas() {
           fontWeight: 'bold'
         }}>
           <i className="bi bi-info-circle me-2"></i>
-          Información Importante
+          Información Importante:
         </h6>
         <ul style={{ 
           color: 'var(--color-texto)', 
@@ -332,4 +324,4 @@ export default function MisReservas() {
       </Modal>
     </div>
   );
-} 
+}

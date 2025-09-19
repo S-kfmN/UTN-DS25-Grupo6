@@ -1,5 +1,5 @@
 import { Vehicle, CreateVehicleRequest, UpdateVehicleRequest } from '../types/vehicle';
-import { PrismaClient, VehicleStatus } from '../generated/prisma';
+import { PrismaClient, VehicleStatus } from '@prisma/client';
 import prisma from '../config/prisma'; // Usar la instancia compartida
 
 class VehicleModel {

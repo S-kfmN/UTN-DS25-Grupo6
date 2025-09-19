@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
-import { crearFecha, formatearFechaParaMostrar, esFechaPasada } from '../utils/dateUtils';
+import { crearFecha, formatearFechaParaMostrar, esFechaPasada, dividirNombreCompleto } from '../utils/dateUtils';
 import apiService from '../services/apiService'; // Importar apiService
 
 export default function Reservar() {
@@ -24,7 +24,6 @@ export default function Reservar() {
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
   const [reservasDelDia, setReservasDelDia] = useState([]); // Nuevo estado para reservas del día
   
-
   const [mesActual, setMesActual] = useState(() => {
     const fecha = new Date();
     return {
@@ -33,30 +32,29 @@ export default function Reservar() {
     };
   });
   
-
-  const [datosReserva, setDatosReserva] = useState({
-    nombre: usuario?.nombre || '',
-    apellido: usuario?.apellido || '',
-    telefono: usuario?.telefono || '',
-    email: usuario?.email || '',
-    patente: '',
-    marca: 'RENAULT',
-    modelo: '',
-    año: '',
-    servicio: '',
-    fecha: '',
-    hora: '',
-    observaciones: ''
+  const [datosReserva, setDatosReserva] = useState(() => {
+    const { nombre, apellido } = dividirNombreCompleto(usuario?.name || '');
+    return {
+      nombre: nombre,
+      apellido: apellido,
+      telefono: usuario?.phone || '',
+      email: usuario?.email || '',
+      patente: '',
+      marca: 'RENAULT',
+      modelo: '',
+      año: '',
+      servicio: '',
+      fecha: '',
+      hora: '',
+      observaciones: ''
+    };
   });
   
-
   const [errores, setErrores] = useState({});
   const [estaEnviando, setEstaEnviando] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   
-
   const [reservasExistentes, setReservasExistentes] = useState([]);
-
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -92,7 +90,7 @@ export default function Reservar() {
     };
 
     cargarDatos();
-  }, [usuario?.id]);
+  }, [usuario?.id, cargarVehiculosUsuario]);
 
   // Efecto para cargar las reservas de la fecha seleccionada
   useEffect(() => {
@@ -117,30 +115,13 @@ export default function Reservar() {
   useEffect(() => {
     if (usuario) {
       setDatosReserva(prev => {
-        let newNombre = usuario.nombre || '';
-        let newApellido = usuario.apellido || '';
-
-        // Aplicar la lógica existente para dividir el nombre si el apellido no está presente
-        if (usuario.nombre && !usuario.apellido) {
-          const nombreCompleto = usuario.nombre.trim();
-          const espacioIndex = nombreCompleto.indexOf(' ');
-          if (espacioIndex !== -1) {
-            newNombre = nombreCompleto.substring(0, espacioIndex);
-            newApellido = nombreCompleto.substring(espacioIndex + 1);
-          } else {
-            newNombre = nombreCompleto;
-            newApellido = '';
-          }
-        } else if (usuario.nombre && usuario.apellido) {
-          // Si ambos están explícitamente proporcionados, usarlos directamente
-          newNombre = usuario.nombre;
-          newApellido = usuario.apellido;
-        }
+        // Usar la función dividirNombreCompleto para extraer nombre y apellido del campo 'name'
+        const { nombre, apellido } = dividirNombreCompleto(usuario.name || '');
 
         return {
           ...prev,
-          nombre: newNombre,
-          apellido: newApellido,
+          nombre: nombre,
+          apellido: apellido,
           telefono: usuario.phone || '', // Pre-llenar teléfono del usuario
           email: usuario.email || '',     // Pre-llenar email del usuario
         };
@@ -155,10 +136,6 @@ export default function Reservar() {
     }
   }, []);
 
-
-
-
-  
 
   const generarDiasDelMes = (año, mes) => {
     const primerDia = new Date(año, mes, 1);
@@ -182,21 +159,27 @@ export default function Reservar() {
   };
 
 
-  const diaTieneReservas = (dia) => {
-    if (!dia) return false;
-    
-    const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
-    
-    return reservasExistentes.some(reserva => reserva.fecha === fechaCompleta);
+  const obtenerHorariosOcupadosParaDia = (dia) => {
+    if (!dia || !fechaSeleccionada) return [];
+    const fechaFormateada = crearFecha(mesActual.año, mesActual.mes + 1, dia);
+    // Si la fecha seleccionada coincide con la fecha que estamos procesando,
+    // usamos reservasDelDia. De lo contrario, no tenemos información actualizada.
+    // En un escenario real, cargarías reservas para todo el mes o un rango.
+    if (fechaFormateada === fechaSeleccionada) {
+      return reservasDelDia.map(reserva => reserva.time);
+    }
+    return [];
   };
 
+  const esDiaCompleto = (dia) => {
+    const horariosOcupados = obtenerHorariosOcupadosParaDia(dia);
+    return horariosOcupados.length === horariosDisponibles.length;
+  };
 
-  const obtenerReservasDelDia = (dia) => {
-    if (!dia) return [];
-    
-    const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
-    
-    return reservasExistentes.filter(reserva => reserva.fecha === fechaCompleta);
+  const diaTieneReservas = (dia) => {
+    if (!dia) return false;
+    const fechaFormateada = crearFecha(mesActual.año, mesActual.mes + 1, dia);
+    return reservasDelDia.some(reserva => reserva.date === fechaFormateada);
   };
 
 
@@ -209,13 +192,13 @@ export default function Reservar() {
 
 
   const seleccionarDia = (dia) => {
-    if (!dia || esDiaPasado(dia)) return;
+    if (!dia || esDiaPasado(dia) || esDiaCompleto(dia)) return;
     
     
     const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
 
     setFechaSeleccionada(fechaCompleta);
-    setDatosReserva(prev => ({ ...prev, fecha: fechaCompleta }));
+    setDatosReserva(prev => ({ ...prev, fecha: fechaCompleta, hora: '' }));
   };
 
 
@@ -239,8 +222,6 @@ export default function Reservar() {
       }
     });
   };
-
-
 
 
   const manejarCambioFormulario = (campo, valor) => {
@@ -354,10 +335,12 @@ export default function Reservar() {
         
         
         
+        
+        const { nombre, apellido } = dividirNombreCompleto(usuario?.name || '');
         setDatosReserva({
-          nombre: usuario?.nombre || '',
-          apellido: usuario?.apellido || '',
-          telefono: usuario?.telefono || '',
+          nombre: nombre,
+          apellido: apellido,
+          telefono: usuario?.phone || '',
           email: usuario?.email || '',
           patente: vehiculoSeleccionado?.patente || '',
           marca: 'RENAULT', // Siempre RENAULT
@@ -507,13 +490,16 @@ export default function Reservar() {
                 } ${
                   dia && esDiaPasado(dia) ? 'dia-pasado' : ''
                 } ${
-                  dia && !esDiaPasado(dia) && diaTieneReservas(dia) ? 'dia-con-reservas' : ''
+                  dia && esDiaCompleto(dia) ? 'dia-completo' : '' // Nueva clase para días completos
                 } ${
-                  dia && !esDiaPasado(dia) && fechaSeleccionada === crearFecha(mesActual.año, mesActual.mes + 1, dia) ? 'dia-seleccionado' : ''
+                  // dia con reservas solo si no está completo
+                  dia && !esDiaPasado(dia) && diaTieneReservas(dia) && !esDiaCompleto(dia) ? 'dia-con-reservas' : ''
+                } ${
+                  dia && fechaSeleccionada === crearFecha(mesActual.año, mesActual.mes + 1, dia) ? 'dia-seleccionado' : ''
                 }`}
                 onClick={() => seleccionarDia(dia)}
                 style={{
-                  cursor: dia && !esDiaPasado(dia) ? 'pointer' : 'default'
+                  cursor: dia && !esDiaPasado(dia) && !esDiaCompleto(dia) ? 'pointer' : 'default' // No seleccionable si está completo
                 }}
               >
                 {dia}
@@ -529,7 +515,11 @@ export default function Reservar() {
             </div>
             <div className="leyenda-item">
               <div className="leyenda-color dia-con-reservas"></div>
-              <span>Con reservas</span>
+              <span>Con reservas (parcial)</span>
+            </div>
+            <div className="leyenda-item">
+              <div className="leyenda-color dia-completo"></div>
+              <span>Día completo</span>
             </div>
             <div className="leyenda-item">
               <div className="leyenda-color dia-seleccionado"></div>
@@ -561,6 +551,7 @@ export default function Reservar() {
                       onChange={(e) => manejarCambioFormulario('nombre', e.target.value)}
                       isInvalid={!!errores.nombre}
                       placeholder="Tu nombre"
+                      readOnly={true}
                       className="form-control-custom"
                     />
                     <Form.Control.Feedback type="invalid">
@@ -578,6 +569,7 @@ export default function Reservar() {
                       onChange={(e) => manejarCambioFormulario('apellido', e.target.value)}
                       isInvalid={!!errores.apellido}
                       placeholder="Tu apellido"
+                      readOnly={true}
                       className="form-control-custom"
                     />
                     <Form.Control.Feedback type="invalid">
@@ -598,6 +590,7 @@ export default function Reservar() {
                       isInvalid={!!errores.telefono}
                       placeholder="11 1234-5678"
                       className="form-control-custom"
+                      readOnly={true}
                     />
                     <Form.Control.Feedback type="invalid">
                       {errores.telefono}
@@ -614,6 +607,7 @@ export default function Reservar() {
                       onChange={(e) => manejarCambioFormulario('email', e.target.value)}
                       isInvalid={!!errores.email}
                       placeholder="tu@email.com"
+                      readOnly={true}
                       className="form-control-custom"
                     />
                     <Form.Control.Feedback type="invalid">
@@ -784,7 +778,12 @@ export default function Reservar() {
                       {horariosDisponibles.map(hora => {
                         const isOcupado = reservasDelDia.some(reserva => reserva.time === hora);
                         return (
-                          <option key={hora} value={hora} disabled={isOcupado}>
+                          <option 
+                            key={hora} 
+                            value={hora} 
+                            disabled={isOcupado}
+                            className={isOcupado ? 'horario-ocupado' : ''} // Clase para estilos visuales
+                          >
                             {hora} {isOcupado && '(Ocupado)'}
                           </option>
                         );
@@ -804,6 +803,7 @@ export default function Reservar() {
                   rows={3}
                   value={datosReserva.observaciones}
                   onChange={(e) => manejarCambioFormulario('observaciones', e.target.value)}
+                  onClick={(e) => e.target.select()}
                   placeholder="Información adicional sobre el servicio..."
                   className="form-control-custom"
                 />

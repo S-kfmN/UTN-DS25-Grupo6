@@ -6,43 +6,51 @@ import {
   updateReservation,
   cancelReservation,
   getReservationsByDate,
-  getAllReservations // Importar la nueva función
+  getAllReservations
 } from '../controllers/reservationController';
-import { authenticateToken } from '../middlewares/auth';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 console.log('🚀 Router de reservas registrado');
 
-// APLICAR MIDDLEWARE DE AUTENTICACIÓN A TODAS LAS RUTAS
-router.use(authenticateToken);
-
 // RUTAS PROTEGIDAS - Requieren autenticación
-// POST /api/reservations - Crear nueva reserva
-router.post('/', createReservation);
+// POST /api/reservations - Crear nueva reserva (Admite roles Admin y Users)
+router.post('/', authenticate, authorize('ADMIN', 'USER'), createReservation);
 
-// GET /api/reservations - Obtener TODAS las reservas (solo para admin)
-router.get('/', getAllReservations);
+// GET /api/reservations - Obtener reservas del usuario autenticado (para usuarios normales) o TODAS las reservas (para admin)
+router.get('/', authenticate, authorize('ADMIN', 'USER'), (req, res) => {
+  const userRole = req.user!.role;
+  const userId = req.query.userId || req.params.userId;
 
-// GET /api/reservations/user/:userId - Obtener reservas de un usuario específico
-router.get('/user/:userId', getUserReservations);
+  if (userRole === 'ADMIN' && userId) {
+    // Si es admin y pide reservas de un usuario específico (incluido él mismo)
+    req.params.userId = userId.toString();
+    return getUserReservations(req, res);
+  }
+  if (userRole === 'ADMIN') {
+    // Si es admin y NO pide userId, devuelve todas
+    return getAllReservations(req, res);
+  }
+  // Usuario normal: solo sus reservas
+  req.params.userId = req.user!.id.toString();
+  return getUserReservations(req, res);
+});
 
-// GET /api/reservations/date/:date - Obtener reservas por fecha (para ver disponibilidad)
-router.get('/date/:date', getReservationsByDate);
+// GET /api/reservations/user/:userId - Obtener reservas de un usuario específico (solo para roles Admin)
+router.get('/user/:userId', authenticate, authorize('ADMIN'), getUserReservations);
 
-// PATCH /api/reservations/:id/cancel - Cancelar reserva (DEBE IR ANTES DE /:id)
-router.patch('/:id/cancel', (req, res, next) => {
-  console.log('🔍 Ruta cancel detectada:', req.method, req.path, req.params);
-  console.log('🔍 URL completa:', req.originalUrl);
-  console.log('🔍 Headers:', req.headers);
-  next();
-}, cancelReservation);
+// GET /api/reservations/date/:date - Obtener reservas por fecha (Admite roles Admin y Users)
+router.get('/date/:date', authenticate, authorize('ADMIN', 'USER'), getReservationsByDate);
 
-// GET /api/reservations/:id - Obtener reserva específica
-router.get('/:id', getReservation);
+// PATCH /api/reservations/:id/cancel - Cancelar reserva (Admite roles Admin y Users)
+router.patch('/:id/cancel', authenticate, authorize('ADMIN', 'USER'), cancelReservation);
 
-// PUT /api/reservations/:id - Actualizar reserva
-router.put('/:id', updateReservation);
+// GET /api/reservations/:id - Obtener reserva específica (Admite roles Admin y Users)
+router.get('/:id', authenticate, authorize('ADMIN', 'USER'), getReservation);
 
-export default router;
+// PUT /api/reservations/:id - Actualizar reserva (Admite roles Admin y Users)
+router.put('/:id', authenticate, authorize('ADMIN', 'USER'), updateReservation);
+
+export const reservationRoutes = router;
 

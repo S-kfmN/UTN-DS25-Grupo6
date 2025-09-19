@@ -1,4 +1,4 @@
-import { User, UserRole } from "../generated/prisma";
+import { User, UserRole } from "@prisma/client";
 
 // Re-exportar el tipo User de Prisma para mantener compatibilidad
 export { User, UserRole };

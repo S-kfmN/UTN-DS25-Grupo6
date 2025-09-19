@@ -3,20 +3,18 @@ import { Form, Button, Alert, Row, Col, Card, Badge } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usarAuth } from '../context/AuthContext';
 import { useServicios } from '../hooks/useServicios';
-import { useHistorial } from '../hooks/useHistorial';
+import apiService from '../services/apiService';
 
 export default function RegistrarServicio() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { usuario, esAdmin, reservas, refrescarUsuario, actualizarReserva } = usarAuth();
+  const { usuario, esAdmin, refrescarUsuario } = usarAuth();
   
   // Obtener datos de la reserva desde location.state
   const reserva = location.state?.reserva;
-  const patente = reserva?.patente || 'ABC123';
   
   // Hooks personalizados
   const { servicios, loading: loadingServicios, obtenerServicioPorId } = useServicios();
-  const { registrarServicio, loading: loadingHistorial } = useHistorial(patente);
   
   // Estados del formulario
   const [datosServicio, setDatosServicio] = useState({
@@ -31,6 +29,7 @@ export default function RegistrarServicio() {
   const [errores, setErrores] = useState({});
   const [estaGuardando, setEstaGuardando] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
+  const [error, setError] = useState(null);
 
   // useEffect para cargar datos iniciales
   useEffect(() => {
@@ -94,9 +93,16 @@ export default function RegistrarServicio() {
     if (!validarFormulario()) return;
     setEstaGuardando(true);
     try {
-      const datosCompletos = {
-        ...datosServicio,
-        servicio: obtenerNombreServicio(datosServicio.servicio)
+      // Crear información detallada del servicio para agregar a las notas
+      const servicioInfo = {
+        servicioRealizado: obtenerNombreServicio(datosServicio.servicio),
+        resultado: datosServicio.resultado,
+        observaciones: datosServicio.observaciones,
+        repuestos: datosServicio.repuestos,
+        kilometraje: datosServicio.kilometraje,
+        mecanico: datosServicio.mecanico,
+        fechaServicio: new Date().toISOString(),
+        registradoPor: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : 'Sistema'
       };
       const resultado = await registrarServicio(datosCompletos);
       if (resultado.success) {

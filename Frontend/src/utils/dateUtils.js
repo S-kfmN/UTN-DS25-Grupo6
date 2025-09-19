@@ -79,12 +79,20 @@ export const esFechaPasada = (fecha) => {
  */
 export const formatearFechaParaMostrar = (fecha) => {
   if (!fecha) return 'Fecha no especificada';
-  
-  // Asegurar que la fecha se interprete en zona horaria local
+
+  // Parsear la fecha como YYYY-MM-DD
   const [año, mes, dia] = fecha.split('-').map(Number);
-  const fechaLocal = new Date(año, mes - 1, dia); // mes - 1 porque los meses van de 0-11
+  
+  // Crear un objeto Date en la zona horaria local, usando mes - 1 porque los meses en Date son 0-indexados
+  const fechaObjeto = new Date(año, mes - 1, dia);
+  
+  // Si la fecha es inválida después de la construcción
+  if (isNaN(fechaObjeto.getTime())) {
+    return 'Fecha inválida';
+  }
+  
   const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  return fechaLocal.toLocaleDateString('es-ES', opciones);
+  return fechaObjeto.toLocaleDateString('es-ES', opciones);
 };
 
 /**
