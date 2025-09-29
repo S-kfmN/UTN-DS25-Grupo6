@@ -1,0 +1,199 @@
+/* ===== ESTILOS ESPECÍFICOS PARA HOMEPAGE ===== */
+
+/* Sección Principal */
+.seccion-principal {
+  position: relative;
+  text-align: center;
+  padding: 4rem 1rem;
+  background-image: url('/fondo-lubricentro.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--color-texto);
+  overflow: hidden;
+  min-height: 70vh;
+}
+
+.seccion-principal h1 {
+  font-size: 3rem;
+  margin-bottom: 5rem;
+}
+
+.seccion-principal p {
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+}
+
+/* Botones de la página principal */
+.boton-principal {
+  background-color: var(--color-acento);
+  color: var(--color-fondo);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  transition: transform 0.2s;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.boton-principal:hover {
+  transform: scale(1.1);
+  background-color: #e6b800;
+  color: var(--color-fondo);
+  text-decoration: none;
+}
+
+.boton-secundario {
+  background-color: var(--color-gris);
+  border: none;
+  padding: 1.5rem 2.5rem;
+  cursor: pointer;
+  color: var(--color-texto);
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin: 0 0.5rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.boton-secundario:hover {
+  background-color: #444;
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.contenedor-botones-secundarios {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+/* Secciones de contenido */
+.seccion-contenido {
+  min-height: 60vh;
+  padding: 1rem 1rem;
+  text-align: center;
+  color: var(--color-texto);
+}
+
+.seccion-contenido h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-texto);
+}
+
+.seccion-contenido h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: var(--color-texto);
+}
+
+.seccion-contenido h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-texto);
+}
+
+.seccion-contenido p {
+  margin-bottom: 1rem;
+  color: var(--color-texto);
+}
+
+/* Grid de productos y servicios */
+.contenedor-grid {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.contenedor-tarjetas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 0 1rem;
+}
+
+/* Tarjetas */
+.tarjeta {
+  background-color: var(--color-gris);
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  color: var(--color-texto);
+  width: 200px;
+  margin: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.tarjeta:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(255, 204, 0, 0.3);
+}
+
+.tarjeta-contenido {
+  padding: 0;
+  text-align: center;
+}
+
+.tarjeta-titulo {
+  color: var(--color-acento);
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.tarjeta-texto {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Responsive para HomePage */
+@media (max-width: 768px) {
+  .seccion-principal h1 {
+    font-size: 2rem;
+  }
+  
+  .seccion-principal p {
+    font-size: 1.2rem;
+  }
+  
+  .boton-principal {
+    font-size: 1.2rem;
+    padding: 0.8rem 1.5rem;
+  }
+  
+  .boton-secundario {
+    font-size: 1rem;
+    padding: 1rem 2rem;
+  }
+  
+  .contenedor-botones-secundarios {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .contenedor-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .contenedor-tarjetas {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .tarjeta {
+    max-width: 90%;
+    width: 100%;
+  }
+}

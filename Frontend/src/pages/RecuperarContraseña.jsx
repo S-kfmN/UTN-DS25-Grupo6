@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import '../assets/styles/recuperarcontrasena.css';
 
 export default function RecuperarContraseña() {
   const [email, setEmail] = useState('');
@@ -67,22 +68,15 @@ export default function RecuperarContraseña() {
   };
 
   return (
-    <div className="contenedor-admin-reservas">
+    <div className="recuperarcontrasena-container">
       {/* Header del formulario */}
-      <div className="header-admin-reservas">
+      <div className="recuperarcontrasena-header">
         <h1>Recuperar Contraseña</h1>
         <p>Te enviaremos un enlace para restablecer tu contraseña</p>
       </div>
 
       {/* Contenedor del formulario */}
-      <div style={{ 
-        maxWidth: '500px', 
-        margin: '0 auto',
-        backgroundColor: 'var(--color-gris)',
-        borderRadius: '10px',
-        padding: '2rem',
-        border: '1px solid var(--color-acento)'
-      }}>
+      <div className="recuperarcontrasena-formulario-container">
         {mostrarExito && (
           <Alert variant="success" className="mb-4" style={{
             backgroundColor: 'rgba(40, 167, 69, 0.1)',

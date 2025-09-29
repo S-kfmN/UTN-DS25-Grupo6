@@ -78,25 +78,30 @@ class VehicleModel {
   }
 
   // UPDATE - Actualizar vehículo
-  async update(id: number, updateData: UpdateVehicleRequest): Promise<Vehicle | null> {
-    try {
-      // Si se está actualizando la patente, normalizarla
-      if (updateData.license) {
-        updateData.license = this.normalizarPatente(updateData.license);
+  async update(id: number, updateData: any): Promise<any> {
+    console.log('updateData recibido:', updateData);
+    const dataToUpdate: any = {};
+    for (const key of Object.keys(updateData)) {
+      let value = updateData[key];
+      // Normalizar patente si corresponde
+      if (key === 'license' && value) {
+        value = this.normalizarPatente(value);
       }
-
-      const updatedVehicle = await prisma.vehicle.update({
-        where: { id: id },
-        data: {
-          ...updateData,
-          updatedAt: new Date(),
-        },
-      });
-      return updatedVehicle;
-    } catch (error) {
-      console.error("Error updating vehicle:", error);
-      return null;
+      if (key === 'year' && value !== undefined && value !== null && value !== '') {
+        value = Number(value);
+      }
+      if (value !== undefined && value !== null) {
+        dataToUpdate[key] = value;
+      }
     }
+    dataToUpdate.updatedAt = new Date();
+
+    console.log('🚗 VehicleModel.update - datos a actualizar:', dataToUpdate);
+
+    return prisma.vehicle.update({
+      where: { id },
+      data: dataToUpdate,
+    });
   }
 
   // DELETE - Eliminar vehículo

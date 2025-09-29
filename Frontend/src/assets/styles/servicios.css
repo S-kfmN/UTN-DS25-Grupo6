@@ -1,0 +1,191 @@
+/* ===== ESTILOS ESPECÍFICOS PARA SERVICIOS ===== */
+
+/* Sección de contenido principal */
+.servicios-seccion-contenido {
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 80vh;
+  text-align: center;
+}
+
+.servicios-seccion-contenido h1 {
+  color: var(--color-acento);
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.servicios-seccion-contenido p {
+  color: var(--color-texto);
+  font-size: 1.3rem;
+  margin-bottom: 3rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* Contenedor de tarjetas */
+.servicios-contenedor-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Tarjetas de servicio */
+.servicios-tarjeta-servicio {
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 255, 255, 0.05));
+  border: 2px solid var(--color-acento);
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.servicios-tarjeta-servicio::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 204, 0, 0.1), transparent);
+  transform: rotate(45deg);
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.servicios-tarjeta-servicio:hover::before {
+  opacity: 1;
+  animation: shimmer 1.5s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.servicios-tarjeta-servicio:hover {
+  transform: translateY(-10px) scale(1.02);
+  border-color: var(--color-acento);
+  box-shadow: 
+    0 15px 35px rgba(255, 204, 0, 0.3),
+    0 5px 15px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.15), rgba(255, 255, 255, 0.08));
+}
+
+.servicios-tarjeta-servicio h2 {
+  color: var(--color-acento);
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+}
+
+.servicios-tarjeta-servicio p {
+  color: var(--color-texto);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+  opacity: 0.9;
+  position: relative;
+  z-index: 2;
+}
+
+/* Efectos adicionales */
+.servicios-tarjeta-servicio::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-acento), transparent, var(--color-acento));
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.servicios-tarjeta-servicio:hover::after {
+  transform: scaleX(1);
+}
+
+/* Responsive para Servicios */
+@media (max-width: 768px) {
+  .servicios-seccion-contenido {
+    padding: 2rem 1rem;
+  }
+  
+  .servicios-seccion-contenido h1 {
+    font-size: 2.5rem;
+  }
+  
+  .servicios-seccion-contenido p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .servicios-contenedor-tarjetas {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .servicios-tarjeta-servicio {
+    padding: 1.5rem;
+  }
+  
+  .servicios-tarjeta-servicio h2 {
+    font-size: 1.6rem;
+  }
+  
+  .servicios-tarjeta-servicio p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .servicios-seccion-contenido h1 {
+    font-size: 2rem;
+  }
+  
+  .servicios-seccion-contenido p {
+    font-size: 1rem;
+  }
+  
+  .servicios-tarjeta-servicio {
+    padding: 1.25rem;
+    border-radius: 10px;
+  }
+  
+  .servicios-tarjeta-servicio h2 {
+    font-size: 1.4rem;
+  }
+  
+  .servicios-tarjeta-servicio p {
+    font-size: 0.95rem;
+  }
+}
+
+/* Animación de entrada */
+@media (prefers-reduced-motion: no-preference) {
+  .servicios-tarjeta-servicio {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  
+  .servicios-tarjeta-servicio:nth-child(1) { animation-delay: 0.1s; }
+  .servicios-tarjeta-servicio:nth-child(2) { animation-delay: 0.2s; }
+  .servicios-tarjeta-servicio:nth-child(3) { animation-delay: 0.3s; }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

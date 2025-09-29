@@ -165,11 +165,7 @@ htmlcov/
 # ===========================================
 # DEPLOYMENT
 # ===========================================
-# Docker
-.dockerignore
-Dockerfile
-docker-compose.yml
-docker-compose.override.yml
+
 
 # ===========================================
 # ARCHIVOS TEMPORALES Y CACHE

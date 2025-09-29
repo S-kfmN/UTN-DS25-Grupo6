@@ -33,7 +33,6 @@ class ApiService {
 
       // Manejar diferentes códigos de respuesta
       if (response.status === 401) {
-        // Token expirado, redirigir al login
         localStorage.removeItem('token');
         window.location.href = '/login';
         throw new Error('Sesión expirada');
@@ -57,7 +56,6 @@ class ApiService {
         throw new Error(errorData.message || `Error ${response.status}`);
       }
 
-      // Si la respuesta es exitosa pero no tiene contenido
       if (response.status === 204) {
         return null;
       }
@@ -123,8 +121,21 @@ class ApiService {
       return response;
     } catch (error) {
       console.error('❌ ApiService: Error en getAllUsers:', error);
-      throw error; // Re-lanzar el error para que sea manejado por el AuthContext
+      throw error;
     }
+  }
+
+  async updateUserById(id, userData) {
+    return this.request(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    });
+  }
+
+  async deleteUserById(id) {
+    return this.request(`/users/${id}`, {
+      method: 'DELETE'
+    });
   }
 
   // Métodos para vehículos
@@ -132,7 +143,7 @@ class ApiService {
     let endpoint;
 
     if (forAdminAll) {
-      endpoint = API_ENDPOINTS.VEHICLES.ALL_FOR_ADMIN; // Usar el nuevo endpoint para admin
+      endpoint = API_ENDPOINTS.VEHICLES.ALL_FOR_ADMIN;
     } else if (userId) {
       endpoint = API_ENDPOINTS.VEHICLES.BY_USER(userId);
     } else {
@@ -172,7 +183,6 @@ class ApiService {
     if (forAdminAll) {
       endpoint = API_ENDPOINTS.RESERVATIONS.LIST;
     } else if (userId) {
-      // Agrega el userId como query param
       endpoint = `${API_ENDPOINTS.RESERVATIONS.LIST}?userId=${userId}`;
     } else {
       throw new Error('Debe proporcionar un userId o especificar forAdminAll para obtener reservas.');
@@ -187,10 +197,10 @@ class ApiService {
     });
   }
 
-  async updateReservation(id, reservationData) {
-    return this.request(API_ENDPOINTS.RESERVATIONS.UPDATE(id), {
+  async updateReservation(reservaId, data) {
+    return this.request(`/reservations/${reservaId}`, {
       method: 'PUT',
-      body: JSON.stringify(reservationData)
+      body: JSON.stringify(data)
     });
   }
 
@@ -210,6 +220,10 @@ class ApiService {
     return this.request(API_ENDPOINTS.RESERVATIONS.BY_DATE(date));
   }
 
+  async getReservationsByMonth(year, month) {
+    return this.request(API_ENDPOINTS.RESERVATIONS.BY_MONTH(year, month));
+  }
+
   // Métodos para servicios
   async getServices(category = null) {
     const endpoint = category ? API_ENDPOINTS.SERVICES.BY_CATEGORY(category) : API_ENDPOINTS.SERVICES.LIST;
@@ -220,6 +234,12 @@ class ApiService {
     return this.request(API_ENDPOINTS.SERVICES.CREATE, {
       method: 'POST',
       body: JSON.stringify(serviceData)
+    });
+  }
+
+  async deleteService(id) {
+    return this.request(`/services/${id}`, {
+      method: 'DELETE'
     });
   }
 
@@ -240,3 +260,4 @@ class ApiService {
 // Instancia singleton del servicio
 const apiService = new ApiService();
 export default apiService;
+

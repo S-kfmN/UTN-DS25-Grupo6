@@ -1,11 +1,12 @@
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
+import '../assets/styles/contacto.css';
 
 export default function Contacto() {
   return (
-    <main className="seccion-contenido">
+    <main className="contacto-contenido">
       <h3>Formulario de Contacto</h3>
-      <div style={{ marginTop: '2rem', marginBottom: '1rem' }}></div>
-      <form className="formulario">
+      <div className="contacto-separador"></div>
+      <form className="contacto-formulario">
         <label>Nombre:</label>
         <input type="text" required />
 
@@ -18,13 +19,15 @@ export default function Contacto() {
         <label>Mensaje:</label>
         <textarea rows="5" required></textarea>
 
-        <button type="submit" className="boton-principal">Enviar mensaje</button>
+        <button type="submit" className="contacto-boton-enviar">Enviar mensaje</button>
       </form>
       
-      <h1>Datos de Contacto</h1>
-      <p><b>Dirección:</b> Av. Santa Fe 1860, Buenos Aires, Argentina</p>
-      <p><b>Teléfono:</b> (011) 4813-6052</p>
-      <p><b>Email:</b> contacto@elateneo.com.ar</p>
+      <div className="contacto-datos">
+        <h1>Datos de Contacto</h1>
+        <p><b>Dirección:</b> Av. Santa Fe 1860, Buenos Aires, Argentina</p>
+        <p><b>Teléfono:</b> (011) 4813-6052</p>
+        <p><b>Email:</b> contacto@elateneo.com.ar</p>
+      </div>
     </main>
   );
 }

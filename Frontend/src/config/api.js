@@ -2,7 +2,7 @@
 const API_CONFIG = {
   // URLs base para diferentes entornos
   development: {
-    baseURL: 'http://localhost:3000/api',
+    baseURL: 'http://localhost:3000/api', // <-- incluye /api
     timeout: 5000
   },
   production: {
@@ -15,11 +15,6 @@ const API_CONFIG = {
   }
 };
 
-// Obtener configuración según el entorno
-const getApiConfig = () => {
-  const environment = process.env.NODE_ENV || 'development';
-  return API_CONFIG[environment];
-};
 
 // Endpoints de la API
 export const API_ENDPOINTS = {
@@ -34,6 +29,7 @@ export const API_ENDPOINTS = {
   
   // Usuarios
   USERS: {
+    LIST: '/users',
     PROFILE: '/users/profile',
     UPDATE_PROFILE: '/users/profile',
     CHANGE_PASSWORD: '/users/change-password',
@@ -59,6 +55,7 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/reservations/${id}`,
     BY_USER: (userId) => `/reservations/user/${userId}`, // Endpoint para admin obtener reservas de un usuario específico
     BY_DATE: (date) => `/reservations/date/${date}`,
+    BY_MONTH: (year, month) => `/reservations/month/${year}/${month}`,
     CANCEL: (id) => `/reservations/${id}/cancel`
   },
   
@@ -90,4 +87,8 @@ export const getDefaultHeaders = () => {
   };
 };
 
-export { getApiConfig }; 
+export const getApiConfig = () => {
+  const env = import.meta.env.MODE || 'development';
+  return API_CONFIG[env] || API_CONFIG.development;
+};
+

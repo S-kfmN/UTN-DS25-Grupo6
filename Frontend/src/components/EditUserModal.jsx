@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 
 export default function EditUserModal({ show, onHide, usuario, onSave }) {
   const { actualizarEstadoVehiculoGlobal } = usarAuth();
   const [formData, setFormData] = useState({
-    nombre: '',
+    name: '',
     apellido: '',
     email: '',
-    telefono: '',
-    dni: ''
+    phone: ''
   });
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
@@ -18,11 +17,10 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
   useEffect(() => {
     if (usuario) {
       setFormData({
-        nombre: usuario.nombre || '',
+        name: usuario.name || '',
         apellido: usuario.apellido || '',
         email: usuario.email || '',
-        telefono: usuario.telefono || '',
-        dni: usuario.dni || ''
+        phone: usuario.phone || ''
       });
     }
   }, [usuario]);
@@ -32,8 +30,6 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
       ...prev,
       [campo]: valor
     }));
-    
-    // Limpiar error del campo
     if (errores[campo]) {
       setErrores(prev => ({
         ...prev,
@@ -44,39 +40,34 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
 
   const validarFormulario = () => {
     const nuevosErrores = {};
-
-    if (!formData.nombre.trim()) {
-      nuevosErrores.nombre = 'El nombre es requerido';
+    if (!formData.name.trim()) {
+      nuevosErrores.name = 'El nombre es requerido';
     }
-
     if (!formData.apellido.trim()) {
       nuevosErrores.apellido = 'El apellido es requerido';
     }
-
     if (!formData.email.trim()) {
       nuevosErrores.email = 'El email es requerido';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       nuevosErrores.email = 'El email no es válido';
     }
-
-    if (!formData.telefono.trim()) {
-      nuevosErrores.telefono = 'El teléfono es requerido';
+    if (!formData.phone.trim()) {
+      nuevosErrores.phone = 'El teléfono es requerido';
     }
-
-    if (!formData.dni.trim()) {
-      nuevosErrores.dni = 'El DNI es requerido';
-    }
-
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
 
   const manejarGuardar = async () => {
     if (!validarFormulario()) return;
-
     setGuardando(true);
     try {
-      await onSave(formData);
+      const payload = {};
+      if (formData.name !== usuario.name) payload.name = formData.name;
+      if (formData.apellido !== usuario.apellido) payload.apellido = formData.apellido;
+      if (formData.email !== usuario.email) payload.email = formData.email;
+      if (formData.phone !== usuario.phone) payload.phone = formData.phone;
+      await onSave(payload);
       onHide();
     } catch (error) {
       console.error('Error al guardar usuario:', error);
@@ -102,13 +93,13 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
                 <Form.Label>Nombre *</Form.Label>
                 <Form.Control
                   type="text"
-                  value={formData.nombre}
-                  onChange={(e) => manejarCambio('nombre', e.target.value)}
-                  isInvalid={!!errores.nombre}
+                  value={formData.name}
+                  onChange={(e) => manejarCambio('name', e.target.value)}
+                  isInvalid={!!errores.name}
                   placeholder="Nombre del usuario"
                 />
                 <Form.Control.Feedback type="invalid">
-                  {errores.nombre}
+                  {errores.name}
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
@@ -152,35 +143,19 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
                 <Form.Label>Teléfono *</Form.Label>
                 <Form.Control
                   type="tel"
-                  value={formData.telefono}
-                  onChange={(e) => manejarCambio('telefono', e.target.value)}
-                  isInvalid={!!errores.telefono}
+                  value={formData.phone}
+                  onChange={(e) => manejarCambio('phone', e.target.value)}
+                  isInvalid={!!errores.phone}
                   placeholder="11 1234-5678"
                 />
                 <Form.Control.Feedback type="invalid">
-                  {errores.telefono}
+                  {errores.phone}
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
           </Row>
 
           <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>DNI *</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={formData.dni}
-                  onChange={(e) => manejarCambio('dni', e.target.value)}
-                  isInvalid={!!errores.dni}
-                  placeholder="12345678"
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errores.dni}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>Rol</Form.Label>
@@ -248,4 +223,4 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
       </Modal.Footer>
     </Modal>
   );
-} 
+}

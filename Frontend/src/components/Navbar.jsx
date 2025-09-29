@@ -1,185 +1,115 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Navbar, Container, Nav, Button, Dropdown } from 'react-bootstrap';
+import { Navbar, Container, Nav, Dropdown } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
+import '../assets/styles/navbar.css';
 
-export default function NavbarComponent() {
+export default function NavbarComponent({ showBrand = true, style: inlineStyle = {} }) {
   const { usuario, cerrarSesion, estaAutenticado, esAdmin } = usarAuth();
   const navigate = useNavigate();
-  
-  // Determinar si el navbar debe estar centrado
-  const shouldCenter = !estaAutenticado() || (estaAutenticado() && !esAdmin());
+
+  const isLoggedIn = estaAutenticado();
+  const isAdmin = esAdmin();
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="py-3">
-      <Container>
-        {/* Logo y marca */}
-        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
-          <img 
-            src="/renault-logo.png" 
-            alt="Logo Renault" 
-            className="me-2" 
-            style={{ height: '40px' }}
-          />
-          <span className="fw-bold">Lubricentro Renault</span>
-        </Navbar.Brand>
+    <Navbar expand="lg" className="py-3 app-navbar" role="navigation" aria-label="Main navigation" style={inlineStyle}>
+      <Container fluid>
+        <div className="app-navbar__left">
+          <Navbar.Brand as={Link} to="/" className="app-navbar__brand">
+            <img
+              src="/renault-logo.png"
+              alt="Lubricentro Renault logo"
+              className="app-navbar__logo"
+            />
+            {showBrand && (
+              <span className="app-navbar__company-name" data-show-brand>
+                Lubricentro Renault
+              </span>
+            )}
+          </Navbar.Brand>
+        </div>
 
-        {/* Botón hamburguesa para móviles */}
-        <Navbar.Toggle aria-controls="navbar-nav" />
-
-        {/* Navegación */}
         <Navbar.Collapse id="navbar-nav">
-          <Nav className={`navbar-nav-container ${shouldCenter ? 'navbar-centered' : ''}`}>
-            {/* Enlaces principales - siempre visibles */}
-            <div className="navbar-main-links">
-              <Nav.Link as={Link} to="/">Inicio</Nav.Link>
-              <Nav.Link as={Link} to="/servicios">Servicios</Nav.Link>
-              <Nav.Link as={Link} to="/productos">Productos</Nav.Link>
-              <Nav.Link as={Link} to="/contacto">Contacto</Nav.Link>
-            </div>
-            
-            {/* Enlaces específicos del usuario autenticado */}
-            {estaAutenticado() && (
-              <div className="navbar-user-links">
-                <Nav.Link as={Link} to="/reservar">Reservar Turno</Nav.Link>
-                
-                {/* Enlace al panel de administración para admins */}
-                {esAdmin() && (
-                  <Nav.Link 
-                    as={Link} 
-                    to="/admin"
-                    className="navbar-admin-link"
+          <div className="app-navbar__center">
+            <ul className="app-navbar__links">
+              <li className="nav-item"><Link to="/">Inicio</Link></li>
+              <li className="nav-item"><Link to="/servicios">Servicios</Link></li>
+              <li className="nav-item"><Link to="/productos">Productos</Link></li>
+              <li className="nav-item"><Link to="/contacto">Contacto</Link></li>
+              {isLoggedIn && (
+                <li className="nav-item nav-item--reservar" data-show-logged-in>
+                  <Link to="/reservar">Reservar Turno</Link>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          <div className="app-navbar__right">
+          {isLoggedIn && isAdmin && (
+              <Link to="/admin" className="app-navbar__admin-link" aria-label="Panel de control">
+                <i className="bi bi-gear me-2"></i>
+                Panel de control
+              </Link>
+            )}
+            {isLoggedIn ? (
+              <Dropdown align="end" className="nav-user">
+                <Dropdown.Toggle id="dropdown-usuario" className="nav-user__toggle" variant="outline-light" aria-haspopup="true">
+                  <i className="bi bi-person-circle me-2"></i>
+                  {usuario?.nombre || 'Mi Cuenta'}
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="nav-user__menu" role="menu">
+                  <Dropdown.Item as={Link} to="/mi-perfil" role="menuitem">
+                    <i className="bi bi-person me-2"></i>
+                    Mi Perfil
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/mis-vehiculos" role="menuitem">
+                    <i className="bi bi-car-front me-2"></i>
+                    Mis Vehículos
+                  </Dropdown.Item>
+                  <Dropdown.Item as={Link} to="/mis-reservas" role="menuitem">
+                    <i className="bi bi-calendar-check me-2"></i>
+                    Mis Reservas
+                  </Dropdown.Item>
+                  {isAdmin && (
+                    <>
+                      <Dropdown.Divider />
+                      <Dropdown.Item as={Link} to="/reservas" role="menuitem">
+                        <i className="bi bi-calendar-event me-2"></i>
+                        Turnos de Hoy
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/gestion-reservas" role="menuitem">
+                        <i className="bi bi-funnel me-2"></i>
+                        Gestión de Reservas
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/gestion-vehiculos" role="menuitem">
+                        <i className="bi bi-car-front me-2"></i>
+                        Gestión de Vehículos
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/gestion-usuarios" role="menuitem">
+                        <i className="bi bi-people me-2"></i>
+                        Gestión de Usuarios
+                      </Dropdown.Item>
+                    </>
+                  )}
+                  <Dropdown.Divider />
+                  <Dropdown.Item
+                    role="menuitem"
+                    onClick={() => {
+                      cerrarSesion();
+                      navigate('/login');
+                    }}
                   >
-                    <i className="bi bi-gear me-1"></i>
-                    Panel de control
-                  </Nav.Link>
-                )}
+                    <i className="bi bi-box-arrow-right me-2"></i>
+                    Cerrar Sesión
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            ) : (
+              <div className="auth-actions" data-show-logged-out>
+                <Link className="btn btn--link" to="/login">Iniciar sesión</Link>
+                <Link className="btn btn--primary" to="/registro">Registrarse</Link>
               </div>
             )}
-            
-            {/* Sección de autenticación - siempre al final */}
-            <div className="navbar-auth-section">
-              {estaAutenticado() ? (
-                /* Usuario autenticado - Dropdown */
-                <Dropdown>
-                  <Dropdown.Toggle 
-                    variant="outline-light" 
-                    id="dropdown-usuario"
-                    className="navbar-user-dropdown"
-                  >
-                    <i className="bi bi-person-circle me-2"></i>
-                    {usuario?.nombre || 'Mi Cuenta'}
-                  </Dropdown.Toggle>
-
-                  <Dropdown.Menu className="navbar-dropdown-menu">
-                    <Dropdown.Header className="navbar-dropdown-header">
-                      Mi Cuenta
-                    </Dropdown.Header>
-                    
-                    <Dropdown.Item 
-                      as={Link} 
-                      to="/mis-vehiculos"
-                      className="dropdown-item-custom"
-                    >
-                      <i className="bi bi-car-front me-2"></i>
-                      Mis Vehículos
-                    </Dropdown.Item>
-                    
-                    <Dropdown.Item 
-                      as={Link} 
-                      to="/mi-perfil"
-                      className="dropdown-item-custom"
-                    >
-                      <i className="bi bi-person me-2"></i>
-                      Mi Perfil
-                    </Dropdown.Item>
-                    
-                    <Dropdown.Item 
-                      as={Link} 
-                      to="/mis-reservas"
-                      className="dropdown-item-custom"
-                    >
-                      <i className="bi bi-calendar-check me-2"></i>
-                      Mis Reservas
-                    </Dropdown.Item>
-                    
-                    {/* Opciones de administración en el dropdown */}
-                    {esAdmin() && (
-                      <>
-                        <Dropdown.Divider className="navbar-dropdown-divider" />
-                        <Dropdown.Item 
-                          as={Link} 
-                          to="/reservas"
-                          className="dropdown-item-custom navbar-admin-dropdown-item"
-                        >
-                          <i className="bi bi-calendar-event me-2"></i>
-                          Turnos de Hoy
-                        </Dropdown.Item>
-                        <Dropdown.Item 
-                          as={Link} 
-                          to="/gestion-reservas"
-                          className="dropdown-item-custom navbar-admin-dropdown-item"
-                        >
-                          <i className="bi bi-funnel me-2"></i>
-                          Gestión de Reservas
-                        </Dropdown.Item>
-                        <Dropdown.Item 
-                          as={Link} 
-                          to="/gestion-vehiculos"
-                          className="dropdown-item-custom navbar-admin-dropdown-item"
-                        >
-                          <i className="bi bi-car-front me-2"></i>
-                          Gestión de Vehículos
-                        </Dropdown.Item>
-                        <Dropdown.Item 
-                          as={Link} 
-                          to="/buscar-usuarios"
-                          className="dropdown-item-custom navbar-admin-dropdown-item"
-                        >
-                          <i className="bi bi-people me-2"></i>
-                          Buscar Usuarios
-                        </Dropdown.Item>
-                      </>
-                    )}
-                    
-                    <Dropdown.Divider className="navbar-dropdown-divider" />
-                    
-                    <Dropdown.Item 
-                      onClick={() => {
-                        cerrarSesion();
-                        navigate('/login');
-                      }}
-                      className="dropdown-item-custom navbar-logout-item"
-                    >
-                      <i className="bi bi-box-arrow-right me-2"></i>
-                      Cerrar Sesión
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-              ) : (
-                /* Usuario no autenticado - Botones */
-                <div className="navbar-auth-buttons">
-                  <Button 
-                    as={Link} 
-                    to="/registro" 
-                    variant="outline-light" 
-                    size="md"
-                    className="navbar-register-btn"
-                  >
-                    Registrarse
-                  </Button>
-                  <Button 
-                    as={Link} 
-                    to="/login" 
-                    variant="light" 
-                    size="sm"
-                    className="navbar-login-btn"
-                  >
-                    Iniciar Sesión
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Nav>
+          </div>
         </Navbar.Collapse>
       </Container>
     </Navbar>
