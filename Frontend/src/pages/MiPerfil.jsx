@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Form, Button, Alert, Row, Col, Card } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { dividirNombreCompleto, combinarNombreCompleto } from '../utils/dateUtils';
+import '../assets/styles/perfil.css';
 
 export default function MiPerfil() {
   const { usuario, actualizarUsuario } = usarAuth();
@@ -96,60 +97,43 @@ export default function MiPerfil() {
   };
 
   return (
-    <div className="contenedor-admin-reservas">
+    <div className="perfil-container">
       {/* Header */}
-      <div className="header-admin-reservas">
+      <div className="perfil-header">
         <h1>Mi Perfil</h1>
         <p>Gestiona tu información personal</p>
       </div>
 
       {/* Contenedor principal */}
-      <div style={{ 
-        maxWidth: '800px', 
-        margin: '0 auto'
-      }}>
+      <div className="perfil-contenedor-principal">
         {/* Información de la cuenta */}
-        <div className="mb-4" style={{
-          backgroundColor: 'var(--color-gris)',
-          borderRadius: '10px',
-          padding: '1.5rem',
-          border: '1px solid var(--color-acento)'
-        }}>
-          <h3 style={{ color: 'var(--color-acento)', marginBottom: '1rem' }}>
+        <div className="perfil-info-cuenta">
+          <h3>
             <i className="bi bi-person-circle me-2"></i>
             Información de la Cuenta
           </h3>
           
           <Row>
             <Col md={6}>
-              <p><strong style={{ color: 'var(--color-acento)' }}>ID de Usuario:</strong> {usuario?.id}</p>
-              <p><strong style={{ color: 'var(--color-acento)' }}>Rol:</strong> {usuario?.role === 'ADMIN' ? 'Administrador' : 'Cliente'}</p>
+              <p><strong>ID de Usuario:</strong> {usuario?.id}</p>
+              <p><strong>Rol:</strong> {usuario?.role === 'ADMIN' ? 'Administrador' : 'Cliente'}</p>
             </Col>
             <Col md={6}>
-              <p><strong style={{ color: 'var(--color-acento)' }}>Vehículos Registrados:</strong> {usuario?.vehiculos?.length || 0}</p>
-              <p><strong style={{ color: 'var(--color-acento)' }}>Fecha de Registro:</strong> {new Date().toLocaleDateString('es-ES')}</p>
+              <p><strong>Vehículos Registrados:</strong> {usuario?.vehiculos?.length || 0}</p>
+              <p><strong>Fecha de Registro:</strong> {new Date().toLocaleDateString('es-ES')}</p>
             </Col>
           </Row>
         </div>
 
         {/* Formulario de edición */}
-        <div style={{
-          backgroundColor: 'var(--color-gris)',
-          borderRadius: '10px',
-          padding: '2rem',
-          border: '1px solid var(--color-acento)'
-        }}>
-          <h3 style={{ color: 'var(--color-acento)', marginBottom: '1.5rem' }}>
+        <div className="perfil-formulario-edicion">
+          <h3>
             <i className="bi bi-pencil-square me-2"></i>
             Editar Información Personal
           </h3>
 
           {mostrarExito && (
-            <Alert variant="success" className="mb-4" style={{
-              backgroundColor: 'rgba(40, 167, 69, 0.1)',
-              border: '1px solid #28a745',
-              color: '#28a745'
-            }}>
+            <Alert variant="success" className="perfil-alerta-exito">
               <i className="bi bi-check-circle-fill me-2"></i>
               Perfil actualizado exitosamente
             </Alert>
@@ -159,12 +143,7 @@ export default function MiPerfil() {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-4">
-                  <Form.Label style={{
-                    color: 'var(--color-acento)',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    marginBottom: '0.5rem'
-                  }}>
+                  <Form.Label className="perfil-form-label">
                     Nombre *
                   </Form.Label>
                   <Form.Control
@@ -174,16 +153,9 @@ export default function MiPerfil() {
                     onChange={manejarCambio}
                     isInvalid={!!errores.nombre}
                     placeholder="Ingrese su nombre"
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="perfil-form-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="perfil-feedback-invalid">
                     {errores.nombre}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -191,12 +163,7 @@ export default function MiPerfil() {
               
               <Col md={6}>
                 <Form.Group className="mb-4">
-                  <Form.Label style={{
-                    color: 'var(--color-acento)',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    marginBottom: '0.5rem'
-                  }}>
+                  <Form.Label className="perfil-form-label">
                     Apellido *
                   </Form.Label>
                   <Form.Control
@@ -206,16 +173,9 @@ export default function MiPerfil() {
                     onChange={manejarCambio}
                     isInvalid={!!errores.apellido}
                     placeholder="Ingrese su apellido"
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="perfil-form-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="perfil-feedback-invalid">
                     {errores.apellido}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -225,12 +185,7 @@ export default function MiPerfil() {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-4">
-                  <Form.Label style={{
-                    color: 'var(--color-acento)',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    marginBottom: '0.5rem'
-                  }}>
+                  <Form.Label className="perfil-form-label">
                     Email *
                   </Form.Label>
                   <Form.Control
@@ -240,16 +195,9 @@ export default function MiPerfil() {
                     onChange={manejarCambio}
                     isInvalid={!!errores.email}
                     placeholder="ejemplo@email.com"
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="perfil-form-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="perfil-feedback-invalid">
                     {errores.email}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -257,12 +205,7 @@ export default function MiPerfil() {
               
               <Col md={6}>
                 <Form.Group className="mb-4">
-                  <Form.Label style={{
-                    color: 'var(--color-acento)',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    marginBottom: '0.5rem'
-                  }}>
+                  <Form.Label className="perfil-form-label">
                     Teléfono *
                   </Form.Label>
                   <Form.Control
@@ -272,43 +215,25 @@ export default function MiPerfil() {
                     onChange={manejarCambio}
                     isInvalid={!!errores.telefono}
                     placeholder="11 1234-5678"
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="perfil-form-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="perfil-feedback-invalid">
                     {errores.telefono}
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
 
-            <div className="d-grid gap-3">
+            <div className="perfil-d-grid">
               <Button 
                 variant="primary" 
                 type="submit" 
                 disabled={estaGuardando}
-                style={{
-                  backgroundColor: 'var(--color-acento)',
-                  color: 'var(--color-fondo)',
-                  border: 'none',
-                  padding: '1rem 2rem',
-                  fontWeight: 'bold',
-                  fontSize: '1.1rem',
-                  borderRadius: '5px',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                className="perfil-boton-guardar"
               >
                 {estaGuardando ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span className="perfil-spinner spinner-border spinner-border-sm me-2" role="status"></span>
                     Guardando cambios...
                   </>
                 ) : (
@@ -320,29 +245,21 @@ export default function MiPerfil() {
         </div>
 
         {/* Sección de seguridad */}
-        <div className="mt-4" style={{
-          backgroundColor: 'var(--color-gris)',
-          borderRadius: '10px',
-          padding: '1.5rem',
-          border: '1px solid var(--color-acento)'
-        }}>
-          <h3 style={{ color: 'var(--color-acento)', marginBottom: '1rem' }}>
+        <div className="perfil-seccion-seguridad">
+          <h3>
             <i className="bi bi-shield-lock me-2"></i>
             Seguridad
           </h3>
           
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
+          <div className="perfil-seguridad-contenido">
+            <div className="perfil-seguridad-info">
               <p className="mb-1"><strong>Contraseña</strong></p>
               <p className="text-muted-light mb-0">Última actualización: Hace 30 días</p>
             </div>
             <Button 
               variant="outline-warning"
               size="sm"
-              style={{
-                borderColor: 'var(--color-acento)',
-                color: 'var(--color-acento)'
-              }}
+              className="perfil-boton-cambiar-password"
             >
               Cambiar Contraseña
             </Button>

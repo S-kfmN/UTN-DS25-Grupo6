@@ -204,18 +204,19 @@ export const getAllVehicles = async (req: Request, res: Response) => {
 export const updateVehicle = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    
+    const userRole = req.user?.role; // <-- AGREGADO
     if (!userId) {
       return res.status(401).json({
         success: false,
         message: 'Usuario no autenticado'
       });
     }
-    
     const vehicleId = parseInt(req.params.id);
     const updateData: UpdateVehicleRequest = req.body;
 
-    // Verificar que el vehículo existe y pertenece al usuario
+    console.log('BODY UPDATE RESERVA:', req.body); // <-- agrega esto
+
+    // Verificar que el vehículo existe
     const vehicle = await VehicleModel.findById(vehicleId);
     if (!vehicle) {
       return res.status(404).json({
@@ -223,8 +224,8 @@ export const updateVehicle = async (req: Request, res: Response) => {
         message: 'Vehículo no encontrado'
       });
     }
-
-    if (vehicle.userId !== userId) {
+    // PERMITIR SI ES ADMIN O DUEÑO
+    if (userRole !== 'ADMIN' && vehicle.userId !== userId) {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para modificar este vehículo'
@@ -233,7 +234,6 @@ export const updateVehicle = async (req: Request, res: Response) => {
 
     // Si se está actualizando la patente, verificar que no exista
     if (updateData.license && updateData.license !== vehicle.license) {
-      // Verificar si la patente ya existe (validación centralizada)
       const esPatenteUnica = await VehicleModel.validarPatenteUnica(updateData.license, vehicleId);
       if (!esPatenteUnica) {
         return res.status(400).json({
@@ -243,7 +243,7 @@ export const updateVehicle = async (req: Request, res: Response) => {
       }
     }
 
-    // Actualizar vehículo
+    // Actualizar vehículo en la base de datos
     const updatedVehicle = await VehicleModel.update(vehicleId, updateData);
 
     res.json({
@@ -263,7 +263,7 @@ export const updateVehicle = async (req: Request, res: Response) => {
 export const deleteVehicle = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    
+    const userRole = req.user?.role; // <-- AGREGADO
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -273,7 +273,7 @@ export const deleteVehicle = async (req: Request, res: Response) => {
     
     const vehicleId = parseInt(req.params.id);
 
-    // Verificar que el vehículo existe y pertenece al usuario
+    // Verificar que el vehículo existe
     const vehicle = await VehicleModel.findById(vehicleId);
     if (!vehicle) {
       return res.status(404).json({
@@ -282,7 +282,8 @@ export const deleteVehicle = async (req: Request, res: Response) => {
       });
     }
 
-    if (vehicle.userId !== userId) {
+    // PERMITIR SI ES ADMIN O DUEÑO
+    if (userRole !== 'ADMIN' && vehicle.userId !== userId) {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para eliminar este vehículo'

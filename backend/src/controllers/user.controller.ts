@@ -108,3 +108,47 @@ export const getUserById = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const updateUserById = async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const updateData = req.body;
+
+    const updatedUser = await UserModel.update(userId, updateData);
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+export const deleteUserById = async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const deleted = await UserModel.delete(userId);
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};

@@ -6,7 +6,8 @@ import {
   updateReservation,
   cancelReservation,
   getReservationsByDate,
-  getAllReservations
+  getAllReservations,
+  deleteReservation
 } from '../controllers/reservationController';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
@@ -51,6 +52,9 @@ router.get('/:id', authenticate, authorize('ADMIN', 'USER'), getReservation);
 
 // PUT /api/reservations/:id - Actualizar reserva (Admite roles Admin y Users)
 router.put('/:id', authenticate, authorize('ADMIN', 'USER'), updateReservation);
+
+// DELETE /api/reservations/:id - Eliminar reserva (solo admin)
+router.delete('/:id', authenticate, authorize('ADMIN'), deleteReservation);
 
 export const reservationRoutes = router;
 

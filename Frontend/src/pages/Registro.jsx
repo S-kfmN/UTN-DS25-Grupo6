@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Container, Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { usarAuth } from '../context/AuthContext';
+import '../assets/styles/registro.css';
 
 export default function Registro() {
   const { registrarUsuario } = usarAuth();
@@ -75,13 +76,12 @@ export default function Registro() {
 
     if (!datosFormulario.contraseña) {
       nuevosErrores.contraseña = 'La contraseña es requerida';
-    } else if (datosFormulario.contraseña.length < 6) {
-      nuevosErrores.contraseña = 'La contraseña debe tener al menos 6 caracteres';
-    /*} else if (!/[A-Z]/.test(datosFormulario.contraseña)) {
-      nuevosErrores.contraseña = 'Debe contener al menos una mayúscula';
+    } else if (datosFormulario.contraseña.length < 8) {
+      nuevosErrores.contraseña = 'La contraseña debe tener al menos 8 caracteres';
+    } else if (!/[A-Z]/.test(datosFormulario.contraseña)) {
+      nuevosErrores.contraseña = 'La contraseña debe contener al menos una letra mayúscula y al menos un número';
     } else if (!/[0-9]/.test(datosFormulario.contraseña)) {
-      nuevosErrores.contraseña = 'Debe contener al menos un número';
-    */
+      nuevosErrores.contraseña = 'La contraseña debe contener al menos un número';
     }
 
 
@@ -153,54 +153,34 @@ export default function Registro() {
   };
 
   return (
-    <div className="contenedor-admin-reservas">
+    <div className="registro-container">
       {/* Header del formulario */}
-      <div className="header-admin-reservas">
+      <div className="registro-header">
         <h1>Crear Cuenta</h1>
         <p>Únete a Lubricentro Renault</p>
       </div>
 
       {/* Contenedor del formulario */}
-      <div style={{ 
-        maxWidth: '600px', 
-        margin: '0 auto',
-        backgroundColor: 'var(--color-gris)',
-        borderRadius: '10px',
-        padding: '2rem',
-        border: '1px solid var(--color-acento)'
-      }}>
+      <div className="registro-form-container">
         {mostrarExito && (
-          <Alert variant="success" className="mb-4" style={{
-            backgroundColor: 'rgba(40, 167, 69, 0.1)',
-            border: '1px solid #28a745',
-            color: '#28a745'
-          }}>
+          <Alert variant="success" className="registro-alert success">
             <i className="bi bi-check-circle-fill me-2"></i>
             ¡Registro exitoso! Tu cuenta ha sido creada correctamente.
           </Alert>
         )}
 
         {mostrarError && (
-          <Alert variant="danger" className="mb-4" style={{
-            backgroundColor: 'rgba(220, 53, 69, 0.1)',
-            border: '1px solid #dc3545',
-            color: '#dc3545'
-          }}>
+          <Alert variant="danger" className="registro-alert danger">
             <i className="bi bi-exclamation-triangle-fill me-2"></i>
             {errores.general || 'Error al registrar usuario. Por favor, intente nuevamente.'}
           </Alert>
         )}
 
         <Form onSubmit={manejarEnvio}>
-          <Row className="mb-4">
+          <Row className="registro-mb-4">
             <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label style={{
-                  color: 'var(--color-acento)',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem',
-                  marginBottom: '0.5rem'
-                }}>
+              <Form.Group className="registro-form-group mb-2">
+                <Form.Label className="registro-form-label">
                   Nombre *
                 </Form.Label>
                 <Form.Control
@@ -210,29 +190,17 @@ export default function Registro() {
                   onChange={manejarCambio}
                   isInvalid={!!errores.nombre}
                   placeholder="Ingrese su nombre"
-                  style={{
-                    backgroundColor: 'var(--color-gris)',
-                    border: '1px solid var(--color-acento)',
-                    color: 'var(--color-texto)',
-                    padding: '0.75rem',
-                    borderRadius: '5px'
-                  }}
-                  className="form-control-custom"
+                  className="registro-form-control"
                 />
-                <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                <Form.Control.Feedback type="invalid" className="registro-form-feedback">
                   {errores.nombre}
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
             
             <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label style={{
-                  color: 'var(--color-acento)',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem',
-                  marginBottom: '0.5rem'
-                }}>
+              <Form.Group className="registro-form-group mb-2">
+                <Form.Label className="registro-form-label">
                   Apellido *
                 </Form.Label>
                 <Form.Control
@@ -242,29 +210,17 @@ export default function Registro() {
                   onChange={manejarCambio}
                   isInvalid={!!errores.apellido}
                   placeholder="Ingrese su apellido"
-                  style={{
-                    backgroundColor: 'var(--color-gris)',
-                    border: '1px solid var(--color-acento)',
-                    color: 'var(--color-texto)',
-                    padding: '0.75rem',
-                    borderRadius: '5px'
-                  }}
-                  className="form-control-custom"
+                  className="registro-form-control"
                 />
-                <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                <Form.Control.Feedback type="invalid" className="registro-form-feedback">
                   {errores.apellido}
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
           </Row>
 
-          <Form.Group className="mb-4">
-            <Form.Label style={{
-              color: 'var(--color-acento)',
-              fontWeight: 'bold',
-              fontSize: '0.9rem',
-              marginBottom: '0.5rem'
-            }}>
+          <Form.Group className="registro-form-group mb-4">
+            <Form.Label className="registro-form-label">
               Email *
             </Form.Label>
             <Form.Control
@@ -274,27 +230,15 @@ export default function Registro() {
               onChange={manejarCambio}
               isInvalid={!!errores.email}
               placeholder="ejemplo@email.com"
-              style={{
-                backgroundColor: 'var(--color-gris)',
-                border: '1px solid var(--color-acento)',
-                color: 'var(--color-texto)',
-                padding: '0.75rem',
-                borderRadius: '5px'
-              }}
-              className="form-control-custom"
+              className="registro-form-control"
             />
-            <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+            <Form.Control.Feedback type="invalid" className="registro-form-feedback">
               {errores.email}
             </Form.Control.Feedback>
           </Form.Group>
 
-          <Form.Group className="mb-4">
-            <Form.Label style={{
-              color: 'var(--color-acento)',
-              fontWeight: 'bold',
-              fontSize: '0.9rem',
-              marginBottom: '0.5rem'
-            }}>
+          <Form.Group className="registro-form-group mb-4">
+            <Form.Label className="registro-form-label">
               Teléfono *
             </Form.Label>
             <Form.Control
@@ -304,29 +248,17 @@ export default function Registro() {
               onChange={manejarCambio}
               isInvalid={!!errores.telefono}
               placeholder="11 1234-5678"
-              style={{
-                backgroundColor: 'var(--color-gris)',
-                border: '1px solid var(--color-acento)',
-                color: 'var(--color-texto)',
-                padding: '0.75rem',
-                borderRadius: '5px'
-              }}
-              className="form-control-custom"
+              className="registro-form-control"
             />
-            <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+            <Form.Control.Feedback type="invalid" className="registro-form-feedback">
               {errores.telefono}
             </Form.Control.Feedback>
           </Form.Group>
 
-          <Row className="mb-4">
+          <Row className="registro-mb-4">
             <Col md={6}>
-              <Form.Group className="mb-4">
-                <Form.Label style={{
-                  color: 'var(--color-acento)',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem',
-                  marginBottom: '0.5rem'
-                }}>
+              <Form.Group className="registro-form-group mb-4">
+                <Form.Label className="registro-form-label">
                   Contraseña *
                 </Form.Label>
                 <Form.Control
@@ -335,30 +267,18 @@ export default function Registro() {
                   value={datosFormulario.contraseña}
                   onChange={manejarCambio}
                   isInvalid={!!errores.contraseña}
-                  placeholder="Mínimo 6 caracteres"
-                  style={{
-                    backgroundColor: 'var(--color-gris)',
-                    border: '1px solid var(--color-acento)',
-                    color: 'var(--color-texto)',
-                    padding: '0.75rem',
-                    borderRadius: '5px'
-                  }}
-                  className="form-control-custom"
+                  placeholder="Mínimo 8 caracteres"
+                  className="registro-form-control"
                 />
-                <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                <Form.Control.Feedback type="invalid" className="registro-form-feedback">
                   {errores.contraseña}
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
             
             <Col md={6}>
-              <Form.Group className="mb-4">
-                <Form.Label style={{
-                  color: 'var(--color-acento)',
-                  fontWeight: 'bold',
-                  fontSize: '0.9rem',
-                  marginBottom: '0.5rem'
-                }}>
+              <Form.Group className="registro-form-group mb-4">
+                <Form.Label className="registro-form-label">
                   Confirmar Contraseña *
                 </Form.Label>
                 <Form.Control
@@ -368,39 +288,25 @@ export default function Registro() {
                   onChange={manejarCambio}
                   isInvalid={!!errores.confirmarContraseña}
                   placeholder="Repita su contraseña"
-                  style={{
-                    backgroundColor: 'var(--color-gris)',
-                    border: '1px solid var(--color-acento)',
-                    color: 'var(--color-texto)',
-                    padding: '0.75rem',
-                    borderRadius: '5px'
-                  }}
-                  className="form-control-custom"
+                  className="registro-form-control"
                 />
-                <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                <Form.Control.Feedback type="invalid" className="registro-form-feedback">
                   {errores.confirmarContraseña}
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
           </Row>
 
-          <div className="d-grid gap-3 mb-4">
+          <Form.Text muted>
+            La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.
+          </Form.Text>
+
+          <div className="d-grid gap-3 registro-mb-4">
             <Button 
               variant="primary" 
               type="submit" 
               disabled={estaEnviando}
-              style={{
-                backgroundColor: 'var(--color-acento)',
-                color: 'var(--color-fondo)',
-                border: 'none',
-                padding: '1rem 2rem',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                borderRadius: '5px',
-                transition: 'transform 0.2s'
-              }}
-              onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+              className="registro-submit-button"
             >
               {estaEnviando ? (
                 <>
@@ -413,20 +319,12 @@ export default function Registro() {
             </Button>
           </div>
 
-          <div className="text-center">
-            <p style={{ 
-              color: 'var(--color-texto)', 
-              opacity: 0.8,
-              margin: 0 
-            }}>
+          <div className="registro-text-center">
+            <p className="registro-text">
               ¿Ya tienes una cuenta?{' '}
               <Link 
                 to="/login" 
-                style={{ 
-                  color: 'var(--color-acento)',
-                  textDecoration: 'none',
-                  fontWeight: 'bold'
-                }}
+                className="registro-link"
               >
                 Iniciar Sesión
               </Link>

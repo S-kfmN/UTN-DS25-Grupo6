@@ -1,20 +1,21 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Badge, Alert, Collapse, Modal } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
 import { formatearFechaHoraParaMostrar, combinarNombreCompleto } from '../utils/dateUtils';
+import '../assets/styles/misreservas.css';
+import EditReservaModal from "../components/EditReservaModal";
 
 export default function MisReservas() {
-  const { usuario, obtenerReservasUsuario, cancelarReserva, reservas } = usarAuth();
-  
+  // QUITA setReservaEditar DEL CONTEXTO
+  const { usuario, obtenerReservasUsuario, cancelarReserva, reservas, modificarReserva, servicios } = usarAuth();
+
+  // AGREGA EL ESTADO LOCAL
+  const [reservaEditar, setReservaEditar] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  // Eliminar el estado local `reservasUsuario` y el `useEffect` para cargarlas
-  // const [reservasUsuario, setReservasUsuario] = useState([]);
   const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
   const [modalCancelar, setModalCancelar] = useState({ show: false, reserva: null, error: '' });
 
-  // Usar las reservas directamente del contexto, ya cargadas por AuthProvider
-  // Si necesitas filtrar o manipular, hazlo sobre el array `reservas` directamente
   const reservasUsuario = reservas; // Asignar directamente las reservas del contexto
   console.log('🔍 MisReservas: reservasUsuario del contexto (completo):', reservasUsuario);
 
@@ -25,8 +26,8 @@ export default function MisReservas() {
   }, [usuario, obtenerReservasUsuario]);
 
   // Filtrar reservas según el estado seleccionado
-  const reservasFiltradas = filtroEstado === 'todos' 
-    ? reservasUsuario 
+  const reservasFiltradas = filtroEstado === 'todos'
+    ? reservasUsuario
     : reservasUsuario.filter(reserva => reserva.estado === filtroEstado);
 
   // Verificar que reservas sea un array
@@ -57,8 +58,6 @@ export default function MisReservas() {
       default: return estado;
     }
   };
-
-  // Usar la función utilitaria para formatear fechas
 
   // Nueva función para validar y abrir modal
   const intentarCancelarReserva = (reserva) => {
@@ -101,42 +100,57 @@ export default function MisReservas() {
     }).length
   };
 
+  const handleEliminarReserva = async (reservaId) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) return;
+    const resultado = await cancelarReserva(reservaId);
+    if (resultado.exito) {
+      await obtenerReservasUsuario(usuario.id);
+      alert('Reserva eliminada correctamente.');
+    } else {
+      alert('Error al eliminar la reserva: ' + (resultado.error || 'Error desconocido'));
+    }
+  };
+
+  if (!reservas.length) {
+    return <Alert variant="info">No tienes reservas registradas.</Alert>;
+  }
+
   return (
-    <div className="contenedor-admin-reservas">
+    <div className="misreservas-container">
       {/* Header */}
-      <div className="header-admin-reservas">
+      <div className="misreservas-header">
         <h1>Mis Reservas</h1>
         <p>Gestiona tus turnos programados</p>
       </div>
 
       {/* Estadísticas rápidas */}
-      <div className="estadisticas-rapidas">
-        <div className="stat-card">
+      <div className="misreservas-estadisticas-rapidas">
+        <div className="misreservas-stat-card">
           <h3>Total Reservas</h3>
-          <p className="stat-numero">{estadisticas.total}</p>
+          <p className="misreservas-stat-numero">{estadisticas.total}</p>
         </div>
-        <div className="stat-card">
+        <div className="misreservas-stat-card">
           <h3>Confirmadas</h3>
-          <p className="stat-numero confirmado">{estadisticas.confirmadas}</p>
+          <p className="misreservas-stat-numero confirmado">{estadisticas.confirmadas}</p>
         </div>
-        <div className="stat-card">
+        <div className="misreservas-stat-card">
           <h3>Pendientes</h3>
-          <p className="stat-numero pendiente">{estadisticas.pendientes}</p>
+          <p className="misreservas-stat-numero pendiente">{estadisticas.pendientes}</p>
         </div>
-        <div className="stat-card">
+        <div className="misreservas-stat-card">
           <h3>Canceladas</h3>
-          <p className="stat-numero cancelado">{estadisticas.canceladas}</p>
+          <p className="misreservas-stat-numero cancelado">{estadisticas.canceladas}</p>
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="filtros-admin">
-        <div className="filtro-grupo">
+      <div className="misreservas-filtros">
+        <div className="misreservas-filtro-grupo">
           <label>Filtrar por estado:</label>
           <select 
             value={filtroEstado} 
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="form-select"
+            className="misreservas-form-select"
           >
             <option value="todos">Todos los estados</option>
             <option value="confirmado">Confirmado</option>
@@ -145,60 +159,74 @@ export default function MisReservas() {
             <option value="completado">Completado</option>
           </select>
         </div>
-        
-
       </div>
 
       {/* Lista de reservas activas */}
-      <div className="lista-reservas-admin">
-        {reservasActivas.length > 0 ? (
-          <div className="grupo-fecha">
-            <h2 className="fecha-titulo">Mis Turnos Programados</h2>
-            <div className="reservas-del-dia">
-              {reservasActivas
-                .filter(reserva => reserva && reserva.id)
+      <div className="misreservas-lista-reservas">
+        {reservasFiltradas.length > 0 ? (
+          <div className="misreservas-grupo-fecha">
+            <h2 className="misreservas-fecha-titulo">Mis Turnos Programados</h2>
+            <div className="misreservas-reservas-del-dia">
+              {reservasFiltradas
+                .filter(reserva => reserva && reserva.id && reserva.estado !== 'cancelado')
                 .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
                 .map(reserva => (
-                  <div key={reserva.id} className="reserva-card">
-                    <div className="reserva-header">
-                      <div className="reserva-hora">
-                        <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
-                      </div>
-                      <div className="reserva-estado">
-                        <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>
+                  <div key={reserva.id} className="misreservas-reserva-card">
+                    <div className="misreservas-reserva-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div className="misreservas-reserva-hora" style={{ fontWeight: 'bold' }}>
+                        {formatearFechaHoraParaMostrar(reserva.date, reserva.time)}
                       </div>
                     </div>
-                    <div className="reserva-info">
-                      <div className="cliente-info">
-                        <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
+                    <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`} style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
+                      {obtenerTextoEstado(reserva.estado)}
+                    </span>
+                    <div className="misreservas-reserva-info">
+                      <div className="misreservas-cliente-info">
+                        <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
                         <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
                         <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
                       </div>
                       {reserva.observaciones && (
-                        <div className="observaciones">
+                        <div className="misreservas-observaciones">
                           <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
                         </div>
                       )}
                     </div>
-                    <div className="reserva-acciones mt-2">
+                    <div className="misreservas-reserva-acciones">
                       {reserva.estado === 'pendiente' && (
                         <Button 
                           variant="outline-danger" 
                           size="sm" 
                           onClick={() => intentarCancelarReserva(reserva)}
-                          style={{ fontWeight: 'bold' }}
+                          className="misreservas-boton-cancelar"
                         >
                           <i className="bi bi-x-circle me-1"></i>
                           Cancelar Reserva
                         </Button>
                       )}
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleEliminarReserva(reserva.id)}
+                        title="Eliminar reserva"
+                      >
+                        <i className="bi bi-trash"></i> Eliminar
+                      </Button>
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => setReservaEditar(reserva)}
+                        className="misreservas-boton-editar"
+                      >
+                        <i className="bi bi-pencil"></i> Modificar
+                      </Button>
                     </div>
                   </div>
                 ))}
             </div>
           </div>
         ) : (
-          <div className="sin-reservas">
+          <div className="misreservas-sin-reservas">
             <p>No tienes reservas activas.</p>
           </div>
         )}
@@ -211,42 +239,41 @@ export default function MisReservas() {
             onClick={() => setMostrarCanceladas(v => !v)}
             aria-controls="turnos-cancelados"
             aria-expanded={mostrarCanceladas}
-            className="mb-2"
-            style={{ fontWeight: 'bold' }}
+            className="misreservas-boton-toggle-canceladas mb-2"
           >
             {mostrarCanceladas ? 'Ocultar' : 'Mostrar'} Turnos Cancelados ({reservasCanceladas.length})
           </Button>
           <Collapse in={mostrarCanceladas}>
             <div id="turnos-cancelados">
-              <div className="grupo-fecha">
-                <h2 className="fecha-titulo">Turnos Cancelados</h2>
-                <div className="reservas-del-dia">
+              <div className="misreservas-grupo-fecha">
+                <h2 className="misreservas-fecha-titulo">Turnos Cancelados</h2>
+                <div className="misreservas-reservas-del-dia">
                   {reservasCanceladas
                     .filter(reserva => reserva && reserva.id)
                     .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
                     .map(reserva => (
-                      <div key={reserva.id} className="reserva-card" style={{ opacity: 0.7 }}>
-                        <div className="reserva-header">
-                          <div className="reserva-hora">
+                      <div key={reserva.id} className="misreservas-reserva-card" style={{ opacity: 0.7 }}>
+                        <div className="misreservas-reserva-header">
+                          <div className="misreservas-reserva-hora">
                             <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
                           </div>
-                          <div className="reserva-estado">
+                          <div className="misreservas-reserva-estado">
                             <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>
                           </div>
                         </div>
-                        <div className="reserva-info">
-                          <div className="cliente-info">
-                            <h4 style={{ color: 'var(--color-acento)' }}>{reserva.servicio || 'Servicio no especificado'}</h4>
+                        <div className="misreservas-reserva-info">
+                          <div className="misreservas-cliente-info">
+                            <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
                             <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
                             <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
                           </div>
                           {reserva.observaciones && (
-                            <div className="observaciones">
+                            <div className="misreservas-observaciones">
                               <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
                             </div>
                           )}
                           {reserva.fechaCancelacion && (
-                            <div className="text-muted mt-2" style={{ fontSize: '0.95em' }}>
+                            <div className="misreservas-texto-cancelacion">
                               <i className="bi bi-clock-history me-1"></i>
                               Cancelado el {formatearFechaParaMostrar(reserva.fechaCancelacion)} a las {new Date(reserva.fechaCancelacion).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                             </div>
@@ -262,26 +289,12 @@ export default function MisReservas() {
       )}
 
       {/* Información adicional */}
-      <div className="mt-4 p-3" style={{
-        backgroundColor: 'rgba(255, 204, 0, 0.1)',
-        border: '1px solid rgba(255, 204, 0, 0.3)',
-        borderRadius: '5px',
-        borderLeft: '4px solid var(--color-acento)'
-      }}>
-        <h6 style={{ 
-          color: 'var(--color-acento)', 
-          marginBottom: '0.5rem',
-          fontWeight: 'bold'
-        }}>
+      <div className="misreservas-info-adicional">
+        <h6>
           <i className="bi bi-info-circle me-2"></i>
           Información Importante:
         </h6>
-        <ul style={{ 
-          color: 'var(--color-texto)', 
-          fontSize: '0.9rem',
-          margin: 0,
-          paddingLeft: '1.5rem'
-        }}>
+        <ul>
           <li>Las reservas se pueden cancelar hasta 24 horas antes del turno</li>
           <li>Recibirás confirmación por email cuando tu turno sea confirmado</li>
           <li>Llega 10 minutos antes de tu hora programada</li>
@@ -296,14 +309,14 @@ export default function MisReservas() {
         </Modal.Header>
         <Modal.Body>
           {modalCancelar.error ? (
-            <div className="alert alert-warning mb-0">
+            <div className="alert alert-warning misreservas-modal-alert">
               <i className="bi bi-exclamation-triangle me-2"></i>
               {modalCancelar.error}
             </div>
           ) : (
             <>
               <p>¿Estás seguro de que quieres cancelar esta reserva?</p>
-              <ul>
+              <ul className="misreservas-modal-lista">
                 <li><b>Fecha:</b> {modalCancelar.reserva?.fecha}</li>
                 <li><b>Hora:</b> {modalCancelar.reserva?.hora}</li>
                 <li><b>Servicio:</b> {modalCancelar.reserva?.servicio}</li>
@@ -322,6 +335,25 @@ export default function MisReservas() {
           )}
         </Modal.Footer>
       </Modal>
+
+      {/* Modal para editar reserva */}
+      <EditReservaModal
+        show={!!reservaEditar}
+        reserva={reservaEditar}
+        onHide={() => setReservaEditar(null)}
+        onSave={async (nuevosDatos) => {
+          // Buscar el servicio por nombre
+          const servicioSeleccionado = servicios.find(s => s.name === nuevosDatos.servicio);
+          await modificarReserva(reservaEditar.id, {
+            date: nuevosDatos.fecha,
+            time: nuevosDatos.hora,
+            notes: nuevosDatos.observaciones,
+            serviceId: servicioSeleccionado?.id // <-- enviar el id del servicio
+          });
+          setReservaEditar(null);
+          await obtenerReservasUsuario(usuario.id);
+        }}
+      />
     </div>
   );
 }

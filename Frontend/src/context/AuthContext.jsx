@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   const [allReservations, setAllReservations] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [allVehicles, setAllVehicles] = useState([]);
+  const [reservaEditar, setReservaEditar] = useState(null); // Nuevo estado para reserva a editar
 
   // --- Definiciones de funciones useCallback ---
 
@@ -72,21 +73,30 @@ export const AuthProvider = ({ children }) => {
       console.log('📅 obtenerReservasUsuario: Respuesta de la API para reservas:', response);
       const loadedReservas = response.data.reservations || [];
       console.log('🔍 obtenerReservasUsuario: Reserva bruta del backend:', loadedReservas[0]);
+      const statusToEstado = (status) => {
+        switch ((status || '').toUpperCase()) {
+          case 'PENDING': return 'pendiente';
+          case 'CONFIRMED': return 'confirmado';
+          case 'CANCELLED': return 'cancelado';
+          case 'COMPLETED': return 'completado';
+          default: return status?.toLowerCase() || '';
+        }
+      };
       const reservasTransformadas = loadedReservas.map(reserva => {
         const { nombre, apellido } = dividirNombreCompleto(reserva.user?.name || '');
-        console.log(`🔍 obtenerReservasUsuario: Procesando user.name: "${reserva.user?.name}" -> Nombre: "${nombre}", Apellido: "${apellido}"`);
         return {
           ...reserva,
-          fecha: reserva.date, // Mapear 'date' del backend a 'fecha' para el frontend
-          hora: reserva.time,  // Mapear 'time' del backend a 'hora' para el frontend
-          servicio: reserva.service?.name, 
-          patente: reserva.vehicle?.license, 
+          fecha: reserva.date,
+          hora: reserva.time,
+          estado: statusToEstado(reserva.status), // <-- aquí el cambio
+          servicio: reserva.service?.name,
+          patente: reserva.vehicle?.license,
           marca: reserva.vehicle?.brand,
           modelo: reserva.vehicle?.model,
           año: reserva.vehicle?.year,
-          nombre: nombre,   
+          nombre: nombre,
           apellido: apellido,
-          dni: reserva.user?.dni, // Asegurarse de que el DNI se mapee si existe en el user
+          dni: reserva.user?.dni,
         };
       });
       setReservas(reservasTransformadas); 
@@ -390,41 +400,61 @@ export const AuthProvider = ({ children }) => {
   // Función para actualizar vehículo
   const actualizarVehiculo = useCallback(async (vehiculoId, nuevosDatos) => {
     try {
-      const vehiculoParaBackend = {};
-      
-      if (nuevosDatos.patente) vehiculoParaBackend.license = nuevosDatos.patente;
-      if (nuevosDatos.marca) vehiculoParaBackend.brand = nuevosDatos.marca;
-      if (nuevosDatos.modelo) vehiculoParaBackend.model = nuevosDatos.modelo;
-      if (nuevosDatos.año) vehiculoParaBackend.year = parseInt(nuevosDatos.año);
-      if (nuevosDatos.color) vehiculoParaBackend.color = nuevosDatos.color;
-      if (nuevosDatos.estado) vehiculoParaBackend.status = nuevosDatos.estado;
+      // Buscar el vehículo original según el rol
+      let vehiculoOriginal = null;
+      if (usuario?.rol === 'ADMIN' || usuario?.role === 'ADMIN') {
+        vehiculoOriginal = allVehicles.find(v => v.id === vehiculoId);
+      } else {
+        vehiculoOriginal = usuario?.vehiculos?.find(v => v.id === vehiculoId);
+      }
+      if (!vehiculoOriginal) throw new Error('Vehículo no encontrado');
 
+      // Solo claves en inglés
+      const vehiculoParaBackend = {
+        license: nuevosDatos.license !== undefined && nuevosDatos.license !== '' 
+          ? nuevosDatos.license 
+          : vehiculoOriginal.license,
+        brand: nuevosDatos.brand !== undefined && nuevosDatos.brand !== '' 
+          ? nuevosDatos.brand 
+          : vehiculoOriginal.brand,
+        model: nuevosDatos.model !== undefined && nuevosDatos.model !== '' 
+          ? nuevosDatos.model 
+          : vehiculoOriginal.model,
+        year: nuevosDatos.year !== undefined && nuevosDatos.year !== '' 
+          ? parseInt(nuevosDatos.year) 
+          : vehiculoOriginal.year,
+        color: nuevosDatos.color !== undefined && nuevosDatos.color !== '' 
+          ? nuevosDatos.color 
+          : vehiculoOriginal.color,
+        status: nuevosDatos.status !== undefined && nuevosDatos.status !== '' 
+          ? nuevosDatos.status 
+          : vehiculoOriginal.status,
+      };
+
+      // Llamada al backend
       const response = await apiService.updateVehicle(vehiculoId, vehiculoParaBackend);
       const vehiculoData = response.data;
-      
-      const vehiculosActualizados = usuario?.vehiculos?.map(v =>
-        v.id === vehiculoId ? { 
-          ...v, 
-          ...nuevosDatos,
-          ...(vehiculoData.license && { patente: vehiculoData.license }),
-          ...(vehiculoData.brand && { marca: vehiculoData.brand }),
-          ...(vehiculoData.model && { modelo: vehiculoData.model }),
-          ...(vehiculoData.year && { año: vehiculoData.year }),
-          ...(vehiculoData.color && { color: vehiculoData.color }),
-          ...(vehiculoData.status && { estado: vehiculoData.status })
-        } : v
-      ) || [];
-      
-      const usuarioActualizado = { ...usuario, vehiculos: vehiculosActualizados };
-      setUsuario(usuarioActualizado);
-      localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
-      
+
+      // Actualiza el estado local solo si eres usuario normal
+      if (usuario?.rol !== 'ADMIN' && usuario?.role !== 'ADMIN') {
+        const vehiculosActualizados = usuario?.vehiculos?.map(v =>
+          v.id === vehiculoId ? { 
+            ...v, 
+            ...vehiculoData
+          } : v
+        ) || [];
+
+        const usuarioActualizado = { ...usuario, vehiculos: vehiculosActualizados };
+        setUsuario(usuarioActualizado);
+        localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+      }
+
       return { exito: true };
     } catch (error) {
       console.error('Error al actualizar vehículo:', error);
       return { exito: false, error: error.message };
     }
-  }, [usuario]);
+  }, [usuario, allVehicles]);
 
   // Función para eliminar vehículo
   const eliminarVehiculo = useCallback(async (vehiculoId) => {
@@ -515,6 +545,17 @@ export const AuthProvider = ({ children }) => {
       return { exito: false, error: error.message };
     }
   }, [reservas]);
+
+  // Función para modificar reserva
+  const modificarReserva = useCallback(async (reservaId, nuevosDatos) => {
+    try {
+      const response = await apiService.updateReservation(reservaId, nuevosDatos);
+      return { exito: true, reserva: response.data };
+    } catch (error) {
+      console.error('Error al modificar reserva:', error);
+      return { exito: false, error: error.message };
+    }
+  }, []);
 
   // Función para obtener vehículos activos
   const obtenerVehiculosActivos = useCallback(() => {
@@ -694,6 +735,18 @@ export const AuthProvider = ({ children }) => {
 
     verificarUsuarioGuardado();
   }, [cargarVehiculosUsuario, obtenerReservasUsuario, cargarServicios, cargarTodosLosUsuarios, cargarTodasLasReservas, cargarTodosLosVehiculos]);
+    // Función para eliminar reserva (ADMIN o usuario)
+  const eliminarReserva = useCallback(async (reservaId) => {
+    try {
+      await apiService.deleteReservation(reservaId);
+      setAllReservations(prev => prev.filter(r => r.id !== reservaId));
+      setReservas(prev => prev.filter(r => r.id !== reservaId));
+      return { exito: true };
+    } catch (error) {
+      console.error('Error al eliminar reserva:', error);
+      return { exito: false, error: error.message };
+    }
+  }, [setAllReservations, setReservas]);
 
   // Valor del contexto
   const valor = {
@@ -733,6 +786,8 @@ export const AuthProvider = ({ children }) => {
     crearReserva,
     obtenerReservasUsuario,
     cancelarReserva,
+    modificarReserva,
+    eliminarReserva,
     
     // Funciones de utilidad
     cambiarRol,
@@ -750,4 +805,5 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};
+

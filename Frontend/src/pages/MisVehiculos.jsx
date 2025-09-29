@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Button, Modal, Form, Alert, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import CustomButton from '../components/CustomButton';
 import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
+import '../assets/styles/misvehiculos.css';
 
 export default function MisVehiculos() {
   const { usuario, agregarVehiculo, actualizarVehiculo, eliminarVehiculo, cargarVehiculosUsuario } = usarAuth();
@@ -55,9 +57,9 @@ export default function MisVehiculos() {
 
   // Filtrar vehículos por búsqueda
   const vehiculosFiltrados = vehiculos.filter(vehiculo =>
-    vehiculo.patente.toLowerCase().includes(busqueda.toLowerCase()) ||
-    vehiculo.marca.toLowerCase().includes(busqueda.toLowerCase()) ||
-    vehiculo.modelo.toLowerCase().includes(busqueda.toLowerCase())
+    (vehiculo.license || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+    (vehiculo.brand || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+    (vehiculo.model || '').toLowerCase().includes(busqueda.toLowerCase())
   );
 
   // Función para formatear patente automáticamente
@@ -144,33 +146,34 @@ export default function MisVehiculos() {
 
     try {
       if (modoEdicion && vehiculoAEditar) {
-        // Editar vehículo existente
-        // Los campos para edición ya deberían coincidir o manejarse de forma similar
+        // Usar el valor anterior si el nuevo es string vacío
         const vehicleDataToSend = {
-          license: nuevoVehiculo.patente, // Mapear patente a license
-          brand: nuevoVehiculo.marca,
-          model: nuevoVehiculo.modelo,
-          year: parseInt(nuevoVehiculo.año), // Convertir año a número
-          color: nuevoVehiculo.color,
-          // No necesitamos userId para actualizar, ya que se asocia al vehículo existente
+          brand: nuevoVehiculo.marca !== '' ? nuevoVehiculo.marca : vehiculoAEditar.brand,
+          model: nuevoVehiculo.modelo !== '' ? nuevoVehiculo.modelo : vehiculoAEditar.model,
+          year: nuevoVehiculo.año !== '' ? parseInt(nuevoVehiculo.año) : vehiculoAEditar.year,
+          color: nuevoVehiculo.color !== '' ? nuevoVehiculo.color : vehiculoAEditar.color,
         };
+        // Solo agrega license si realmente cambió
+        if (nuevoVehiculo.patente !== vehiculoAEditar.license) {
+          vehicleDataToSend.license = nuevoVehiculo.patente;
+        }
+        console.log('Datos a actualizar:', vehicleDataToSend);
         const resultado = await actualizarVehiculo(vehiculoAEditar.id, vehicleDataToSend);
         if (resultado.exito) {
           setMostrarExito(true);
           setTimeout(() => setMostrarExito(false), 3000);
-          // Recargar vehículos desde el backend
           const vehiculosActualizados = await cargarVehiculosUsuario(usuario.id);
           setVehiculos(vehiculosActualizados || []);
         }
       } else {
         // Agregar nuevo vehículo
         const vehicleDataToSend = {
-          license: nuevoVehiculo.patente, // Mapear patente a license
+          license: nuevoVehiculo.patente,
           brand: nuevoVehiculo.marca,
           model: nuevoVehiculo.modelo,
-          year: parseInt(nuevoVehiculo.año), // Convertir año a número
+          year: parseInt(nuevoVehiculo.año),
           color: nuevoVehiculo.color,
-          userId: usuario.id, // Añadir el userId del usuario autenticado
+          userId: usuario.id 
         };
         console.log('🚗 MisVehiculos.jsx: Datos del vehículo a enviar:', vehicleDataToSend); // Debug para verificar
         const resultado = await agregarVehiculo(vehicleDataToSend);
@@ -222,17 +225,17 @@ export default function MisVehiculos() {
     }
   };
   const manejarEditarVehiculo = (vehiculo) => {
-    // Limpiar la patente para evitar problemas de formateo
-    const vehiculoLimpio = {
-      ...vehiculo,
-      marca: 'RENAULT', // Siempre forzar marca RENAULT
-      patente: vehiculo.patente || '' // Asegurar que patente no sea null/undefined
-    };
-    setNuevoVehiculo(vehiculoLimpio);
-    setVehiculoAEditar(vehiculo);
-    setModoEdicion(true);
-    setMostrarModal(true);
-  };
+  setNuevoVehiculo({
+    patente: vehiculo.license || '',
+    marca: vehiculo.brand || 'RENAULT',
+    modelo: vehiculo.model || '',
+    año: vehiculo.year || '',
+    color: vehiculo.color || '',
+  });
+  setVehiculoAEditar(vehiculo);
+  setModoEdicion(true);
+  setMostrarModal(true);
+};
   const obtenerColorEstado = (estado) => {
     switch (estado?.toLowerCase()) {
       case 'active': return 'success';
@@ -250,102 +253,87 @@ export default function MisVehiculos() {
   };
 
   return (
-    <div className="contenedor-admin-reservas">
+    <div className="misvehiculos-container">
       {/* Header */}
-      <div className="header-admin-reservas">
+      <div className="misvehiculos-header">
         <h1>Mis Vehículos</h1>
         <p>Gestiona tus vehículos registrados</p>
       </div>
 
       {/* Botón para agregar vehículo */}
-      <div className="mb-4 text-center">
-        <Button 
+      <div className="text-center">
+        <CustomButton 
           onClick={() => setMostrarModal(true)}
-          style={{
-            backgroundColor: 'var(--color-acento)',
-            color: 'var(--color-fondo)',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            fontWeight: 'bold',
-            borderRadius: '5px'
-          }}
+          className="misvehiculos-boton-agregar"
         >
           <i className="bi bi-plus-circle me-2"></i>
           Agregar Vehículo
-        </Button>
-
+        </CustomButton>
       </div>
 
       {/* Mensaje de éxito */}
       {mostrarExito && (
-        <Alert variant="success" className="mb-4" style={{
-          backgroundColor: 'rgba(40, 167, 69, 0.1)',
-          border: '1px solid #28a745',
-          color: '#28a745'
-        }}>
+        <Alert variant="success" className="misvehiculos-alerta-exito">
           <i className="bi bi-check-circle-fill me-2"></i>
           Vehículo agregado exitosamente
         </Alert>
       )}
 
-          {/* Lista de vehículos */}
-    <div className="lista-reservas-admin">
+      {/* Lista de vehículos */}
+      <div className="misvehiculos-lista-vehiculos">
         {cargando ? (
-          <div className="text-center py-4">
-            <div className="spinner-border text-primary" role="status">
+          <div className="misvehiculos-spinner-container">
+            <div className="spinner-border misvehiculos-spinner" role="status">
               <span className="visually-hidden">Cargando vehículos...</span>
             </div>
-            <p className="mt-2">Cargando vehículos desde el servidor...</p>
+            <p className="misvehiculos-spinner-text">Cargando vehículos desde el servidor...</p>
           </div>
         ) : vehiculos.length > 0 ? (
-        <div className="grupo-fecha">
-          <h2 className="fecha-titulo">Vehículos Registrados</h2>
+        <div className="misvehiculos-grupo-fecha">
 
           {/* Input de búsqueda */}
-          <div className="mb-3 text-center">
+          <div className="text-center">
             <input
               type="text"
-              className="form-control"
-              placeholder="Buscar por patente o propietario..."
+              className="misvehiculos-busqueda"
+              placeholder="Buscar por patente..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              style={{
-                maxWidth: '400px',
-                margin: '0 auto',
-                borderRadius: '8px',
-                padding: '0.75rem',
-                backgroundColor: 'var(--color-gris)',
-                border: '1px solid var(--color-acento)',
-                color: 'var(--color-texto)'
-              }}
             />
           </div>
 
-          <div className="reservas-del-dia">
+          <div className="misvehiculos-reservas-del-dia">
               {vehiculosFiltrados.map(vehiculo => (
-                <div key={vehiculo.id} className="reserva-card">
-                  <div className="reserva-header">
-                    <div className="reserva-hora">
-                      <strong>{vehiculo.patente}</strong>
+                <div key={vehiculo.id} className="misvehiculos-reserva-card">
+                  <div className="misvehiculos-reserva-header">
+                    <div className="misvehiculos-reserva-identificacion">
+                      <div className="misvehiculos-reserva-patente">
+                        {vehiculo.license}
+                      </div>
+                      <div className="misvehiculos-reserva-divisor"></div>
+                      <div className="misvehiculos-reserva-marca">
+                        {vehiculo.brand}
+                      </div>
                     </div>
-                    <div className="reserva-estado">
-                      <span className={`badge bg-${obtenerColorEstado(vehiculo.estado)}`}>
-                        {obtenerTextoEstado(vehiculo.estado)}
+                    <div className="misvehiculos-reserva-estado">
+                      <span className={`badge bg-${obtenerColorEstado(vehiculo.status)}`}>
+                        {obtenerTextoEstado(vehiculo.status)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="reserva-info">
-                    <div className="cliente-info">
-                      <h4>{vehiculo.marca} {vehiculo.modelo}</h4>
-                      <p><strong>Año:</strong> {vehiculo.año}</p>
+                  <div className="misvehiculos-reserva-info">
+                    <div className="misvehiculos-cliente-info">
+                      <h4>{vehiculo.model}</h4>
+                      <p><strong>Año:</strong> {vehiculo.year}</p>
                       {vehiculo.color && <p><strong>Color:</strong> {vehiculo.color}</p>}
                       <p><strong>Propietario:</strong> {usuario.nombre} {usuario.apellido}</p>
                     </div>
                   </div>
 
-                <div className="reserva-acciones">
-                  <div className="mb-2">
+                  <div className="misvehiculos-reserva-acciones">
+                  {/* VER CON LOS CHICOS */}
+                  {/*<div className="mb-2">
                     <select 
                       value={vehiculo.estado}
                       onChange={async (e) => {
@@ -358,33 +346,20 @@ export default function MisVehiculos() {
                           console.error('Error al actualizar estado:', error);
                         }
                       }}
-                      className="form-select form-select-sm"
-                      style={{
-                        backgroundColor: 'var(--color-gris)',
-                        border: '1px solid var(--color-acento)',
-                        color: 'var(--color-texto)',
-                        padding: '0.5rem',
-                        borderRadius: '5px',
-                        minWidth: '120px'
-                      }}
+                      className="misvehiculos-select-estado"
                     >
                       <option value="ACTIVE">Activo</option>
                       <option value="INACTIVE">Inactivo</option>
                     </select>
-                  </div>
+                  </div>*/}
 
-                  <div className="d-flex justify-content-start gap-2">
+                  <div className="misvehiculos-botones-accion">
                     <Button 
                       onClick={() => manejarEditarVehiculo(vehiculo)}
-                      variant="primary"
                       size="sm"
-                      style={{
-                        fontWeight: 'bold',
-                        padding: '0.4rem 1rem',
-                        borderRadius: '5px',
-                        fontSize: '0.8rem'
-                      }}
+                      className="misvehiculos-boton-accion misvehiculos-boton-editar"
                     >
+                      <i className="bi bi-pencil me-1"></i>
                       Editar
                     </Button>
 
@@ -392,12 +367,7 @@ export default function MisVehiculos() {
                         variant="info" 
                         size="sm" 
                         onClick={() => navigate('/historial-vehiculo', { state: { patente: vehiculo.patente } })}
-                        style={{
-                          fontWeight: 'bold',
-                          padding: '0.4rem 1rem',
-                          borderRadius: '5px',
-                          fontSize: '0.8rem'
-                        }}
+                        className="misvehiculos-boton-accion misvehiculos-boton-historial"
                       >
                         <i className="bi bi-clock-history me-1"></i>
                         Ver historial
@@ -407,14 +377,9 @@ export default function MisVehiculos() {
                       onClick={() => manejarEliminarVehiculo(vehiculo)}
                       variant="danger"
                       size="sm"
-                      style={{
-                        fontWeight: 'bold',
-                        padding: '0.4rem 1rem',
-                        borderRadius: '5px',
-                        fontSize: '0.8rem'
-                      }}
+                      className="misvehiculos-boton-accion misvehiculos-boton-eliminar"
                     >
-                      Eliminar
+                      <i className="bi bi-trash me-1"></i>
                     </Button>
                   </div>
                 </div>
@@ -423,7 +388,7 @@ export default function MisVehiculos() {
           </div>
         </div>
       ) : (
-        <div className="sin-reservas">
+        <div className="misvehiculos-sin-vehiculos">
           <p>No tienes vehículos registrados. ¡Agrega tu primer vehículo!</p>
         </div>
       )}
@@ -437,20 +402,17 @@ export default function MisVehiculos() {
       >
         <Modal.Header 
           closeButton
-          style={{
-            background: 'linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%)',
-            color: 'white'
-          }}
+          className="misvehiculos-modal-header"
         >
           <Modal.Title>{modoEdicion ? 'Editar Vehículo' : 'Agregar Vehículo'}</Modal.Title>
         </Modal.Header>
         
-        <Modal.Body style={{ backgroundColor: 'var(--color-gris)', color: 'var(--color-texto)' }}>
+        <Modal.Body className="misvehiculos-modal-body">
           <Form onSubmit={manejarGuardarVehiculo}>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                  <Form.Label className="misvehiculos-modal-label">
                     Patente *
                   </Form.Label>
                   <Form.Control
@@ -460,16 +422,9 @@ export default function MisVehiculos() {
                     onChange={manejarCambio}
                     isInvalid={!!errores.patente}
                     placeholder="ABC-123"
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="misvehiculos-modal-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
                     {errores.patente}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -477,25 +432,17 @@ export default function MisVehiculos() {
               
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                  <Form.Label className="misvehiculos-modal-label">
                     Marca *
                   </Form.Label>
                   <Form.Control
                     type="text"
                     name="marca"
                     value={nuevoVehiculo.marca || 'RENAULT'}
-                    readOnly
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px',
-                      opacity: 0.7
-                    }}
-                    className="form-control-custom"
+                    readOnly={true}
+                    className="misvehiculos-modal-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
                     {errores.marca}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -505,7 +452,7 @@ export default function MisVehiculos() {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                  <Form.Label className="misvehiculos-modal-label">
                     Modelo *
                   </Form.Label>
                   <Form.Control
@@ -515,16 +462,9 @@ export default function MisVehiculos() {
                     onChange={manejarCambio}
                     isInvalid={!!errores.modelo}
                     placeholder="Clio"
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="misvehiculos-modal-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
                     {errores.modelo}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -532,7 +472,7 @@ export default function MisVehiculos() {
               
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+                  <Form.Label className="misvehiculos-modal-label">
                     Año *
                   </Form.Label>
                   <Form.Control
@@ -544,16 +484,9 @@ export default function MisVehiculos() {
                     placeholder="2025"
                     min="2000"
                     max={new Date().getFullYear() + 1}
-                    style={{
-                      backgroundColor: 'var(--color-gris)',
-                      border: '1px solid var(--color-acento)',
-                      color: 'var(--color-texto)',
-                      padding: '0.75rem',
-                      borderRadius: '5px'
-                    }}
-                    className="form-control-custom"
+                    className="misvehiculos-modal-control"
                   />
-                  <Form.Control.Feedback type="invalid" style={{ color: '#dc3545' }}>
+                  <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
                     {errores.año}
                   </Form.Control.Feedback>
                 </Form.Group>
@@ -561,7 +494,7 @@ export default function MisVehiculos() {
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
+              <Form.Label className="misvehiculos-modal-label">
                 Color
               </Form.Label>
               <Form.Control
@@ -570,40 +503,24 @@ export default function MisVehiculos() {
                 value={nuevoVehiculo.color || ''}
                 onChange={manejarCambio}
                 placeholder="Blanco"
-                style={{
-                  backgroundColor: 'var(--color-gris)',
-                  border: '1px solid var(--color-acento)',
-                  color: 'var(--color-texto)',
-                  padding: '0.75rem',
-                  borderRadius: '5px'
-                }}
-                className="form-control-custom"
+                className="misvehiculos-modal-control"
               />
             </Form.Group>
 
-            <div className="d-flex justify-content-end gap-2">
+            <div className="misvehiculos-modal-botones">
                 <Button 
                   variant="secondary" 
                   onClick={() => setMostrarModal(false)}
-                  style={{
-                    backgroundColor: 'var(--color-gris)',
-                    border: '1px solid var(--color-acento)',
-                    color: 'var(--color-texto)'
-                  }}
+                  className="misvehiculos-boton-cancelar"
                 >
                   Cancelar
                 </Button>
-                <Button 
+                <CustomButton 
+                className="custom-btn--xs" 
                 type="submit"
-                style={{
-                  backgroundColor: 'var(--color-acento)',
-                  color: 'var(--color-fondo)',
-                  border: 'none',
-                  fontWeight: 'bold'
-                }}
               >
                 {modoEdicion ? 'Guardar Cambios' : 'Agregar Vehículo'}
-              </Button>
+              </CustomButton>
             </div>
           </Form>
         </Modal.Body>
@@ -617,28 +534,21 @@ export default function MisVehiculos() {
       >
         <Modal.Header 
           closeButton
-          style={{
-            background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-            color: 'white'
-          }}
+          className="misvehiculos-modal-confirm-header"
         >
           <Modal.Title>Confirmar Eliminación</Modal.Title>
         </Modal.Header>
         
-        <Modal.Body style={{ backgroundColor: 'var(--color-gris)', color: 'var(--color-texto)' }}>
+        <Modal.Body className="misvehiculos-modal-confirm-body">
           <p>¿Estás seguro de que quieres eliminar el vehículo <strong>{vehiculoAEliminar?.patente}</strong>?</p>
           <p>Esta acción no se puede deshacer.</p>
         </Modal.Body>
         
-        <Modal.Footer style={{ backgroundColor: 'var(--color-gris)', borderTop: '1px solid var(--color-acento)' }}>
+        <Modal.Footer className="misvehiculos-modal-confirm-footer">
           <Button 
             variant="secondary" 
             onClick={() => setMostrarConfirmacion(false)}
-            style={{
-              backgroundColor: 'var(--color-gris)',
-              border: '1px solid var(--color-acento)',
-              color: 'var(--color-texto)'
-            }}
+            className="misvehiculos-boton-confirm-cancelar"
           >
             Cancelar
           </Button>
@@ -652,4 +562,4 @@ export default function MisVehiculos() {
       </Modal>
     </div>
   );
-} 
+}

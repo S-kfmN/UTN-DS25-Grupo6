@@ -35,7 +35,6 @@ class UserModel {
 
   // READ - Obtener usuario por ID
   async findById(id: number): Promise<User | null> {
-    // return this.users.find(user => user.id === id) || null;
     return await prisma.user.findUnique({
       where: { id: id },
       select: {
@@ -43,55 +42,70 @@ class UserModel {
         name: true,
         email: true,
         phone: true,
+        password: true,
         role: true,
-        createdAt: true, // Incluir fecha de creación
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
 
   // READ - Obtener usuario por email
   async findByEmail(email: string): Promise<User | null> {
-    // return this.users.find(user => user.email === email) || null;
     return await prisma.user.findUnique({
       where: { email: email },
       select: {
         id: true,
         name: true,
         email: true,
-        password: true, // Incluir password para login
         phone: true,
+        password: true,
         role: true,
-        createdAt: true, // Incluir fecha de creación
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
 
   // UPDATE - Actualizar usuario
   async update(id: number, updateData: Partial<User>): Promise<User | null> {
-    // const userIndex = this.users.findIndex(user => user.id === id);
-    // if (userIndex === -1) return null;
-
-    // this.users[userIndex] = {
-    //   ...this.users[userIndex],
-    //   ...updateData,
-    //   updatedAt: new Date().toISOString()
-    // };
-
     try {
+      if (updateData.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: updateData.email },
+        });
+        if (existingUser && existingUser.id !== id) {
+          throw new Error('El email ya está en uso por otro usuario.');
+        }
+      }
+
+      const dataToUpdate: any = { updatedAt: new Date() };
+
+      if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
+      if (updateData.email !== undefined) dataToUpdate.email = updateData.email;
+      if (updateData.phone !== undefined) dataToUpdate.phone = updateData.phone;
+      if (updateData.password !== undefined) dataToUpdate.password = updateData.password;
+      if (updateData.isActive !== undefined) dataToUpdate.isActive = updateData.isActive;
+      // Solo actualiza el rol si viene en el payload
+      if (Object.prototype.hasOwnProperty.call(updateData, 'role')) {
+        dataToUpdate.role = updateData.role;
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id: id },
-        data: {
-          ...updateData,
-          role: updateData.role, // Asegurarse de que el enum se mapea correctamente
-          updatedAt: new Date(),
-        },
+        data: dataToUpdate,
         select: {
           id: true,
           name: true,
           email: true,
           phone: true,
+          password: true,
           role: true,
-          createdAt: true, // Incluir fecha de creación
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
       return updatedUser;
@@ -122,15 +136,17 @@ class UserModel {
 
   // READ - Obtener todos los usuarios (para admin)
   async findAll(): Promise<User[]> {
-    // return [...this.users];
     return await prisma.user.findMany({
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
+        password: true,
         role: true,
-        createdAt: true, // Incluir fecha de creación
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }

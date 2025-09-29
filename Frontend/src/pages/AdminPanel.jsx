@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Button, Alert, Row, Col, Card, Badge } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usarAuth } from '../context/AuthContext';
 import { useFetch } from '../hooks/useFetch';
 import { useReservasSync } from '../hooks/useReservasSync';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { formatearFechaParaMostrar } from '../utils/dateUtils';
+import '../assets/styles/admin.css';
 
 export default function AdminPanel() {
+  const navigate = useNavigate();
   const { 
     usuario, 
     esAdmin, 
@@ -25,8 +27,8 @@ export default function AdminPanel() {
   // Manejo de errores
   if (!usuario) {
     return (
-      <div className="contenedor-admin-reservas">
-        <div className="header-admin-reservas">
+      <div className="admin-container">
+        <div className="admin-header">
           <h1>Cargando...</h1>
           <p>Inicializando panel de administración</p>
         </div>
@@ -95,12 +97,12 @@ export default function AdminPanel() {
   // Verificar si el usuario es admin
   if (!usuario || !esAdmin()) {
     return (
-      <div className="contenedor-admin-reservas">
-        <div className="header-admin-reservas">
+      <div className="admin-container">
+        <div className="admin-header">
           <h1>Acceso Denegado</h1>
           <p>No tienes permisos para acceder al panel de administración</p>
         </div>
-        <Alert variant="danger">
+        <Alert variant="danger" className="admin-alert danger">
           <i className="bi bi-exclamation-triangle me-2"></i>
           Solo los administradores pueden acceder a esta página.
         </Alert>
@@ -112,151 +114,118 @@ export default function AdminPanel() {
 
   return (
     <ErrorBoundary>
-    <div className="contenedor-admin-reservas">
+    <div className="admin-container">
 
       {/* Información del administrador */}
-      <div className="mb-4" style={{
-        backgroundColor: 'var(--color-gris)',
-        borderRadius: '10px',
-        padding: '1.5rem',
-        border: '1px solid var(--color-acento)'
-      }}>
-        <h3 style={{ color: 'var(--color-acento)', marginBottom: '1rem' }}>
+      <div className="admin-info-card">
+        <h3>
           <i className="bi bi-person-badge me-2"></i>
           Administrador Conectado
         </h3>
         <Row>
           <Col md={6}>
-            <p><strong style={{ color: 'var(--color-acento)' }}>Nombre:</strong> {usuario?.nombre} {usuario?.apellido}</p>
-            <p><strong style={{ color: 'var(--color-acento)' }}>Email:</strong> {usuario?.email}</p>
+            <p><strong>Nombre:</strong> {usuario?.nombre} {usuario?.apellido}</p>
+            <p><strong>Email:</strong> {usuario?.email}</p>
           </Col>
           <Col md={6}>
-            <p><strong style={{ color: 'var(--color-acento)' }}>Rol:</strong> 
+            <p><strong>Rol:</strong> 
               <Badge bg="warning" className="ms-2">Administrador</Badge>
             </p>
-            <p><strong style={{ color: 'var(--color-acento)' }}>Último acceso:</strong> {new Date().toLocaleString('es-ES')}</p>
+            <p><strong>Último acceso:</strong> {new Date().toLocaleString('es-ES')}</p>
           </Col>
         </Row>
       </div>
 
       {/* Estadísticas rápidas */}
-      <div className="estadisticas-rapidas">
-        <div className="stat-card">
+      <div className="admin-estadisticas-rapidas">
+        <div className="admin-stat-card">
           <h3>Total Reservas</h3>
-          <p className="stat-numero">{estadisticas.totalReservas}</p>
+          <p className="admin-stat-numero">{estadisticas.totalReservas}</p>
         </div>
-        <div className="stat-card">
+        <div className="admin-stat-card">
           <h3>Pendientes</h3>
-          <p className="stat-numero pendiente">{estadisticas.reservasPendientes}</p>
+          <p className="admin-stat-numero pendiente">{estadisticas.reservasPendientes}</p>
         </div>
-        <div className="stat-card">
+        <div className="admin-stat-card">
           <h3>Confirmadas</h3>
-          <p className="stat-numero confirmado">{estadisticas.reservasConfirmadas}</p>
+          <p className="admin-stat-numero confirmado">{estadisticas.reservasConfirmadas}</p>
         </div>
-        <div className="stat-card">
+        <div className="admin-stat-card">
           <h3>Canceladas</h3>
-          <p className="stat-numero cancelado">{estadisticas.reservasCanceladas}</p>
+          <p className="admin-stat-numero cancelado">{estadisticas.reservasCanceladas}</p>
         </div>
       </div>
 
       {/* Acciones rápidas */}
-      <div className="mb-4">
-        <h3 style={{ color: 'var(--color-acento)', marginBottom: '1.5rem' }}>
+      <div className="admin-acciones-rapidas">
+        <h3>
           <i className="bi bi-lightning me-2"></i>
           Acciones Rápidas
         </h3>
         <Row>
         <Col md={3}>
-            <Card style={{
-              backgroundColor: 'var(--color-gris)',
-              border: '1px solid var(--color-acento)',
-              borderRadius: '10px',
-              textAlign: 'center',
-              padding: '1rem'
-            }}>
-              <i className="bi bi-calendar-event" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Turnos del Día</h5>
+            <Card className="admin-accion-card">
+              <i className="bi bi-calendar-event"></i>
+              <h5 className="mt-2">Turnos del Día</h5>
               <Link to="/reservas">
                 <Button 
                   variant="warning" 
                   size="lg" 
-                  className="mt-2 boton-turnos-dia-principal"
-                  style={{ 
-                    width: '100%',
-                    fontWeight: 'bold', 
-                    fontSize: '1.25rem', 
-                    color: '#222', 
-                    backgroundColor: '#ffc107', 
-                    border: 'none', 
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 16px rgba(255,204,0,0.25)',
-                    transition: 'transform 0.15s, box-shadow 0.15s',
-                    padding: '1.1rem 0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.7rem'
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,204,0,0.35)'; }}
-                  onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,204,0,0.25)'; }}
+                  className="admin-accion-button-principal"
                 >
-                  <i className="bi bi-lightning" style={{ fontSize: '2rem', color: '#222' }}></i>
+                  <i className="bi bi-lightning"></i>
                   Turnos del Día
                 </Button>
               </Link>
             </Card>
           </Col>
           <Col md={3}>
-            <Card style={{
-              backgroundColor: 'var(--color-gris)',
-              border: '1px solid var(--color-acento)',
-              borderRadius: '10px',
-              textAlign: 'center',
-              padding: '1rem'
-            }}>
-              <i className="bi bi-calendar-check" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Reservas</h5>
+            <Card className="admin-accion-card">
+              <i className="bi bi-calendar-check"></i>
+              <h5 className="mt-2">Gestionar Reservas</h5>
               <Link to="/gestion-reservas">
-                <Button variant="outline-warning" size="sm" className="mt-2" style={{ width: '100%' }}>
+                <Button variant="outline-warning" size="sm" className="admin-accion-button">
                   Ver Todas
                 </Button>
               </Link>
             </Card>
           </Col>
           <Col md={3}>
-            <Card style={{
-              backgroundColor: 'var(--color-gris)',
-              border: '1px solid var(--color-acento)',
-              borderRadius: '10px',
-              textAlign: 'center',
-              padding: '1rem'
-            }}>
-              <i className="bi bi-people" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Usuarios</h5>
-              <Link to="/buscar-usuarios">
-                <Button variant="outline-warning" size="sm" className="mt-2" style={{ width: '100%' }}>
+            <Card className="admin-accion-card">
+              <i className="bi bi-people"></i>
+              <h5 className="mt-2">Gestionar Usuarios</h5>
+              <Link to="/gestion-usuarios">
+                <Button variant="outline-warning" size="sm" className="admin-accion-button">
                   Buscar Usuarios
                 </Button>
               </Link>
             </Card>
           </Col>
           <Col md={3}>
-            <Card style={{
-              backgroundColor: 'var(--color-gris)',
-              border: '1px solid var(--color-acento)',
-              borderRadius: '10px',
-              textAlign: 'center',
-              padding: '1rem'
-            }}>
-              <i className="bi bi-people" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-              <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Gestionar Vehiculos</h5>
+            <Card className="admin-accion-card">
+              <i className="bi bi-people"></i>
+              <h5 className="mt-2">Gestionar Vehiculos</h5>
               <Link to="/gestion-vehiculos">
-                <Button variant="outline-warning" size="sm" className="mt-2" style={{ width: '100%' }}>
+                <Button variant="outline-warning" size="sm" className="admin-accion-button">
                   Buscar Vehiculos
                 </Button>
               </Link>
             </Card>
           </Col>
+          <Col md={3}>
+  <Card className="admin-accion-card">
+    <i className="bi bi-tools"></i>
+    <h5 className="mt-2">Gestion Servicios</h5>
+    <Button
+      variant="outline-warning"
+      size="sm"
+      className="admin-accion-button"
+      onClick={() => navigate('/crear-servicio')}
+    >
+      Crear Servicio
+    </Button>
+  </Card>
+</Col>
 
           {/* ===== BOTON DE CONFIGURACION ===== */}
           {/*
@@ -283,7 +252,7 @@ export default function AdminPanel() {
       {/* Últimas reservas */}
       <div>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h3 style={{ color: 'var(--color-acento)', marginBottom: 0 }}>
+          <h3>
           <i className="bi bi-clock-history me-2"></i>
             Últimas Reservas ({reservas?.length || 0} total)
         </h3>
@@ -295,17 +264,17 @@ export default function AdminPanel() {
 
         
         {reservas && reservas.length > 0 ? (
-          <div className="lista-reservas-admin">
+          <div className="admin-lista-reservas">
             {reservas
               .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) // Ordenar por fecha más reciente
               .slice(0, 5)
               .map(reserva => (
-              <div key={reserva.id} className="reserva-card">
-                <div className="reserva-header">
-                  <div className="reserva-hora">
+              <div key={reserva.id} className="admin-reserva-card">
+                <div className="admin-reserva-header">
+                  <div className="admin-reserva-hora">
                     <strong>{formatearFechaParaMostrar(reserva.fecha)} - {reserva.hora}</strong>
                   </div>
-                  <div className="reserva-estado">
+                  <div className="admin-reserva-estado">
                     <Badge bg={
                       reserva.estado === 'confirmado' ? 'success' :
                       reserva.estado === 'pendiente' ? 'warning' :
@@ -315,8 +284,8 @@ export default function AdminPanel() {
                     </Badge>
                   </div>
                 </div>
-                <div className="reserva-info">
-                  <div className="cliente-info">
+                <div className="admin-reserva-info">
+                  <div className="admin-cliente-info">
                     <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
                     <p><strong>Cliente:</strong> {reserva.nombre || 'N/A'} {reserva.apellido || ''}</p>
                       <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.marca || 'N/A'} {reserva.modelo || 'N/A'}</p>
@@ -329,7 +298,7 @@ export default function AdminPanel() {
             ))}
           </div>
         ) : (
-          <Alert variant="info">
+          <Alert variant="info" className="admin-alert info">
             <i className="bi bi-info-circle me-2"></i>
             No hay reservas registradas en el sistema.
           </Alert>
@@ -337,26 +306,12 @@ export default function AdminPanel() {
       </div>
 
       {/* Información del sistema */}
-      <div className="mt-4 p-3" style={{
-        backgroundColor: 'rgba(255, 204, 0, 0.1)',
-        border: '1px solid rgba(255, 204, 0, 0.3)',
-        borderRadius: '5px',
-        borderLeft: '4px solid var(--color-acento)'
-      }}>
-        <h6 style={{ 
-          color: 'var(--color-acento)', 
-          marginBottom: '0.5rem',
-          fontWeight: 'bold'
-        }}>
+      <div className="admin-sistema-info">
+        <h6>
           <i className="bi bi-info-circle me-2"></i>
           Información del Sistema
         </h6>
-        <ul style={{ 
-          color: 'var(--color-texto)', 
-          fontSize: '0.9rem',
-          margin: 0,
-          paddingLeft: '1.5rem'
-        }}>
+        <ul>
           <li>Versión del sistema: 1.0.0</li>
           <li>Última actualización: {new Date().toLocaleDateString('es-ES')}</li>
           <li>Estado del sistema: Operativo</li>
@@ -369,4 +324,4 @@ export default function AdminPanel() {
     </div>
     </ErrorBoundary>
   );
-} 
+}

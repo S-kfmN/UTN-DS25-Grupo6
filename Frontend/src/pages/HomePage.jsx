@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { usarAuth } from "../context/AuthContext";
+import '../assets/styles/home.css';
 
 export default function HomePage() {
+  const { estaAutenticado } = usarAuth();
+  const destinoReserva = estaAutenticado() ? "/reservar" : "/registro";
   // Función para hacer scroll suave a testimonios
   const scrollToTestimonios = () => {
     const seccion = document.getElementById("testimonios");
@@ -14,7 +18,7 @@ export default function HomePage() {
         <h1>Bienvenido a Lubricentro Renault</h1>
         <p>Gestiona tus turnos de manera fácil y rápida.</p>
         
-        <Link to="/reservar" className="boton-principal">
+        <Link to={destinoReserva} className="boton-principal">
           Reservar Ahora
         </Link>
 

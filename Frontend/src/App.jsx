@@ -13,10 +13,11 @@ import MisVehiculos from './pages/MisVehiculos';
 import MiPerfil from './pages/MiPerfil';
 import MisReservas from './pages/MisReservas';
 import AdminPanel from './pages/AdminPanel';
-import BuscarUsuarios from './pages/BuscarUsuarios';
+import GestionarUsuarios from './pages/GestionarUsuarios';
 import HistorialVehiculo from "./pages/HistorialVehiculo";
 import RegistrarServicio from './pages/RegistrarServicio';
-import { AuthProvider } from './context/AuthContext';
+import CrearServicio from './pages/CrearServicio';
+import { AuthProvider, usarAuth } from './context/AuthContext';
 
 import GestionReservas from  './pages/GestionReservas';
 import GestionVehiculos from './pages/GestionVehiculos';
@@ -40,12 +41,12 @@ export default function App() {
             <Route path="/mi-perfil" element={<MiPerfil />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
             <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/buscar-usuarios" element={<BuscarUsuarios />} />
+            <Route path="/gestion-usuarios" element={<GestionarUsuarios />} />
             <Route path="/historial-vehiculo" element={<HistorialVehiculo />} />
             <Route path="/registrar-servicio" element={<RegistrarServicio />} />
-
             <Route path="/gestion-reservas" element={<GestionReservas />} />
             <Route path="/gestion-vehiculos" element={<GestionVehiculos />} />
+            <Route path="/crear-servicio" element={<CrearServicio />} />
           </Routes>
         </Layout>
       </BrowserRouter>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, Table, Badge, Button, Alert, Spinner } from 'react-bootstrap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useHistorial } from '../hooks/useHistorial';
+import '../assets/styles/historialvehiculo.css';
 
 export default function HistorialVehiculo() {
   const navigate = useNavigate();
@@ -13,12 +14,12 @@ export default function HistorialVehiculo() {
   const { historial, loading, error } = useHistorial(patente);
 
   return (
-    <div className="contenedor-admin-reservas">
-      <div className="header-admin-reservas">
+    <div className="historialvehiculo-container">
+      <div className="historialvehiculo-header">
         <h1>Historial de Servicios</h1>
         <p>Vehículo: <strong>{patente}</strong></p>
-        <div className="d-flex gap-2">
-          <Button variant="secondary" onClick={() => navigate(-1)}>
+        <div className="historialvehiculo-botones">
+          <Button variant="secondary" className="historialvehiculo-boton-volver" onClick={() => navigate(-1)}>
             <i className="bi bi-arrow-left me-2"></i>
             Volver
           </Button>
@@ -27,17 +28,17 @@ export default function HistorialVehiculo() {
 
       {/* Mostrar loading */}
       {loading && (
-        <div className="text-center my-4">
-          <Spinner animation="border" role="status" style={{ color: 'var(--color-acento)' }}>
+        <div className="historialvehiculo-spinner-container">
+          <Spinner animation="border" role="status" className="historialvehiculo-spinner">
             <span className="visually-hidden">Cargando...</span>
           </Spinner>
-          <p className="mt-2">Cargando historial del vehículo...</p>
+          <p className="historialvehiculo-spinner-text">Cargando historial del vehículo...</p>
         </div>
       )}
 
       {/* Mostrar error */}
       {error && (
-        <Alert variant="danger" className="mb-4">
+        <Alert variant="danger" className="historialvehiculo-alert-error">
           <i className="bi bi-exclamation-triangle me-2"></i>
           Error al cargar el historial: {error}
         </Alert>
@@ -45,32 +46,22 @@ export default function HistorialVehiculo() {
 
       {/* Mostrar historial */}
       {!loading && !error && (
-        <Card style={{ 
-          maxWidth: '1000px', 
-          margin: '0 auto', 
-          marginTop: '2rem', 
-          borderRadius: '10px', 
-          border: '1px solid var(--color-acento)',
-          backgroundColor: 'var(--color-gris)'
-        }}>
-          <Card.Header style={{
-            backgroundColor: 'var(--color-acento)',
-            color: 'var(--color-fondo)',
-            fontWeight: 'bold'
-          }}>
+        <Card className="historialvehiculo-card">
+          <Card.Header className="historialvehiculo-card-header">
             <i className="bi bi-clock-history me-2"></i>
             Historial de Servicios - {patente}
           </Card.Header>
-          <Card.Body style={{ color: 'var(--color-texto)' }}>
+          <Card.Body className="historialvehiculo-card-body">
             {historial.length === 0 ? (
-              <div className="text-center py-4">
-                <i className="bi bi-inbox" style={{ fontSize: '3rem', color: 'var(--color-acento)', opacity: 0.5 }}></i>
-                <p className="mt-3">No hay servicios registrados para este vehículo.</p>
-                <small className="text-muted">Los servicios aparecerán aquí una vez que sean registrados por el mecánico.</small>
+              <div className="historialvehiculo-sin-servicios">
+                <i className="bi bi-inbox historialvehiculo-icono-vacio"></i>
+                <p className="historialvehiculo-mensaje-vacio">No hay servicios registrados para este vehículo.</p>
+                <small className="historialvehiculo-submensaje-vacio">Los servicios aparecerán aquí una vez que sean registrados por el mecánico.</small>
               </div>
             ) : (
-              <Table striped bordered hover responsive>
-                <thead style={{ backgroundColor: 'var(--color-acento)', color: 'var(--color-fondo)' }}>
+              <div className="historialvehiculo-tabla-container">
+                <Table striped bordered hover responsive className="historialvehiculo-tabla">
+                  <thead>
                   <tr>
                     <th>Fecha</th>
                     <th>Servicio</th>
@@ -87,26 +78,27 @@ export default function HistorialVehiculo() {
                     .map((serv, idx) => (
                     <tr key={serv.id || idx}>
                       <td>{serv.fecha}</td>
-                      <td><strong>{serv.servicio}</strong></td>
+                      <td className="historialvehiculo-servicio">{serv.servicio}</td>
                       <td>
-                        <Badge bg={serv.resultado === 'Completado' ? 'success' : 
-                                  serv.resultado === 'Pendiente' ? 'warning' : 
-                                  serv.resultado === 'Cancelado' ? 'danger' : 'info'}>
+                        <Badge className={`historialvehiculo-badge-${serv.resultado === 'Completado' ? 'completado' : 
+                                  serv.resultado === 'Pendiente' ? 'pendiente' : 
+                                  serv.resultado === 'Cancelado' ? 'cancelado' : 'info'}`}>
                           {serv.resultado}
                         </Badge>
                       </td>
                       <td>{serv.mecanico || 'N/A'}</td>
                       <td>{serv.kilometraje ? `${serv.kilometraje} km` : 'N/A'}</td>
-                      <td style={{ maxWidth: '200px' }}>
+                      <td className="historialvehiculo-observaciones">
                         <small>{serv.observaciones || 'Sin observaciones'}</small>
                       </td>
-                      <td style={{ maxWidth: '150px' }}>
+                      <td className="historialvehiculo-repuestos">
                         <small>{serv.repuestos || 'N/A'}</small>
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </Table>
+                  </tbody>
+                </Table>
+              </div>
             )}
           </Card.Body>
         </Card>

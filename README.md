@@ -173,3 +173,69 @@ Elias Caracas
 
    Otros interesados: Técnicos/mecánicos, proveedores de servicios TI.
 
+---
+
+## 🚀 Cómo levantar el proyecto con Docker
+
+### 1. Clona el repositorio
+
+```sh
+git clone https://github.com/tu-usuario/tu-repo.git
+cd tu-repo
+```
+
+### 2. Configura las variables de entorno
+
+- Copia los archivos de ejemplo y completa los valores necesarios:
+
+```sh
+cp backend/.env.example backend/.env
+cp Frontend/.env.example Frontend/.env
+```
+- Edita los archivos `.env` con tus credenciales reales (por ejemplo, la URL de Supabase y claves JWT).
+
+### 3. Instala Docker Desktop
+
+- Descarga e instala [Docker Desktop](https://www.docker.com/products/docker-desktop/) si no lo tienes.
+
+### 4. Levanta los servicios
+
+```sh
+docker-compose up --build
+```
+
+- El **frontend** estará disponible en [http://localhost:5173](http://localhost:5173)
+- El **backend** en [http://localhost:3000](http://localhost:3000)
+
+### 5. Detener los servicios
+
+```sh
+docker-compose down
+```
+
+---
+
+## 📝 Notas importantes
+
+- **No subas los archivos `.env` reales** al repositorio, solo los `.env.example`.
+- Si modificas el código fuente, los cambios se reflejan automáticamente en los contenedores gracias a los volúmenes configurados en `docker-compose.yml`.
+- Si tienes problemas con los puertos, asegúrate de que no estén ocupados por otros procesos.
+
+---
+
+## 📦 Estructura de archivos clave para Docker
+
+- `docker-compose.yml`
+- `backend/Dockerfile`
+- `backend/.dockerignore`
+- `backend/.env.example`
+- `Frontend/Dockerfile`
+- `Frontend/.dockerignore`
+- `Frontend/.env.example`
+
+---
+
+## 👥 Contacto y soporte
+
+Para dudas técnicas, consulta el canal de Slack del grupo o abre un issue en GitHub.
+

@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { usarAuth } from '../context/AuthContext';
 import { useServicios } from '../hooks/useServicios';
 import apiService from '../services/apiService';
+import '../assets/styles/registrarservicio.css';
 
 export default function RegistrarServicio() {
   const navigate = useNavigate();
@@ -137,12 +138,12 @@ export default function RegistrarServicio() {
   // Verificar si el usuario es admin/mecánico
   if (!esAdmin()) {
     return (
-      <div className="contenedor-admin-reservas">
-        <div className="header-admin-reservas">
+      <div className="registrarservicio-container">
+        <div className="registrarservicio-header">
           <h1>Acceso Denegado</h1>
           <p>No tienes permisos para registrar servicios</p>
         </div>
-        <Alert variant="danger">
+        <Alert variant="danger" className="registrarservicio-alert-denegado">
           <i className="bi bi-exclamation-triangle me-2"></i>
           Solo los mecánicos pueden registrar servicios.
         </Alert>
@@ -160,13 +161,13 @@ export default function RegistrarServicio() {
   const servicioSeleccionado = obtenerServicioPorId(parseInt(datosServicio.servicio));
 
   return (
-    <div className="contenedor-admin-reservas">
+    <div className="registrarservicio-container">
       {/* Header */}
-      <div className="header-admin-reservas">
+      <div className="registrarservicio-header">
         <h1>Registrar Servicio Realizado</h1>
         <p>Registra los datos del servicio completado</p>
-        <div className="d-flex gap-2">
-          <Button variant="secondary" onClick={() => navigate(-1)}>
+        <div className="registrarservicio-botones">
+          <Button variant="secondary" className="registrarservicio-boton-volver" onClick={() => navigate(-1)}>
             <i className="bi bi-arrow-left me-2"></i>
             Volver
           </Button>
@@ -175,20 +176,12 @@ export default function RegistrarServicio() {
 
       {/* Información de la reserva */}
       {reserva && (
-        <Card className="mb-4" style={{
-          backgroundColor: 'var(--color-gris)',
-          border: '1px solid var(--color-acento)',
-          borderRadius: '10px'
-        }}>
-          <Card.Header style={{
-            backgroundColor: 'var(--color-acento)',
-            color: 'var(--color-fondo)',
-            fontWeight: 'bold'
-          }}>
+        <Card className="registrarservicio-card-reserva">
+          <Card.Header className="registrarservicio-card-reserva-header">
             <i className="bi bi-calendar-check me-2"></i>
             Información de la Reserva
           </Card.Header>
-          <Card.Body style={{ color: 'var(--color-texto)' }}>
+          <Card.Body className="registrarservicio-card-reserva-body">
             <Row>
               <Col md={6}>
                 <p><strong>Cliente:</strong> {reserva.nombre} {reserva.apellido}</p>
@@ -199,7 +192,7 @@ export default function RegistrarServicio() {
                 <p><strong>Hora:</strong> {reserva.hora}</p>
                 <p><strong>Servicio:</strong> {reserva.servicio}</p>
                 <p><strong>Estado:</strong> 
-                  <Badge bg="success" className="ms-2">Completado</Badge>
+                  <Badge className="registrarservicio-badge-completado">Completado</Badge>
                 </p>
               </Col>
             </Row>
@@ -209,31 +202,19 @@ export default function RegistrarServicio() {
 
       {/* Mensaje de éxito */}
       {mostrarExito && (
-        <Alert variant="success" className="mb-4" style={{
-          backgroundColor: 'rgba(40, 167, 69, 0.1)',
-          border: '1px solid #28a745',
-          color: '#28a745'
-        }}>
+        <Alert variant="success" className="registrarservicio-alert-exito">
           <i className="bi bi-check-circle-fill me-2"></i>
           ¡Servicio registrado exitosamente en el historial!
         </Alert>
       )}
 
       {/* Formulario de registro */}
-      <Card style={{
-        backgroundColor: 'var(--color-gris)',
-        border: '1px solid var(--color-acento)',
-        borderRadius: '10px'
-      }}>
-        <Card.Header style={{
-          backgroundColor: 'var(--color-acento)',
-          color: 'var(--color-fondo)',
-          fontWeight: 'bold'
-        }}>
+      <Card className="registrarservicio-card-formulario">
+        <Card.Header className="registrarservicio-card-formulario-header">
           <i className="bi bi-tools me-2"></i>
           Datos del Servicio Realizado
         </Card.Header>
-        <Card.Body>
+        <Card.Body className="registrarservicio-card-formulario-body">
           <Form onSubmit={manejarGuardar}>
             <Row>
               <Col md={6}>

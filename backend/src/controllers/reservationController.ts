@@ -363,3 +363,43 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
   }
 };
 
+// DELETE - Eliminar reserva (solo para administradores)
+export const deleteReservation = async (req: Request, res: Response) => {
+  try {
+    const userRole = req.user!.role;
+
+    if (userRole !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permisos para eliminar reservas'
+      });
+    }
+
+    const reservationId = parseInt(req.params.id);
+
+    // Verificar que la reserva exista
+    const existingReservation = await ReservationModel.findById(reservationId);
+    if (!existingReservation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reserva no encontrada'
+      });
+    }
+
+    // Eliminar la reserva
+    await ReservationModel.delete(reservationId);
+
+    res.json({
+      success: true,
+      message: 'Reserva eliminada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar reserva:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
