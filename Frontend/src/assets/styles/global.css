@@ -180,6 +180,34 @@ input, select, textarea {
   display: grid;
 }
 
+/* ERRORES DE VALIDACIONES */
+
+/* Texto de error debajo de los campos */
+.field-error {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Bordes rojos para campos con error */
+.input-error {
+  border: 1px solid #d32f2f !important;
+  outline: none;
+  background-color: #fff5f5;
+}
+
+/* Mensaje de error general */
+.error-message {
+  background-color: #fdecea;
+  color: #d32f2f;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
 /* Responsive global */
 @media (max-width: 768px) {
   h1 {

@@ -9,9 +9,8 @@ import apiService from '../services/apiService';
 import '../assets/styles/buscarusuarios.css';
 
 export default function GestionarUsuarios() {
-  const { esAdmin, allUsers, allReservations, refrescarUsuario, actualizarUsuario, actualizarEstadoVehiculoGlobal, cargarTodosLosUsuarios, limpiarError } = usarAuth();
+  const { esAdmin, allUsers, allReservations, refrescarUsuario, cargarTodosLosUsuarios } = usarAuth();
   const [terminoBusqueda, setTerminoBusqueda] = useState('');
-  // Inicializar con allUsers en lugar de usuarios
   const [usuariosFiltrados, setUsuariosFiltrados] = useState(allUsers);
   const [mostrarDetalles, setMostrarDetalles] = useState(false);
   const [mostrarEditar, setMostrarEditar] = useState(false);

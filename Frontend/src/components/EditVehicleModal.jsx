@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import '../assets/styles/modalEdicion.css';
 
 export default function EditVehicleModal({ show, vehiculo, onHide, onSave }) {
   const [form, setForm] = useState({
@@ -33,12 +34,15 @@ export default function EditVehicleModal({ show, vehiculo, onHide, onSave }) {
   };
 
   return (
-    <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Modificar Vehículo</Modal.Title>
+    <Modal show={show} onHide={onHide} size="lg" centered className="modal-edicion .modal-content">
+      <Modal.Header closeButton className="modal-edicion-header">
+        <Modal.Title className="modal-edicion-title">
+          <i className="bi bi-car-front me-2"></i>
+          Modificar Vehículo
+        </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
-        <Modal.Body>
+        <Modal.Body className="modal-edicion-body">
           <Form.Group className="mb-3">
             <Form.Label>Patente</Form.Label>
             <Form.Control
@@ -88,11 +92,12 @@ export default function EditVehicleModal({ show, vehiculo, onHide, onSave }) {
             />
           </Form.Group>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={onHide}>
+        <Modal.Footer className="modal-edicion-footer">
+          <Button variant="secondary" onClick={onHide} className="modal-edicion-boton-cerrar">
             Cancelar
           </Button>
-          <Button variant="primary" type="submit">
+          <Button variant="warning" type="submit" className="modal-edicion-boton-guardar">
+            <i className="bi bi-check-circle me-2"></i>
             Guardar Cambios
           </Button>
         </Modal.Footer>

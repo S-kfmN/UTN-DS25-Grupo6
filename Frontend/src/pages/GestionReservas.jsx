@@ -3,7 +3,7 @@ import { usarAuth } from '../context/AuthContext';
 import { Modal, Button, Table, Badge, Card, Form, Row, Col, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useHistorial } from '../hooks/useHistorial';
-import apiService from '../services/apiService'; // <-- IMPORTANTE
+import apiService from '../services/apiService';
 import '../assets/styles/gestionreservas.css';
 import GestionTable from '../components/GestionTable';
 
@@ -16,17 +16,15 @@ export default function GestionReservas() {
 
   const { allReservations, allUsers, esAdmin, cargarTodasLasReservas, eliminarReserva } = usarAuth();
   const navigate = useNavigate();
-  // Eliminar la declaración duplicada de historial
-  // const { historial, loading: historialLoading, error: historialError } = useHistorial(reservaDetalle?.patente || '', mostrarModal && !!reservaDetalle);
 
   // Modal de detalle
   const [reservaDetalle, setReservaDetalle] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
 
-  // NUEVO: Estado para controlar actualización local
+  // Estado para controlar actualización local
   const [actualizando, setActualizando] = useState(null);
 
-  // NUEVO: Función para cambiar el estado de una reserva
+  // Función para cambiar el estado de una reserva
   const handleEstadoChange = async (reservaId, nuevoEstado) => {
     setActualizando(reservaId);
     try {
@@ -40,7 +38,7 @@ export default function GestionReservas() {
     }
   };
 
-  // NUEVO: función para eliminar reserva
+  // Funcion para eliminar reserva
   const handleEliminar = async (id) => {
     if (window.confirm('¿Seguro que deseas eliminar esta reserva?')) {
       const res = await eliminarReserva(id);
@@ -52,7 +50,7 @@ export default function GestionReservas() {
     }
   };
 
-  // Estado para el modal de edición
+  // Estado para el modal de edicion
   const [showEditModal, setShowEditModal] = useState(false);
   const [reservaEditando, setReservaEditando] = useState(null);
   const [editData, setEditData] = useState({ fecha: '', hora: '', status: '' });
@@ -101,6 +99,7 @@ export default function GestionReservas() {
     const coincideBusqueda = !filtroBusqueda || (
       (r.patente && r.patente.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
       (r.dni && r.dni.includes(filtroBusqueda)) ||
+      (r.user?.name && r.user.name.toLowerCase().includes(filtroBusqueda.toLowerCase())) || // nombre completo
       (r.nombre && r.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
       (r.apellido && r.apellido.toLowerCase().includes(filtroBusqueda.toLowerCase()))
     );

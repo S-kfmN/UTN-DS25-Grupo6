@@ -255,6 +255,43 @@ class ApiService {
       body: JSON.stringify(historyData)
     });
   }
+
+  async getServiceHistoryByUser(userId) {
+    return this.request(API_ENDPOINTS.SERVICE_HISTORY.BY_USER(userId));
+  }
+
+  async getAllServiceHistory(params = {}) {
+    const queryParams = new URLSearchParams(params).toString();
+    const endpoint = queryParams ? `${API_ENDPOINTS.SERVICE_HISTORY.LIST}?${queryParams}` : API_ENDPOINTS.SERVICE_HISTORY.LIST;
+    return this.request(endpoint);
+  }
+
+  async getServiceHistoryStats(params = {}) {
+    const queryParams = new URLSearchParams(params).toString();
+    const endpoint = queryParams ? `${API_ENDPOINTS.SERVICE_HISTORY.STATS}?${queryParams}` : API_ENDPOINTS.SERVICE_HISTORY.STATS;
+    return this.request(endpoint);
+  }
+
+  async updateServiceHistory(id, updateData) {
+    return this.request(API_ENDPOINTS.SERVICE_HISTORY.UPDATE(id), {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+  }
+
+  async deleteServiceHistory(id) {
+    return this.request(API_ENDPOINTS.SERVICE_HISTORY.DELETE(id), {
+      method: 'DELETE'
+    });
+  }
+
+  // Método para actualizar estado de reserva
+  async updateReservationStatus(id, status) {
+    return this.request(API_ENDPOINTS.RESERVATIONS.UPDATE(id), {
+      method: 'PUT',
+      body: JSON.stringify({ status })
+    });
+  }
 }
 
 // Instancia singleton del servicio

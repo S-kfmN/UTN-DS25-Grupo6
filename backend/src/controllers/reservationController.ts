@@ -363,6 +363,27 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
   }
 };
 
+// READ - Obtener reservas por mes
+export const getReservationsByMonth = async (req: Request, res: Response) => {
+  try {
+    const { year, month } = req.params;
+    const reservations = await ReservationModel.findByMonth(parseInt(year), parseInt(month));
+
+    res.json({
+      success: true,
+      data: reservations
+    });
+
+  } catch (error) {
+    console.error('Error en getReservationsByMonth:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor',
+      error: (error as Error).message
+    });
+  }
+};
+
 // DELETE - Eliminar reserva (solo para administradores)
 export const deleteReservation = async (req: Request, res: Response) => {
   try {

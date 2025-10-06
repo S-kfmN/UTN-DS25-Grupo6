@@ -4,7 +4,9 @@ import GestionTable from '../components/GestionTable';
 import { usarAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/gestionvehiculos.css';
-import EditVehicleModal from '../components/EditVehicleModal'; // (lo creamos abajo)
+import '../assets/styles/modalEdicion.css';
+import EditVehicleModal from '../components/EditVehicleModal';
+import VehicleDetailsModal from '../components/VehicleDetailsModal';
 
 export default function GestionVehiculos() {
   const [filtroPatente, setFiltroPatente] = useState('');
@@ -23,8 +25,6 @@ export default function GestionVehiculos() {
     }
   }, [esAdmin, cargarTodosLosVehiculos]);
 
-  // Eliminar la lógica de aplanar vehículos de usuarios, usar allVehicles directamente
-  // const vehiculos = usuarios.flatMap(u => (u.vehiculos || []).map(v => ({ ...v, usuario: u })));
   const vehiculos = allVehicles; // Ahora vehiculos contiene todos los vehículos del contexto
 
   // Filtrar por múltiples características del vehículo
@@ -37,6 +37,7 @@ export default function GestionVehiculos() {
       (v.patente && v.patente.toLowerCase().includes(terminoLower)) ||
       (v.modelo && v.modelo.toLowerCase().includes(terminoLower)) ||
       (v.año && String(v.año).includes(filtroPatente)) ||
+      (v.usuario?.name && v.usuario.name.toLowerCase().includes(terminoLower)) || // nombre completo
       (v.usuario?.nombre && v.usuario.nombre.toLowerCase().includes(terminoLower)) ||
       (v.usuario?.apellido && v.usuario.apellido.toLowerCase().includes(terminoLower)) ||
       (v.usuario?.email && v.usuario.email.toLowerCase().includes(terminoLower))
@@ -179,51 +180,11 @@ export default function GestionVehiculos() {
         />
       </div>
       {/* Modal de detalle de vehículo */}
-      <Modal show={mostrarModal} onHide={() => setMostrarModal(false)} size="xl" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Detalle de Vehículo</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="gestionvehiculos-modal-body">
-          {vehiculoDetalle && (
-            <>
-              <h5>Datos del Vehículo</h5>
-              <ul>
-                <li><b>Patente:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.patente}</span></li>
-                <li><b>Modelo:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.modelo}</span></li>
-                <li><b>Marca:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.marca}</span></li>
-                <li><b>Año:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.año || '-'}</span></li>
-              </ul>
-              <h5 className="mt-3">Dueño Actual</h5>
-              {vehiculoDetalle.usuario ? (
-                <ul>
-                  <li><b>Nombre:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.usuario.nombre} {vehiculoDetalle.usuario.apellido}</span></li>
-                  <li><b>Email:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.usuario.email}</span></li>
-                  
-                  <li><b>Teléfono:</b> <span style={{ color: '#111' }}>{vehiculoDetalle.usuario.phone}</span></li>
-                </ul>
-              ) : (
-                <p className="gestionvehiculos-modal-body .text-muted">No se encontró el usuario vinculado.</p>
-              )}
-              <Button 
-                variant="outline-info" 
-                size="sm" 
-                className="gestionvehiculos-boton-historial-modal"
-                onClick={() => {
-                  setMostrarModal(false);
-                  navigate('/historial-vehiculo', { state: { patente: vehiculoDetalle.patente } });
-                }}
-              >
-                Ver historial de servicios
-              </Button>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setMostrarModal(false)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <VehicleDetailsModal
+        show={mostrarModal}
+        onHide={() => setMostrarModal(false)}
+        vehiculo={vehiculoDetalle}
+      />
       {/* Modal para editar vehículo */}
       <EditVehicleModal
         show={!!vehiculoEditar}
@@ -236,17 +197,21 @@ export default function GestionVehiculos() {
       />
       {/* Modal de confirmación de eliminación */}
       <Modal show={mostrarConfirmacion} onHide={() => setMostrarConfirmacion(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        <Modal.Header closeButton className="modal-edicion-header">
+          <Modal.Title className="modal-edicion-title">
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            Confirmar Eliminación
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="modal-edicion-body">
           ¿Estás seguro de que quieres eliminar el vehículo <b>{vehiculoAEliminar?.patente}</b>? Esta acción no se puede deshacer.
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setMostrarConfirmacion(false)}>
+        <Modal.Footer className="modal-edicion-footer">
+          <Button variant="secondary" onClick={() => setMostrarConfirmacion(false)} className="modal-edicion-boton-cerrar">
             Cancelar
           </Button>
           <Button variant="danger" onClick={confirmarEliminarVehiculo}>
+            <i className="bi bi-trash me-2"></i>
             Eliminar
           </Button>
         </Modal.Footer>

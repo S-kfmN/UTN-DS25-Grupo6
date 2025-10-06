@@ -6,6 +6,7 @@ import {
   updateReservation,
   cancelReservation,
   getReservationsByDate,
+  getReservationsByMonth,
   getAllReservations,
   deleteReservation
 } from '../controllers/reservationController';
@@ -43,6 +44,9 @@ router.get('/user/:userId', authenticate, authorize('ADMIN'), getUserReservation
 
 // GET /api/reservations/date/:date - Obtener reservas por fecha (Admite roles Admin y Users)
 router.get('/date/:date', authenticate, authorize('ADMIN', 'USER'), getReservationsByDate);
+
+// GET /api/reservations/month/:year/:month - Obtener reservas por mes (Admite roles Admin y Users)
+router.get('/month/:year/:month', authenticate, authorize('ADMIN', 'USER'), getReservationsByMonth);
 
 // PATCH /api/reservations/:id/cancel - Cancelar reserva (Admite roles Admin y Users)
 router.patch('/:id/cancel', authenticate, authorize('ADMIN', 'USER'), cancelReservation);

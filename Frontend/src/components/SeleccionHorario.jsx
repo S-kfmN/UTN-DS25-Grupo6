@@ -11,14 +11,15 @@ const SeleccionHorario = ({
 }) => {
   // Horarios predefinidos (puedes modificar según tus necesidades)
   const defaultTimeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-    '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-    '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
+    '08:00', '09:00', '10:00', '11:00', '12:00', 
+    '14:00', '15:00', '16:00', '17:00', '18:00',
   ];
 
   // Si no se proporcionan horarios disponibles, usar los predefinidos
   const timeSlots = availableSlots.length > 0 ? availableSlots : defaultTimeSlots;
+
+  // Set para búsqueda eficiente (asume que occupiedSlots ya está en el mismo formato HH:MM)
+  const occupiedSet = new Set(occupiedSlots || []);
 
   const handleTimeClick = (time) => {
     if (!disabled) {
@@ -32,7 +33,7 @@ const SeleccionHorario = ({
       <div className="seleccion-horario-grid">
         {timeSlots.map((time) => {
           const isSelected = selectedTime === time;
-          const isOccupied = occupiedSlots.includes(time);
+          const isOccupied = occupiedSet.has(time);
           const isDisabled = disabled || isOccupied;
           
           return (
