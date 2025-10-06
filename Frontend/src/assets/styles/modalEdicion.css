@@ -1,0 +1,368 @@
+/* ===== ESTILOS PARA MODALES DE EDICIÓN Y DETALLES ===== */
+
+/* Modal */
+.modal-edicion .modal-content {
+  background-color: none;
+  border: none;
+  border-radius: none;
+}
+
+/* Header del modal */
+.modal-edicion-header {
+  background-color: var(--color-fondo);
+  border-bottom: 1px solid var(--color-acento);
+}
+
+.modal-edicion-header .btn-close {
+  background-color: var(--color-gris);
+  color: #000;
+  opacity: 1;
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-edicion-header .btn-close:hover {
+  background-color: var(--color-gris);
+  color: #000;
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.modal-edicion-header .btn-close:focus {
+  background-color: var(--color-gris);
+  color: #000;
+  opacity: 1;
+  box-shadow: none;
+}
+
+.modal-edicion-header .btn-close:active {
+  background-color: var(--color-acento);
+  color: #000;
+  transform: scale(0.95);
+}
+
+.modal-edicion-header .btn-close::before {
+  content: "×";
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.modal-edicion-title {
+  color: var(--color-acento);
+}
+
+/* label */
+.modal-edicion-label strong {
+  color: rgba(255, 204, 0, 0.901);
+}
+
+
+
+/* Body del modal */
+.modal-edicion-body {
+  background-color: var(--color-gris);
+}
+
+/* Footer del modal */
+.modal-edicion-footer {
+  background-color: var(--color-gris);
+  border-top: 1px solid var(--color-acento);
+}
+
+/* Secciones dentro del modal */
+.modal-edicion-seccion {
+  margin-bottom: 1.5rem;
+}
+
+.modal-edicion-seccion-titulo {
+  color: var(--color-acento);
+  border-bottom: 2px solid var(--color-acento);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Información de vehículos */
+.modal-edicion-vehiculos-container {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.modal-edicion-vehiculo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.97rem;
+}
+
+.modal-edicion-vehiculo-patente {
+  min-width: 80px;
+  font-weight: bold;
+}
+
+.modal-edicion-vehiculo-select {
+  max-width: 130px;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+/* Información personal */
+.modal-edicion-info-personal {
+  margin-bottom: 1.5rem;
+}
+
+.modal-edicion-info-personal p {
+  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.448)
+}
+
+.modal-edicion-info-personal strong {
+  color: rgba(255, 204, 0, 0.901)
+}
+
+/* Reservas del usuario */
+.modal-edicion-reservas-container {
+  margin-top: 1rem;
+}
+
+.modal-edicion-reservas-vacio {
+  text-align: center;
+  padding: 1rem 0;
+  background-color: rgba(108, 117, 125, 0.1);
+  border-radius: 5px;
+}
+
+.modal-edicion-reservas-vacio i {
+  font-size: 2rem;
+  color: #6c757d;
+}
+
+.modal-edicion-reservas-vacio p {
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  color: #6c757d;
+}
+
+.modal-edicion-reserva-item {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 204, 0, 0.1);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  border-radius: 5px;
+}
+
+.modal-edicion-reserva-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-edicion-reserva-fecha {
+  font-weight: bold;
+}
+
+.modal-edicion-reserva-servicio {
+  color: #6c757d;
+}
+
+.modal-edicion-reserva-observaciones {
+  margin-top: 0.25rem;
+  display: block;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* Campo de rol deshabilitado */
+.modal-edicion-rol-disabled {
+  background-color: var(--color-gris);
+}
+
+/* Texto de ayuda */
+.modal-edicion-texto-ayuda {
+  color: #979fa5;
+}
+
+/* Botones del modal */
+.modal-edicion-boton-guardar {
+  background-color: var(--color-acento);
+  border-color: var(--color-acento);
+  color: #222;
+}
+
+.modal-edicion-boton-guardar:hover {
+  background-color: var(--color-acento);
+  border-color: var(--color-acento);
+  color: #222;
+}
+
+.modal-edicion-boton-guardar:disabled {
+  background-color: var(--color-acento);
+  border-color: var(--color-acento);
+  color: #222;
+  opacity: 0.6;
+}
+
+.modal-edicion-footer .modal-edicion-boton-cerrar {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.modal-edicion-footer .modal-edicion-boton-cerrar:hover {
+    background-color: #5c636a;
+    border-color: #fff;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.modal-edicion-footer .modal-edicion-boton-cerrar:focus {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+    box-shadow: none;
+}
+
+.modal-edicion-footer .modal-edicion-boton-cerrar:active {
+    background-color: var(--color-acento);
+    color: #000;
+    transform: scale(0.98);
+}
+
+.modal-edicion-footer .modal-edicion-boton-cerrar:focus-visible {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+    box-shadow: none;
+}
+
+
+/* Spinner de carga */
+.modal-edicion-spinner {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* Estilos específicos para modales de vehículos */
+.modal-edicion-detalle-vehiculo {
+  margin-bottom: 1rem;
+}
+
+.modal-edicion-detalle-vehiculo h5 {
+  color: var(--color-acento);
+  border-bottom: 2px solid var(--color-acento);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-edicion-detalle-vehiculo ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.modal-edicion-detalle-vehiculo li {
+  margin-bottom: 0.5rem;
+  color: var(--color-texto);
+}
+
+.modal-edicion-detalle-vehiculo b {
+  color: var(--color-acento);
+  margin-right: 0.5rem;
+}
+
+.modal-edicion-detalle-vehiculo span {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.modal-edicion-detalle-dueno {
+  margin-top: 1.5rem;
+}
+
+.modal-edicion-detalle-dueno h5 {
+  color: var(--color-acento);
+  border-bottom: 2px solid var(--color-acento);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modal-edicion-detalle-dueno ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.modal-edicion-detalle-dueno li {
+  margin-bottom: 0.5rem;
+  color: var(--color-texto);
+}
+
+.modal-edicion-detalle-dueno b {
+  color: var(--color-acento);
+  margin-right: 0.5rem;
+}
+
+.modal-edicion-detalle-dueno span {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+
+.modal-edicion-boton-historial-modal {
+  background-color: rgba(94, 94, 94, 0.78);
+  border-color: var(--color-acento);
+  color: white;
+  transition: all 0.3s;
+}
+
+.modal-edicion-boton-historial-modal:hover {
+  background-color: rgba(94, 94, 94, 0.78);
+  border-color: var(--color-acento);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.modal-edicion-boton-historial-modal:focus {
+  background-color: rgba(94, 94, 94, 0.78);
+  border-color: var(--color-acento);
+  color: white;
+  box-shadow: none;
+}
+
+.modal-edicion-boton-historial-modal.btn:active {
+    background-color: var(--color-acento);
+    border-color: var(--color-acento);
+  color: black;
+  transform: scale(0.98);
+}
+
+.modal-edicion-texto-muted {
+  color: #6c757d;
+}
+
+/* Responsive para modales */
+@media (max-width: 768px) {
+  .modal-edicion-vehiculo-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .modal-edicion-vehiculo-select {
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .modal-edicion-reserva-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

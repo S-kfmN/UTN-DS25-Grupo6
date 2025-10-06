@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
+import '../assets/styles/modalEdicion.css';
 
 export default function EditUserModal({ show, onHide, usuario, onSave }) {
   const { actualizarEstadoVehiculoGlobal } = usarAuth();
@@ -77,20 +78,20 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg">
-      <Modal.Header closeButton style={{ backgroundColor: 'var(--color-gris)', borderBottom: '1px solid var(--color-acento)' }}>
-        <Modal.Title style={{ color: 'var(--color-acento)' }}>
+    <Modal show={show} onHide={onHide} size="lg" centered className="modal-edicion .modal-content">
+      <Modal.Header closeButton className="modal-edicion-header">
+        <Modal.Title className="modal-edicion-title">
           <i className="bi bi-pencil-square me-2"></i>
           Editar Usuario
         </Modal.Title>
       </Modal.Header>
       
-      <Modal.Body>
+      <Modal.Body className="modal-edicion-body">
         <Form>
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Nombre *</Form.Label>
+                <Form.Label className="modal-edicion-label"><strong>Nombre *</strong></Form.Label>
                 <Form.Control
                   type="text"
                   value={formData.name}
@@ -106,7 +107,7 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
             
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Apellido *</Form.Label>
+                <Form.Label className="modal-edicion-label"><strong>Apellido *</strong></Form.Label>
                 <Form.Control
                   type="text"
                   value={formData.apellido}
@@ -124,7 +125,7 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Email *</Form.Label>
+                <Form.Label className="modal-edicion-label"><strong>Email *</strong></Form.Label>
                 <Form.Control
                   type="email"
                   value={formData.email}
@@ -140,7 +141,7 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
             
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Teléfono *</Form.Label>
+                <Form.Label className="modal-edicion-label"><strong>Teléfono *</strong></Form.Label>
                 <Form.Control
                   type="tel"
                   value={formData.phone}
@@ -158,59 +159,35 @@ export default function EditUserModal({ show, onHide, usuario, onSave }) {
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>Rol</Form.Label>
+                <Form.Label className="modal-edicion-label"><strong>Rol</strong></Form.Label>
                 <Form.Control
                   type="text"
                   value={usuario?.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
                   disabled
-                  style={{ backgroundColor: 'var(--color-gris)' }}
+                  className="modal-edicion-rol-disabled"
                 />
-                <Form.Text className="text-muted">
+                <Form.Text className="modal-edicion-texto-ayuda">
                   El rol no se puede modificar desde esta interfaz
                 </Form.Text>
               </Form.Group>
             </Col>
           </Row>
         </Form>
-        {usuario?.vehiculos && usuario.vehiculos.length > 0 && (
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '0.7rem', marginBottom: '1rem' }}>
-            <strong>Vehículos del usuario:</strong>
-            {usuario.vehiculos.map(vehiculo => (
-              <div key={vehiculo.id} className="d-flex align-items-center gap-2 mb-2" style={{ fontSize: '0.97rem' }}>
-                <span style={{ minWidth: 80 }}><b>{vehiculo.patente}</b> ({vehiculo.marca} {vehiculo.modelo})</span>
-                <select
-                  value={vehiculo.estado}
-                  onChange={e => {
-                    if (window.confirm('¿Seguro que quieres cambiar el estado de este vehículo? Esta acción es sensible.')) {
-                      actualizarEstadoVehiculoGlobal(usuario.id, vehiculo.id, e.target.value);
-                    }
-                  }}
-                  className="form-select form-select-sm"
-                  style={{ maxWidth: 130, marginLeft: 8, marginRight: 8 }}
-                >
-                  <option value="registrado">Registrado</option>
-                  <option value="ACTIVO">Activo</option>
-                  <option value="INACTIVO">Inactivo</option>
-                </select>
-                <span className={`badge bg-${vehiculo.estado === 'ACTIVO' ? 'success' : vehiculo.estado === 'INACTIVO' ? 'danger' : 'info'}`}>{vehiculo.estado}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </Modal.Body>
       
-      <Modal.Footer style={{ backgroundColor: 'var(--color-gris)', borderTop: '1px solid var(--color-acento)' }}>
-        <Button variant="secondary" onClick={onHide} disabled={guardando}>
+      <Modal.Footer className="modal-edicion-footer">
+        <Button className="modal-edicion-boton-cerrar" onClick={onHide}>
           Cancelar
         </Button>
         <Button 
           variant="warning" 
           onClick={manejarGuardar}
           disabled={guardando}
+          className="modal-edicion-boton-guardar"
         >
           {guardando ? (
             <>
-              <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+              <span className="spinner-border spinner-border-sm modal-edicion-spinner" role="status"></span>
               Guardando...
             </>
           ) : (

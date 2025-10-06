@@ -11,6 +11,7 @@ import { userRoutes } from './routes/users';
 import { vehicleRoutes } from './routes/vehicles';
 import { reservationRoutes } from './routes/reservations';
 import { serviceRoutes } from './routes/services';
+import { serviceHistoryRoutes } from './routes/serviceHistory';
 import adminRoutes from './routes/admin';
 
 // Cargar variables de entorno
@@ -53,6 +54,8 @@ app.use('/api/reservations', reservationRoutes); // CRUD de reservas
 console.log('✅ Ruta /api/reservations registrada');
 app.use('/api/services', serviceRoutes);    // CRUD de servicios
 console.log('✅ Ruta /api/services registrada');
+app.use('/api/services', serviceHistoryRoutes); // Historial de servicios
+console.log('✅ Ruta /api/services/history registrada');
 app.use('/api/admin', adminRoutes);         // Panel de administración
 console.log('✅ Ruta /api/admin registrada');
 
@@ -66,6 +69,7 @@ app.get('/', (req, res) => {
       vehicles: '/api/vehicles',
       reservations: '/api/reservations',
       services: '/api/services',
+      serviceHistory: '/api/services/history',
       admin: '/api/admin'
     }
   });
@@ -99,6 +103,7 @@ const server = app.listen(PORT, async () => {
   console.log(`🚗 Endpoints de vehículos: http://localhost:${PORT}/api/vehicles`);
   console.log(`📅 Endpoints de reservas: http://localhost:${PORT}/api/reservations`);
   console.log(`🛠️ Endpoints de servicios: http://localhost:${PORT}/api/services`);
+  console.log(`📋 Historial de servicios: http://localhost:${PORT}/api/services/history`);
   console.log(`🏢 Panel de administración: http://localhost:${PORT}/api/admin`);
   
   // Probar conexión a la base de datos

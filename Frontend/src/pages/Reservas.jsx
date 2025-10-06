@@ -5,6 +5,7 @@ import { useReservasSync } from '../hooks/useReservasSync';
 import { obtenerProximasFechas, formatearFechaParaMostrar, dividirNombreCompleto, obtenerFechaActual, formatearFechaHoraParaMostrar } from '../utils/dateUtils';
 import { Collapse, Button } from 'react-bootstrap';
 import apiService from '../services/apiService';
+import RegistrarServicioModal from '../components/RegistrarServicioModal';
 import '../assets/styles/reservas.css';
 
 export default function Reservas() {
@@ -19,6 +20,9 @@ export default function Reservas() {
   const [filtroFecha, setFiltroFecha] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   
+  // Estados para el modal de registrar servicio
+  const [mostrarModalServicio, setMostrarModalServicio] = useState(false);
+  const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
 
   const { 
     usuario, 
@@ -115,9 +119,45 @@ export default function Reservas() {
   };
 
 
-  const irARegistrarServicio = (reserva) => {
-    
-    navigate('/registrar-servicio', { state: { reserva: reserva } });
+  // Función para abrir modal de registrar servicio
+  const abrirModalServicio = (reserva) => {
+    setReservaSeleccionada(reserva);
+    setMostrarModalServicio(true);
+  };
+
+  // Función para cerrar modal de registrar servicio
+  const cerrarModalServicio = () => {
+    setMostrarModalServicio(false);
+    setReservaSeleccionada(null);
+  };
+
+  // Función para manejar éxito del registro de servicio
+  const manejarServicioRegistrado = (servicioRegistrado) => {
+    console.log('Servicio registrado exitosamente:', servicioRegistrado);
+    // Recargar las reservas del día para reflejar el cambio de estado
+    const cargarReservasPorFecha = async () => {
+      try {
+        const response = await apiService.getReservationsByDate(fechaSeleccionada);
+        if (response.success) {
+          const reservasTransformadas = response.data.map(reserva => ({
+            ...reserva,
+            fecha: reserva.date,
+            hora: reserva.time,
+            estado: reserva.status,
+            nombre: reserva.user ? reserva.user.name : 'N/A',
+            telefono: reserva.user ? reserva.user.phone : 'N/A',
+            patente: reserva.vehicle ? reserva.vehicle.license : 'N/A',
+            modelo: reserva.vehicle ? `${reserva.vehicle.brand} ${reserva.vehicle.model}` : 'N/A',
+            servicio: reserva.service ? reserva.service.name : 'N/A',
+            observaciones: reserva.notes || '',
+          }));
+          setReservasDelDia(reservasTransformadas);
+        }
+      } catch (error) {
+        console.error('Error al recargar reservas:', error);
+      }
+    };
+    cargarReservasPorFecha();
   };
 
 
@@ -278,7 +318,7 @@ export default function Reservas() {
                             <Button 
                               variant="success"
                               size="sm"
-                              onClick={() => irARegistrarServicio(reserva)}
+                              onClick={() => abrirModalServicio(reserva)}
                               className="reservas-boton-registrar"
                             >
                               Registrar Servicio
@@ -343,7 +383,7 @@ export default function Reservas() {
                         <Button 
                           variant="success"
                           size="sm"
-                          onClick={() => irARegistrarServicio(reserva)}
+                          onClick={() => abrirModalServicio(reserva)}
                           className="reservas-boton-registrar"
                         >
                           Registrar Servicio
@@ -471,6 +511,14 @@ export default function Reservas() {
           </Collapse>
         </div>
       </div>
+      
+      {/* Modal para registrar servicio */}
+      <RegistrarServicioModal
+        show={mostrarModalServicio}
+        onHide={cerrarModalServicio}
+        reserva={reservaSeleccionada}
+        onSuccess={manejarServicioRegistrado}
+      />
     </div>
   );
 } 

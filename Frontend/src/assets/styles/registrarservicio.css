@@ -1,5 +1,52 @@
 /* ===== ESTILOS ESPECÍFICOS PARA REGISTRAR SERVICIO ===== */
 
+/* ===== ESTILOS PARA MODAL ===== */
+.registrarservicio-modal-header {
+  background-color: var(--color-fondo);
+  border-bottom: 2px solid var(--color-acento);
+  color: var(--color-texto);
+}
+
+.registrarservicio-modal-header .modal-title {
+  color: var(--color-acento);
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.registrarservicio-modal-body {
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.registrarservicio-modal-footer {
+  background-color: var(--color-fondo);
+  border-top: 1px solid var(--color-acento);
+  padding: 1rem;
+}
+
+.registrarservicio-modal-footer .btn {
+  margin-left: 0.5rem;
+}
+
+/* Ajustes para el modal en pantallas pequeñas */
+@media (max-width: 768px) {
+  .registrarservicio-modal-body {
+    max-height: 60vh;
+  }
+  
+  .registrarservicio-modal-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .registrarservicio-modal-footer .btn {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
 /* Contenedor principal */
 .registrarservicio-container {
   padding: 2rem;

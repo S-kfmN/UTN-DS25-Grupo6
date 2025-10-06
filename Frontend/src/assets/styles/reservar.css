@@ -169,11 +169,6 @@
   transform: none;
 }
 
-.reservar-dia-con-reservas {
-  background-color: #ff6b6b;
-  color: white;
-}
-
 .reservar-dia-completo {
   background-color: #dc3545;
   color: white;

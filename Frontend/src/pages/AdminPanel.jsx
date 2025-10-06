@@ -45,11 +45,6 @@ export default function AdminPanel() {
     }
   }, [refrescarUsuario]);
   
-
-
-  // El hook useReservasSync maneja toda la sincronización automática
-
-
   
   const [estadisticas, setEstadisticas] = useState({
     totalReservas: 0,
@@ -163,17 +158,12 @@ export default function AdminPanel() {
           Acciones Rápidas
         </h3>
         <Row>
-        <Col md={3}>
+          <Col md={3}>
             <Card className="admin-accion-card">
               <i className="bi bi-calendar-event"></i>
               <h5 className="mt-2">Turnos del Día</h5>
               <Link to="/reservas">
-                <Button 
-                  variant="warning" 
-                  size="lg" 
-                  className="admin-accion-button-principal"
-                >
-                  <i className="bi bi-lightning"></i>
+                <Button variant="outline-warning" size="sm" className="admin-accion-button">
                   Turnos del Día
                 </Button>
               </Link>
@@ -181,7 +171,7 @@ export default function AdminPanel() {
           </Col>
           <Col md={3}>
             <Card className="admin-accion-card">
-              <i className="bi bi-calendar-check"></i>
+              <i className="bi bi-calendar-event"></i>
               <h5 className="mt-2">Gestionar Reservas</h5>
               <Link to="/gestion-reservas">
                 <Button variant="outline-warning" size="sm" className="admin-accion-button">
@@ -213,39 +203,16 @@ export default function AdminPanel() {
             </Card>
           </Col>
           <Col md={3}>
-  <Card className="admin-accion-card">
-    <i className="bi bi-tools"></i>
-    <h5 className="mt-2">Gestion Servicios</h5>
-    <Button
-      variant="outline-warning"
-      size="sm"
-      className="admin-accion-button"
-      onClick={() => navigate('/crear-servicio')}
-    >
-      Crear Servicio
-    </Button>
-  </Card>
-</Col>
-
-          {/* ===== BOTON DE CONFIGURACION ===== */}
-          {/*
-            <Col md={3}>
-              <Card style={{
-                backgroundColor: 'var(--color-gris)',
-                border: '1px solid var(--color-acento)',
-                borderRadius: '10px',
-                textAlign: 'center',
-                padding: '1rem',
-                marginTop: '1rem'
-              }}>
-                <i className="bi bi-gear" style={{ fontSize: '2rem', color: 'var(--color-acento)' }}></i>
-                <h5 className="mt-2" style={{ color: 'var(--color-texto)' }}>Configuración</h5>
-                <Button variant="outline-warning" size="sm" className="mt-2">
-                  Configurar
+            <Card className="admin-accion-card">
+              <i className="bi bi-tools"></i>
+              <h5 className="mt-2">Gestion Servicios</h5>
+              <Link to="/crear-servicio">
+                <Button variant="outline-warning" size="sm" className="admin-accion-button">
+                  Gestionar Servicios
                 </Button>
-              </Card>
-            </Col>
-          */}
+              </Link>
+            </Card>
+          </Col>
         </Row>
       </div>
 
@@ -255,14 +222,8 @@ export default function AdminPanel() {
           <h3>
           <i className="bi bi-clock-history me-2"></i>
             Últimas Reservas ({reservas?.length || 0} total)
-        </h3>
-
+          </h3>
         </div>
-        
-
-        
-
-        
         {reservas && reservas.length > 0 ? (
           <div className="admin-lista-reservas">
             {reservas

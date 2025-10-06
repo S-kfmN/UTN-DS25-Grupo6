@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button, Modal, Form, Alert, Row, Col } from 'react-bootstrap';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { vehicleSchema } from '../validations/vehicleSchema';
 import { usarAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CustomButton from '../components/CustomButton';
-import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
 import '../assets/styles/misvehiculos.css';
 
 export default function MisVehiculos() {
@@ -45,15 +47,23 @@ export default function MisVehiculos() {
   const [busqueda, setBusqueda] = useState('');
   const [modoEdicion, setModoEdicion] = useState(false);
   const [vehiculoAEditar, setVehiculoAEditar] = useState(null);
-  const [nuevoVehiculo, setNuevoVehiculo] = useState({
-    patente: '',
-    marca: 'RENAULT',
-    modelo: '',
-    año: '',
-    color: ''
+  // Formulario del modal (react-hook-form + yup)
+  const {
+    register: registerVehiculo,
+    handleSubmit: handleSubmitVehiculo,
+    formState: { errors: errorsVehiculo, isSubmitting: isSubmittingVehiculo },
+    reset: resetVehiculo,
+    setValue: setValueVehiculo
+  } = useForm({
+    resolver: yupResolver(vehicleSchema),
+    defaultValues: {
+      license: '',
+      brand: 'RENAULT',
+      model: '',
+      year: '',
+      color: ''
+    }
   });
-
-  const [errores, setErrores] = useState({});
 
   // Filtrar vehículos por búsqueda
   const vehiculosFiltrados = vehiculos.filter(vehiculo =>
@@ -85,79 +95,34 @@ export default function MisVehiculos() {
     return patenteLimpia;
   };
 
-  const manejarCambio = (evento) => {
-    const { name, value } = evento.target;
-    
-    // Formatear patente automáticamente
-    if (name === 'patente') {
-      const patenteFormateada = formatearPatente(value);
-      setNuevoVehiculo(previo => ({
-        ...previo,
-        [name]: patenteFormateada
-      }));
-    } else {
-      setNuevoVehiculo(previo => ({
-        ...previo,
-        [name]: value
-      }));
-    }
-    
-    // Limpiar error del campo cuando el usuario escriba
-    if (errores[name]) {
-      setErrores(previo => ({
-        ...previo,
-        [name]: ''
-      }));
-    }
+  // Formateo en vivo de la patente con RHF
+  const manejarCambioPatente = (e) => {
+    const valor = e.target.value;
+    const formateado = formatearPatente(valor);
+    setValueVehiculo('license', formateado, { shouldValidate: true, shouldDirty: true });
   };
 
-  const validarFormulario = () => {
-    const nuevosErrores = {};
-
-    if (!nuevoVehiculo.patente.trim()) {
-      nuevosErrores.patente = 'La patente es requerida';
-    } else {
-      // Validar formato de patente (ABC-123 o ABC123)
-      const patenteRegex = /^[A-Z]{3}-?[0-9]{3}$/;
-      if (!patenteRegex.test(nuevoVehiculo.patente)) {
-        nuevosErrores.patente = 'Formato de patente inválido. Use: ABC-123 o ABC123';
-      }
-    }
-
-    // La marca siempre es RENAULT, no necesita validación
-
-    if (!nuevoVehiculo.modelo.trim()) {
-      nuevosErrores.modelo = 'El modelo es requerido';
-    }
-
-    if (!nuevoVehiculo.año) {
-      nuevosErrores.año = 'El año es requerido';
-    } else if (nuevoVehiculo.año < 2000 || nuevoVehiculo.año > new Date().getFullYear() + 1) {
-      nuevosErrores.año = 'El año debe ser válido';
-    }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
+  // Abrir modal para agregar usando RHF
+  const abrirModalAgregar = () => {
+    setModoEdicion(false);
+    setVehiculoAEditar(null);
+    resetVehiculo({ license: '', brand: 'RENAULT', model: '', year: '', color: '' });
+    setMostrarModal(true);
   };
 
-  const manejarGuardarVehiculo = async (evento) => {
-    evento.preventDefault();
-    if (!validarFormulario()) return;
-
+  // Guardar vehiculo con RHF
+  const onSubmitVehiculo = async (data) => {
     try {
       if (modoEdicion && vehiculoAEditar) {
-        // Usar el valor anterior si el nuevo es string vacío
         const vehicleDataToSend = {
-          brand: nuevoVehiculo.marca !== '' ? nuevoVehiculo.marca : vehiculoAEditar.brand,
-          model: nuevoVehiculo.modelo !== '' ? nuevoVehiculo.modelo : vehiculoAEditar.model,
-          year: nuevoVehiculo.año !== '' ? parseInt(nuevoVehiculo.año) : vehiculoAEditar.year,
-          color: nuevoVehiculo.color !== '' ? nuevoVehiculo.color : vehiculoAEditar.color,
+          brand: data.brand || vehiculoAEditar.brand,
+          model: data.model || vehiculoAEditar.model,
+          year: data.year || vehiculoAEditar.year,
+          color: data.color ?? vehiculoAEditar.color,
         };
-        // Solo agrega license si realmente cambió
-        if (nuevoVehiculo.patente !== vehiculoAEditar.license) {
-          vehicleDataToSend.license = nuevoVehiculo.patente;
+        if (data.license && data.license.toUpperCase() !== (vehiculoAEditar.license || '').toUpperCase()) {
+          vehicleDataToSend.license = data.license.toUpperCase();
         }
-        console.log('Datos a actualizar:', vehicleDataToSend);
         const resultado = await actualizarVehiculo(vehiculoAEditar.id, vehicleDataToSend);
         if (resultado.exito) {
           setMostrarExito(true);
@@ -166,21 +131,18 @@ export default function MisVehiculos() {
           setVehiculos(vehiculosActualizados || []);
         }
       } else {
-        // Agregar nuevo vehículo
         const vehicleDataToSend = {
-          license: nuevoVehiculo.patente,
-          brand: nuevoVehiculo.marca,
-          model: nuevoVehiculo.modelo,
-          year: parseInt(nuevoVehiculo.año),
-          color: nuevoVehiculo.color,
-          userId: usuario.id 
+          license: (data.license || '').toUpperCase(),
+          brand: data.brand,
+          model: data.model,
+          year: data.year,
+          color: data.color || '',
+          userId: usuario.id
         };
-        console.log('🚗 MisVehiculos.jsx: Datos del vehículo a enviar:', vehicleDataToSend); // Debug para verificar
         const resultado = await agregarVehiculo(vehicleDataToSend);
         if (resultado.exito) {
           setMostrarExito(true);
           setTimeout(() => setMostrarExito(false), 3000);
-          // Recargar vehículos desde el backend
           const vehiculosActualizados = await cargarVehiculosUsuario(usuario.id);
           setVehiculos(vehiculosActualizados || []);
         }
@@ -189,18 +151,10 @@ export default function MisVehiculos() {
       console.error('Error al guardar vehículo:', error);
     }
 
-    // Limpiar formulario con valores por defecto seguros
-    setNuevoVehiculo({ 
-      patente: '', 
-      marca: 'RENAULT', 
-      modelo: '', 
-      año: '', 
-      color: '' 
-    });
     setModoEdicion(false);
     setVehiculoAEditar(null);
     setMostrarModal(false);
-    setErrores({}); // Limpiar errores también
+    resetVehiculo({ license: '', brand: 'RENAULT', model: '', year: '', color: '' });
   };
 
   const manejarEliminarVehiculo = (vehiculo) => {
@@ -225,17 +179,17 @@ export default function MisVehiculos() {
     }
   };
   const manejarEditarVehiculo = (vehiculo) => {
-  setNuevoVehiculo({
-    patente: vehiculo.license || '',
-    marca: vehiculo.brand || 'RENAULT',
-    modelo: vehiculo.model || '',
-    año: vehiculo.year || '',
-    color: vehiculo.color || '',
-  });
-  setVehiculoAEditar(vehiculo);
-  setModoEdicion(true);
-  setMostrarModal(true);
-};
+    resetVehiculo({
+      license: vehiculo.license || '',
+      brand: vehiculo.brand || 'RENAULT',
+      model: vehiculo.model || '',
+      year: vehiculo.year || '',
+      color: vehiculo.color || ''
+    });
+    setVehiculoAEditar(vehiculo);
+    setModoEdicion(true);
+    setMostrarModal(true);
+  };
   const obtenerColorEstado = (estado) => {
     switch (estado?.toLowerCase()) {
       case 'active': return 'success';
@@ -263,7 +217,7 @@ export default function MisVehiculos() {
       {/* Botón para agregar vehículo */}
       <div className="text-center">
         <CustomButton 
-          onClick={() => setMostrarModal(true)}
+          onClick={abrirModalAgregar}
           className="misvehiculos-boton-agregar"
         >
           <i className="bi bi-plus-circle me-2"></i>
@@ -394,7 +348,7 @@ export default function MisVehiculos() {
       )}
     </div>
 
-      {/* Modal para agregar vehículo */}
+      {/* Modal para agregar y editar vehículo */}
       <Modal 
         show={mostrarModal} 
         onHide={() => setMostrarModal(false)}
@@ -408,7 +362,7 @@ export default function MisVehiculos() {
         </Modal.Header>
         
         <Modal.Body className="misvehiculos-modal-body">
-          <Form onSubmit={manejarGuardarVehiculo}>
+          <Form onSubmit={handleSubmitVehiculo(onSubmitVehiculo)}>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -417,15 +371,13 @@ export default function MisVehiculos() {
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    name="patente"
-                    value={nuevoVehiculo.patente || ''}
-                    onChange={manejarCambio}
-                    isInvalid={!!errores.patente}
                     placeholder="ABC-123"
                     className="misvehiculos-modal-control"
+                    {...registerVehiculo('license', { onChange: manejarCambioPatente })}
+                    isInvalid={!!errorsVehiculo.license}
                   />
                   <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
-                    {errores.patente}
+                    {errorsVehiculo.license?.message}
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
@@ -437,13 +389,13 @@ export default function MisVehiculos() {
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    name="marca"
-                    value={nuevoVehiculo.marca || 'RENAULT'}
                     readOnly={true}
                     className="misvehiculos-modal-control"
+                    {...registerVehiculo('brand')}
+                    isInvalid={!!errorsVehiculo.brand}
                   />
                   <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
-                    {errores.marca}
+                    {errorsVehiculo.brand?.message}
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
@@ -457,15 +409,13 @@ export default function MisVehiculos() {
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    name="modelo"
-                    value={nuevoVehiculo.modelo || ''}
-                    onChange={manejarCambio}
-                    isInvalid={!!errores.modelo}
                     placeholder="Clio"
                     className="misvehiculos-modal-control"
+                    {...registerVehiculo('model')}
+                    isInvalid={!!errorsVehiculo.model}
                   />
                   <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
-                    {errores.modelo}
+                    {errorsVehiculo.model?.message}
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
@@ -477,17 +427,15 @@ export default function MisVehiculos() {
                   </Form.Label>
                   <Form.Control
                     type="number"
-                    name="año"
-                    value={nuevoVehiculo.año || ''}
-                    onChange={manejarCambio}
-                    isInvalid={!!errores.año}
                     placeholder="2025"
-                    min="2000"
-                    max={new Date().getFullYear() + 1}
+                    min="1900"
+                    max="2099"
                     className="misvehiculos-modal-control"
+                    {...registerVehiculo('year', { valueAsNumber: true })}
+                    isInvalid={!!errorsVehiculo.year}
                   />
                   <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
-                    {errores.año}
+                    {errorsVehiculo.year?.message}
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
@@ -499,12 +447,14 @@ export default function MisVehiculos() {
               </Form.Label>
               <Form.Control
                 type="text"
-                name="color"
-                value={nuevoVehiculo.color || ''}
-                onChange={manejarCambio}
                 placeholder="Blanco"
                 className="misvehiculos-modal-control"
+                {...registerVehiculo('color')}
+                isInvalid={!!errorsVehiculo.color}
               />
+              <Form.Control.Feedback type="invalid" className="misvehiculos-feedback-invalid">
+                {errorsVehiculo.color?.message}
+              </Form.Control.Feedback>
             </Form.Group>
 
             <div className="misvehiculos-modal-botones">

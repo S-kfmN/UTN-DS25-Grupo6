@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
   const [allReservations, setAllReservations] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [allVehicles, setAllVehicles] = useState([]);
-  const [reservaEditar, setReservaEditar] = useState(null); // Nuevo estado para reserva a editar
 
   // --- Definiciones de funciones useCallback ---
 
@@ -199,11 +198,11 @@ export const AuthProvider = ({ children }) => {
         año: vehiculo.year,
         color: vehiculo.color,
         estado: vehiculo.status || 'ACTIVE',
-        // Mapear la información del usuario propietario al campo 'usuario' esperado por el frontend
         usuario: vehiculo.user ? {
           id: vehiculo.user.id,
-          nombre: dividirNombreCompleto(vehiculo.user.name).nombre, // Usar la función para extraer el nombre
-          apellido: dividirNombreCompleto(vehiculo.user.name).apellido, // Usar la función para extraer el apellido
+          name: vehiculo.user.name,
+          nombre: dividirNombreCompleto(vehiculo.user.name).nombre, // extrae el nombre
+          apellido: dividirNombreCompleto(vehiculo.user.name).apellido, // extrae el apellido
           email: vehiculo.user.email,
           phone: vehiculo.user.phone
         } : undefined,
@@ -273,7 +272,7 @@ export const AuthProvider = ({ children }) => {
       const datosParaBackend = {
         name: `${datosUsuario.nombre} ${datosUsuario.apellido}`.trim(),
         email: datosUsuario.email,
-        password: datosUsuario.contraseña,
+        password: datosUsuario.password,
         phone: datosUsuario.telefono
       };
       

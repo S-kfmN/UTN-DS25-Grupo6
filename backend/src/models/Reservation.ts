@@ -113,6 +113,19 @@ class ReservationModel {
     });
   }
 
+  // READ - Obtener reservas por mes
+  async findByMonth(year: number, month: number): Promise<Reservation[]> {
+    const mm = String(month).padStart(2, '0');
+    return await prisma.reservation.findMany({
+      where: { date: { startsWith: `${year}-${mm}-` } },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } },
+        vehicle: { select: { id: true, license: true, brand: true, model: true, year: true, color: true } },
+        service: { select: { id: true, name: true, description: true, price: true } }
+      }
+    });
+  }
+
   // UPDATE - Actualizar reserva
   async update(id: number, updateData: UpdateReservationRequest): Promise<Reservation | null> {
     // const reservationIndex = this.reservations.findIndex(r => r.id === id);

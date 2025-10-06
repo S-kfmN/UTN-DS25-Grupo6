@@ -109,6 +109,10 @@
   margin-bottom: 1.5rem;
 }
 
+.admin-acciones-rapidas .row {
+  --bs-gutter-y: 1.5rem;
+}
+
 .admin-accion-card {
   background-color: var(--color-gris);
   border: 1px solid var(--color-acento);

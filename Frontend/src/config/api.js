@@ -70,10 +70,13 @@ export const API_ENDPOINTS = {
   
   // Historial de servicios
   SERVICE_HISTORY: {
-    LIST: '/service-history',
-    CREATE: '/service-history',
-    BY_VEHICLE: (patente) => `/service-history/vehicle/${patente}`,
-    BY_DATE: (date) => `/service-history/date/${date}`
+    LIST: '/services/history/all',
+    CREATE: '/services/history',
+    BY_VEHICLE: (patente) => `/services/history/vehicle?patente=${patente}`,
+    BY_USER: (userId) => `/services/history/user/${userId}`,
+    STATS: '/services/history/stats',
+    UPDATE: (id) => `/services/history/${id}`,
+    DELETE: (id) => `/services/history/${id}`
   }
 };
 

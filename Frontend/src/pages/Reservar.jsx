@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
-import { useLocalStorageSync } from '../hooks/useLocalStorageSync';
 import { crearFecha, formatearFechaParaMostrar, esFechaPasada, dividirNombreCompleto } from '../utils/dateUtils';
 import apiService from '../services/apiService'; // Importar apiService
+import { reservationUserDataSchema } from '../validations/reservationSchema';
 import '../assets/styles/reservar.css';
 import CustomButton from '../components/CustomButton';
 import SeleccionHorario from '../components/SeleccionHorario';
@@ -11,16 +13,11 @@ import SeleccionHorario from '../components/SeleccionHorario';
 export default function Reservar() {
   const { 
     usuario, 
-    crearReserva, 
-    obtenerVehiculosActivos, 
+    crearReserva,  
     refrescarUsuario, 
     cargarVehiculosUsuario, 
     servicios // Importar servicios desde el contexto
   } = usarAuth();
-  
-
-  useLocalStorageSync();
-  
 
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [vehiculosActivos, setVehiculosActivos] = useState([]);
@@ -37,13 +34,22 @@ export default function Reservar() {
     };
   });
   
-  const [datosReserva, setDatosReserva] = useState(() => {
-    const { nombre, apellido } = dividirNombreCompleto(usuario?.name || '');
-    return {
-      nombre: nombre,
-      apellido: apellido,
-      telefono: usuario?.phone || '',
-      email: usuario?.email || '',
+  const { 
+    register,
+    handleSubmit,
+    setValue,
+    setError,
+    clearErrors,
+    reset,
+    watch,
+    formState: { errors }
+  } = useForm({
+    resolver: yupResolver(reservationUserDataSchema),
+    defaultValues: {
+      nombre: '',
+      apellido: '',
+      telefono: '',
+      email: '',
       patente: '',
       marca: 'RENAULT',
       modelo: '',
@@ -52,14 +58,13 @@ export default function Reservar() {
       fecha: '',
       hora: '',
       observaciones: ''
-    };
+    }
   });
+  const formValues = watch();
   
-  const [errores, setErrores] = useState({});
   const [estaEnviando, setEstaEnviando] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   
-  const [reservasExistentes, setReservasExistentes] = useState([]);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -77,19 +82,10 @@ export default function Reservar() {
 
         if (vehiculos.length > 0) {
           setVehiculoSeleccionado(vehiculos[0]);
-          setDatosReserva(prev => ({
-            ...prev,
-            patente: vehiculos[0].patente,
-            marca: vehiculos[0].marca,
-            modelo: vehiculos[0].modelo,
-            año: vehiculos[0].año
-          }));
-        }
-
-        // Cargar reservas existentes
-        const reservasGuardadas = localStorage.getItem('reservas');
-        if (reservasGuardadas) {
-          setReservasExistentes(JSON.parse(reservasGuardadas));
+          setValue('patente', vehiculos[0].patente || '');
+          setValue('marca', vehiculos[0].marca || 'RENAULT');
+          setValue('modelo', vehiculos[0].modelo || '');
+          setValue('año', vehiculos[0].año || '');
         }
       }
     };
@@ -102,9 +98,9 @@ export default function Reservar() {
     const cargarReservasDelMes = async () => {
       setCargandoReservasMes(true);
       try {
-        // Usar el nuevo endpoint optimizado para obtener todas las reservas del mes
-        const response = await apiService.getReservationsByMonth(mesActual.año, mesActual.mes + 1);
-        const todasLasReservas = response.data.reservations || [];
+        // endpoint optimizado para obtener todas las reservas del mes
+        const reservation = await apiService.getReservationsByMonth(mesActual.año, mesActual.mes + 1);
+        const todasLasReservas = reservation.data?.reservations || reservation.data || [];
         
         // Agrupar las reservas por fecha
         const reservasAgrupadas = {};
@@ -139,9 +135,9 @@ export default function Reservar() {
     const cargarReservasDelDia = async () => {
       if (fechaSeleccionada) {
         try {
-          const response = await apiService.getReservationsByDate(fechaSeleccionada);
-          // Asegúrate de que response.data.reservations es un array
-          setReservasDelDia(response.data.reservations || []);
+          const reservation = await apiService.getReservationsByDate(fechaSeleccionada);
+          setReservasDelDia(reservation.data || []);
+          console.log('Reserva:', reservation.data);
         } catch (error) {
           console.error('Error al cargar reservas del día:', error);
           setReservasDelDia([]);
@@ -156,27 +152,13 @@ export default function Reservar() {
   // Dividir nombre completo en nombre y apellido
   useEffect(() => {
     if (usuario) {
-      setDatosReserva(prev => {
-        // Usar la función dividirNombreCompleto para extraer nombre y apellido del campo 'name'
-        const { nombre, apellido } = dividirNombreCompleto(usuario.name || '');
-
-        return {
-          ...prev,
-          nombre: nombre,
-          apellido: apellido,
-          telefono: usuario.phone || '', // Pre-llenar teléfono del usuario
-          email: usuario.email || '',     // Pre-llenar email del usuario
-        };
-      });
+      const { nombre, apellido } = dividirNombreCompleto(usuario.name || '');
+      setValue('nombre', nombre || '');
+      setValue('apellido', apellido || '');
+      setValue('telefono', usuario.phone || '');
+      setValue('email', usuario.email || '');
     }
   }, [usuario]);
-
-  useEffect(() => {
-    const reservasGuardadas = localStorage.getItem('reservas');
-    if (reservasGuardadas) {
-      setReservasExistentes(JSON.parse(reservasGuardadas));
-    }
-  }, []);
 
 
   const generarDiasDelMes = (año, mes) => {
@@ -218,16 +200,6 @@ export default function Reservar() {
     return horariosOcupados.length === horariosDisponibles.length;
   };
 
-  const diaTieneReservas = (dia) => {
-    if (!dia) return false;
-    const fechaFormateada = crearFecha(mesActual.año, mesActual.mes + 1, dia);
-    
-    // Buscar las reservas de este día en las reservas del mes
-    const reservasDelDia = reservasDelMes.find(item => item.fecha === fechaFormateada);
-    return reservasDelDia && reservasDelDia.reservas.length > 0;
-  };
-
-
   const esDiaPasado = (dia) => {
     if (!dia) return false;
     
@@ -243,7 +215,9 @@ export default function Reservar() {
     const fechaCompleta = crearFecha(mesActual.año, mesActual.mes + 1, dia);
 
     setFechaSeleccionada(fechaCompleta);
-    setDatosReserva(prev => ({ ...prev, fecha: fechaCompleta, hora: '' }));
+    setValue('fecha', fechaCompleta, { shouldValidate: true });
+    setValue('hora', '', { shouldValidate: true });
+    clearErrors(['fecha', 'hora']);
   };
 
 
@@ -269,126 +243,55 @@ export default function Reservar() {
   };
 
 
-  const manejarCambioFormulario = (campo, valor) => {
-    setDatosReserva(prev => ({
-      ...prev,
-      [campo]: valor
-    }));
-    
-    
-    if (errores[campo]) {
-      setErrores(previo => ({
-        ...previo,
-        [campo]: ''
-      }));
-    }
-  };
+  // Los campos del formulario se manejan con react-hook-form usando register.
+  // Para valores programáticos (fecha/hora/vehículo) usamos setValue.
 
 
   const manejarCambioVehiculo = (vehiculoId) => {
     const vehiculo = vehiculosActivos.find(v => v.id === parseInt(vehiculoId));
     if (vehiculo) {
       setVehiculoSeleccionado(vehiculo);
-      setDatosReserva(prev => ({
-        ...prev,
-        patente: vehiculo.patente,
-        marca: vehiculo.marca,
-        modelo: vehiculo.modelo,
-        año: vehiculo.año
-      }));
+      setValue('patente', vehiculo.patente || '', { shouldValidate: true });
+      setValue('marca', vehiculo.marca || 'RENAULT');
+      setValue('modelo', vehiculo.modelo || '');
+      setValue('año', vehiculo.año || '');
+      clearErrors(['patente', 'modelo', 'año']);
     }
   };
 
 
-  const validarFormulario = () => {
-    const nuevosErrores = {};
-
-    if (!datosReserva.nombre.trim()) {
-      nuevosErrores.nombre = 'El nombre es requerido';
-    }
-
-    if (!datosReserva.apellido.trim()) {
-      nuevosErrores.apellido = 'El apellido es requerido';
-    }
-
-    if (!datosReserva.telefono.trim()) {
-      nuevosErrores.telefono = 'El teléfono es requerido';
-    }
-
-    if (!datosReserva.email.trim()) {
-      nuevosErrores.email = 'El email es requerido';
-    }
-
-    if (!datosReserva.patente.trim()) {
-      nuevosErrores.patente = 'La patente es requerida';
-    }
-
-    if (!datosReserva.servicio) {
-      nuevosErrores.servicio = 'Debe seleccionar un servicio';
-    }
-
-    if (!datosReserva.fecha) {
-      nuevosErrores.fecha = 'Debe seleccionar una fecha';
-    }
-
-    if (!datosReserva.hora) {
-      nuevosErrores.hora = 'Debe seleccionar una hora';
-    } else if (reservasDelDia.some(reserva => reserva.time === datosReserva.hora && reserva.date === datosReserva.fecha)) { // Validar si la hora ya está ocupada
-      nuevosErrores.hora = 'Este horario ya está ocupado';
-    }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
-
-
-  const enviarReserva = async (e) => {
-    e.preventDefault();
-    
-    if (!validarFormulario()) {
+  const onSubmit = async (formData) => {
+    if (reservasDelDia.some(reserva => reserva.time === formData.hora && reserva.date === formData.fecha)) {
+      setError('hora', { type: 'manual', message: 'Este horario ya está ocupado' });
       return;
     }
 
     setEstaEnviando(true);
 
     try {
-      
       const datosCompletos = {
-        ...datosReserva,
+        ...formData,
         vehiculo: {
-          patente: datosReserva.patente,
-          marca: datosReserva.marca,
-          modelo: datosReserva.modelo,
-          año: datosReserva.año
+          patente: formData.patente,
+          marca: formData.marca,
+          modelo: formData.modelo,
+          año: formData.año
         }
       };
 
       const resultado = await crearReserva(datosCompletos);
-      
 
-      
       if (resultado.exito) {
         setMostrarExito(true);
-        
-
-        setReservasExistentes(prev => [...prev, resultado.reserva]);
-        
-        
         refrescarUsuario();
-        
-        
-        
-        
-        
-        
         const { nombre, apellido } = dividirNombreCompleto(usuario?.name || '');
-        setDatosReserva({
-          nombre: nombre,
-          apellido: apellido,
+        reset({
+          nombre: nombre || '',
+          apellido: apellido || '',
           telefono: usuario?.phone || '',
           email: usuario?.email || '',
           patente: vehiculoSeleccionado?.patente || '',
-          marca: 'RENAULT', // Siempre RENAULT
+          marca: 'RENAULT',
           modelo: vehiculoSeleccionado?.modelo || '',
           año: vehiculoSeleccionado?.año || '',
           servicio: '',
@@ -396,10 +299,7 @@ export default function Reservar() {
           hora: '',
           observaciones: ''
         });
-        
         setFechaSeleccionada(null);
-        
-
         setTimeout(() => setMostrarExito(false), 5000);
       }
     } catch (error) {
@@ -441,14 +341,6 @@ export default function Reservar() {
         <h1>Reservar Turno</h1>
         <p>Selecciona una fecha en el calendario y completa tu reserva</p>
       </div>
-
-      {/* Mensaje de éxito */}
-      {mostrarExito && (
-        <Alert variant="success" className="reservar-alert success">
-          <i className="bi bi-check-circle-fill me-2"></i>
-          ¡Reserva creada exitosamente! Recibirás confirmación por email.
-        </Alert>
-      )}
 
       {/* ===== CONTENEDOR PRINCIPAL CON DOS COLUMNAS ===== */}
       <div className="reservar-contenedor-principal">
@@ -509,8 +401,6 @@ export default function Reservar() {
                 } ${
                   dia && esDiaCompleto(dia) ? 'reservar-dia-completo' : ''
                 } ${
-                  dia && !esDiaPasado(dia) && diaTieneReservas(dia) && !esDiaCompleto(dia) ? 'reservar-dia-con-reservas' : ''
-                } ${
                   dia && fechaSeleccionada === crearFecha(mesActual.año, mesActual.mes + 1, dia) ? 'reservar-dia-seleccionado' : ''
                 }`}
                 onClick={() => seleccionarDia(dia)}
@@ -542,8 +432,8 @@ export default function Reservar() {
           {/* ===== SELECTOR DE HORARIOS ===== */}
           {fechaSeleccionada && (
             <SeleccionHorario
-              selectedTime={datosReserva.hora}
-              onTimeSelect={(hora) => manejarCambioFormulario('hora', hora)}
+              selectedTime={watch('hora')}
+              onTimeSelect={(hora) => setValue('hora', hora, { shouldValidate: true })}
               availableSlots={horariosDisponibles}
               occupiedSlots={reservasDelDia.map(reserva => reserva.time)}
               disabled={!fechaSeleccionada}
@@ -555,7 +445,7 @@ export default function Reservar() {
         <div className="reservar-columna-formulario">
           <h2>Datos de la Reserva</h2>
           
-          <Form onSubmit={enviarReserva}>
+          <Form onSubmit={handleSubmit(onSubmit)}>
             {/* Información del Cliente */}
             <div className="reservar-seccion-formulario">
               <h3>Información Personal</h3>
@@ -565,16 +455,15 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Nombre *</Form.Label>
                     <Form.Control
+                      {...register('nombre')}
                       type="text"
-                      value={datosReserva.nombre}
-                      onChange={(e) => manejarCambioFormulario('nombre', e.target.value)}
-                      isInvalid={!!errores.nombre}
+                      isInvalid={!!errors.nombre}
                       placeholder="Tu nombre"
                       readOnly={true}
                       className="reservar-form-control"
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.nombre}
+                      {errors.nombre?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -583,16 +472,15 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Apellido *</Form.Label>
                     <Form.Control
+                      {...register('apellido')}
                       type="text"
-                      value={datosReserva.apellido}
-                      onChange={(e) => manejarCambioFormulario('apellido', e.target.value)}
-                      isInvalid={!!errores.apellido}
+                      isInvalid={!!errors.apellido}
                       placeholder="Tu apellido"
                       readOnly={true}
                       className="reservar-form-control"
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.apellido}
+                      {errors.apellido?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -603,16 +491,15 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Teléfono *</Form.Label>
                     <Form.Control
+                      {...register('telefono')}
                       type="tel"
-                      value={datosReserva.telefono}
-                      onChange={(e) => manejarCambioFormulario('telefono', e.target.value)}
-                      isInvalid={!!errores.telefono}
+                      isInvalid={!!errors.telefono}
                       placeholder="11 1234-5678"
                       className="reservar-form-control"
                       readOnly={true}
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.telefono}
+                      {errors.telefono?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -621,16 +508,15 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Email *</Form.Label>
                     <Form.Control
+                      {...register('email')}
                       type="email"
-                      value={datosReserva.email}
-                      onChange={(e) => manejarCambioFormulario('email', e.target.value)}
-                      isInvalid={!!errores.email}
+                      isInvalid={!!errors.email}
                       placeholder="tu@email.com"
                       readOnly={true}
                       className="reservar-form-control"
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.email}
+                      {errors.email?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -672,16 +558,15 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Patente *</Form.Label>
                     <Form.Control
+                      {...register('patente')}
                       type="text"
-                      value={datosReserva.patente}
-                      onChange={(e) => manejarCambioFormulario('patente', e.target.value)}
-                      isInvalid={!!errores.patente}
+                      isInvalid={!!errors.patente}
                       placeholder="ABC123"
                       className="reservar-form-control"
                       readOnly={vehiculosActivos.length > 0}
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.patente}
+                      {errors.patente?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -690,8 +575,8 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Marca</Form.Label>
                     <Form.Control
+                      {...register('marca')}
                       type="text"
-                      value={datosReserva.marca}
                       placeholder="RENAULT"
                       className="reservar-form-control"
                       readOnly={true}
@@ -706,9 +591,8 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Modelo</Form.Label>
                     <Form.Control
+                      {...register('modelo')}
                       type="text"
-                      value={datosReserva.modelo}
-                      onChange={(e) => manejarCambioFormulario('modelo', e.target.value)}
                       placeholder="Clio"
                       className="reservar-form-control"
                       readOnly={vehiculosActivos.length > 0}
@@ -720,9 +604,8 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Año</Form.Label>
                     <Form.Control
+                      {...register('año')}
                       type="number"
-                      value={datosReserva.año}
-                      onChange={(e) => manejarCambioFormulario('año', e.target.value)}
                       placeholder="2020"
                       className="reservar-form-control"
                       readOnly={vehiculosActivos.length > 0}
@@ -741,9 +624,8 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Servicio *</Form.Label>
                     <Form.Select
-                      value={datosReserva.servicio}
-                      onChange={(e) => manejarCambioFormulario('servicio', e.target.value)}
-                      isInvalid={!!errores.servicio}
+                      {...register('servicio')}
+                      isInvalid={!!errors.servicio}
                       className="reservar-form-control"
                     >
                       <option value="">Selecciona un servicio</option>
@@ -754,7 +636,7 @@ export default function Reservar() {
                       ))}
                     </Form.Select>
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.servicio}
+                      {errors.servicio?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -763,19 +645,20 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Fecha Seleccionada *</Form.Label>
                     <Form.Control
+                      {...register('fecha')}
                       type="text"
-                      value={formatearFechaParaMostrar(datosReserva.fecha)}
-                      isInvalid={!!errores.fecha}
+                      value={formatearFechaParaMostrar(watch('fecha'))}
+                      isInvalid={!!errors.fecha}
                       placeholder="Selecciona una fecha en el calendario"
                       className="reservar-form-control"
                       readOnly
                       style={{
-                        color: datosReserva.fecha ? 'var(--color-texto)' : '#6c757d',
+                        color: watch('fecha') ? 'var(--color-texto)' : '#6c757d',
                         cursor: 'pointer'
                       }}
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.fecha}
+                      {errors.fecha?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -786,19 +669,16 @@ export default function Reservar() {
                   <Form.Group className="reservar-form-group">
                     <Form.Label className="reservar-form-label">Hora Seleccionada *</Form.Label>
                     <Form.Control
+                      {...register('hora')}
                       type="text"
-                      value={datosReserva.hora || 'Selecciona una hora en el calendario'}
+                      value={watch('hora') || 'Selecciona una hora en el calendario'}
                       readOnly
-                      isInvalid={!!errores.hora}
+                      isInvalid={!!errors.hora}
                       className="reservar-form-control"
                     />
                     <Form.Control.Feedback type="invalid" className="reservar-form-feedback">
-                      {errores.hora}
+                      {errors.hora?.message}
                     </Form.Control.Feedback>
-                    <Form.Text className="reservar-form-text">
-                      <i className="bi bi-info-circle me-1"></i>
-                      Selecciona la hora en el calendario de la izquierda
-                    </Form.Text>
                   </Form.Group>
                 </Col>
               </Row>
@@ -806,16 +686,23 @@ export default function Reservar() {
               <Form.Group className="reservar-form-group">
                 <Form.Label className="reservar-form-label">Observaciones</Form.Label>
                 <Form.Control
+                  {...register('observaciones')}
                   as="textarea"
                   rows={3}
-                  value={datosReserva.observaciones}
-                  onChange={(e) => manejarCambioFormulario('observaciones', e.target.value)}
                   onClick={(e) => e.target.select()}
                   placeholder="Información adicional sobre el servicio..."
                   className="reservar-form-control"
                 />
               </Form.Group>
             </div>
+
+            {/* Mensaje de éxito */}
+            {mostrarExito && (
+              <Alert variant="success" className="reservar-alert success">
+                <i className="bi bi-check-circle-fill me-2"></i>
+                ¡Reserva creada exitosamente! Recibirás confirmación por email.
+              </Alert>
+            )}
 
             {/* Botón de envío */}
             <div className="d-grid gap-2">

@@ -24,7 +24,15 @@ export const useServicios = () => {
         const response = await fetch(`${baseUrl}/api/services`);
         if (response.ok) {
           const data = await response.json();
-          setServicios(data);
+          // El backend devuelve { success: true, data: { services: [...] } }
+          if (data.success && data.data && Array.isArray(data.data.services)) {
+            setServicios(data.data.services);
+          } else if (Array.isArray(data)) {
+            // Fallback por si el formato cambia
+            setServicios(data);
+          } else {
+            setServicios([]);
+          }
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -32,6 +40,8 @@ export const useServicios = () => {
       } catch (err) {
         setError(err.message);
         console.error('Error en useServicios:', err);
+        // Asegurar que servicios sea un array incluso en caso de error
+        setServicios([]);
       } finally {
         setLoading(false);
       }
@@ -45,6 +55,9 @@ export const useServicios = () => {
    * @param {number} servicioId - ID del servicio
    */
   const obtenerServicioPorId = (servicioId) => {
+    if (!Array.isArray(servicios)) {
+      return null;
+    }
     return servicios.find(servicio => servicio.id === servicioId);
   };
 
@@ -53,6 +66,9 @@ export const useServicios = () => {
    * @param {string} categoria - Categoría de servicios
    */
   const obtenerServiciosPorCategoria = (categoria) => {
+    if (!Array.isArray(servicios)) {
+      return [];
+    }
     return servicios.filter(servicio => servicio.categoria === categoria);
   };
 
@@ -61,6 +77,9 @@ export const useServicios = () => {
    * @param {string} termino - Término de búsqueda
    */
   const buscarServicios = (termino) => {
+    if (!Array.isArray(servicios)) {
+      return [];
+    }
     if (!termino) return servicios;
     
     return servicios.filter(servicio => 
