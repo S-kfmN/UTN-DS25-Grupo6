@@ -1,18 +1,10 @@
 // Configuración de APIs para el proyecto
+// Variables de entorno
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 const API_CONFIG = {
-  // URLs base para diferentes entornos
-  development: {
-    baseURL: 'http://localhost:3000/api', // <-- incluye /api
-    timeout: 5000
-  },
-  production: {
-    baseURL: 'https://tu-api-produccion.com/api',
-    timeout: 10000
-  },
-  staging: {
-    baseURL: 'https://tu-api-staging.com/api',
-    timeout: 8000
-  }
+  baseURL: API_URL,
+  timeout: 10000
 };
 
 
@@ -91,7 +83,6 @@ export const getDefaultHeaders = () => {
 };
 
 export const getApiConfig = () => {
-  const env = import.meta.env.MODE || 'development';
-  return API_CONFIG[env] || API_CONFIG.development;
+  return API_CONFIG;
 };
 
