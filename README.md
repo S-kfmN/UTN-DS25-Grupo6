@@ -2,6 +2,15 @@
 
 Sistema de Gestión de Turnos para Lubricentro Renault
 
+## **URL del proyecto:**
+- Link: [utn-ds-25-grupo6.vercel.app](https://utn-ds-25-grupo6.vercel.app/)
+
+- Usuario de prueba:
+   - Usuario: usuario@gmail.com
+   - Contraseña: Usuario1
+  
+---
+
 ## **Miembros del Equipo:**
 
 Pedro Moyano
