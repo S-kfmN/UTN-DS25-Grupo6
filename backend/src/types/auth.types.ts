@@ -36,7 +36,7 @@ export interface RegisterResponse {
       phone?: string | null;
       role: 'USER' | 'ADMIN' | 'MECHANIC';
     };
-    token: string;
+    token: string | null; // Puede ser null si requiere verificación de email
   };
 }
 

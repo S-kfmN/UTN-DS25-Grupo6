@@ -1,14 +1,7 @@
 import { useMemo, useState } from 'react';
 import '../assets/styles/gestion.css';
 
-/**
- * Componente de tabla genérico para vistas de gestión
- * Props:
- * - columns: Array<{ key, label, sortable?, width?, getSortValue?(row), render?(row) }>
- * - data: any[]
- * - renderActions?: (row) => ReactNode
- * - emptyMessage?: string
- */
+// Tabla genérica para vistas de gestión con ordenamiento
 export default function GestionTable({ columns = [], data = [], renderActions, emptyMessage = 'Sin registros para mostrar' }) {
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc'); // 'asc' | 'desc'

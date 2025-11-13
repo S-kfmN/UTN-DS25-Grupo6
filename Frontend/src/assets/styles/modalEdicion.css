@@ -1,13 +1,11 @@
-/* ===== ESTILOS PARA MODALES DE EDICIÓN Y DETALLES ===== */
-
-/* Modal */
+/* Modales de edición y detalles */
 .modal-edicion .modal-content {
   background-color: none;
   border: none;
   border-radius: none;
 }
 
-/* Header del modal */
+/* Header */
 .modal-edicion-header {
   background-color: var(--color-fondo);
   border-bottom: 1px solid var(--color-acento);
@@ -63,18 +61,18 @@
 
 
 
-/* Body del modal */
+/* Body */
 .modal-edicion-body {
   background-color: var(--color-gris);
 }
 
-/* Footer del modal */
+/* Footer */
 .modal-edicion-footer {
   background-color: var(--color-gris);
   border-top: 1px solid var(--color-acento);
 }
 
-/* Secciones dentro del modal */
+/* Secciones */
 .modal-edicion-seccion {
   margin-bottom: 1.5rem;
 }
@@ -86,15 +84,15 @@
   margin-bottom: 1rem;
 }
 
-/* Información de vehículos */
+/* Vehículos */
 .modal-edicion-vehiculos-container {
-  background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
   padding: 0.7rem;
   margin-bottom: 1rem;
 }
 
 .modal-edicion-vehiculo-item {
+  color: rgba(255, 255, 255, 0.448);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -127,7 +125,7 @@
   color: rgba(255, 204, 0, 0.901)
 }
 
-/* Reservas del usuario */
+/* Reservas */
 .modal-edicion-reservas-container {
   margin-top: 1rem;
 }
@@ -179,17 +177,17 @@
   color: #6c757d;
 }
 
-/* Campo de rol deshabilitado */
+/* Rol deshabilitado */
 .modal-edicion-rol-disabled {
   background-color: var(--color-gris);
 }
 
-/* Texto de ayuda */
+/* Texto ayuda */
 .modal-edicion-texto-ayuda {
   color: #979fa5;
 }
 
-/* Botones del modal */
+/* Botones */
 .modal-edicion-boton-guardar {
   background-color: var(--color-acento);
   border-color: var(--color-acento);
@@ -209,25 +207,32 @@
   opacity: 0.6;
 }
 
+.modal-edicion-footer {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .modal-edicion-footer .modal-edicion-boton-cerrar {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    background-color: var(--color-gris);
+    border: 1px solid var(--color-acento);
+    color: var(--color-texto);
+    transition: all 0.3s;
 }
 
 .modal-edicion-footer .modal-edicion-boton-cerrar:hover {
-    background-color: #5c636a;
-    border-color: #fff;
-    color: #fff;
-    transform: scale(1.05);
+    background-color: rgba(255, 204, 0, 0.1);
+    border-color: var(--color-acento);
+    color: var(--color-texto);
 }
 
 .modal-edicion-footer .modal-edicion-boton-cerrar:focus {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
+    background-color: var(--color-gris);
+    border: 1px solid var(--color-acento);
+    color: var(--color-texto);
     box-shadow: none;
 }
 
@@ -238,21 +243,21 @@
 }
 
 .modal-edicion-footer .modal-edicion-boton-cerrar:focus-visible {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
+    background-color: var(--color-gris);
+    border: 1px solid var(--color-acento);
+    color: var(--color-texto);
     box-shadow: none;
 }
 
 
-/* Spinner de carga */
+/* Spinner */
 .modal-edicion-spinner {
   width: 1rem;
   height: 1rem;
   margin-right: 0.5rem;
 }
 
-/* Estilos específicos para modales de vehículos */
+/* Detalle vehículo */
 .modal-edicion-detalle-vehiculo {
   margin-bottom: 1rem;
 }
@@ -346,7 +351,150 @@
   color: #6c757d;
 }
 
-/* Responsive para modales */
+/* Input */
+.modal-edicion .misvehiculos-modal-control {
+  background-color: var(--color-gris);
+  border: 1px solid var(--color-acento);
+  color: var(--color-texto);
+  padding: 0.75rem;
+  border-radius: 5px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.modal-edicion .misvehiculos-modal-control:focus {
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 0.2rem rgba(255, 204, 0, 0.25);
+  background-color: var(--color-gris);
+  color: var(--color-texto);
+}
+
+.modal-edicion .misvehiculos-modal-control::placeholder {
+  color: #888;
+  opacity: 0.7;
+}
+
+.modal-edicion .misvehiculos-modal-control[readonly] {
+  opacity: 0.7;
+}
+
+/* Historial accordion */
+
+.historial-servicios-container {
+  margin-top: 1rem;
+}
+
+.historial-info-text {
+  color: rgba(255, 204, 0, 0.7);
+  font-size: 0.95rem;
+}
+
+.historial-info-text strong {
+  color: var(--color-acento);
+  font-weight: 700;
+}
+
+.historial-accordion-item {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.historial-accordion-item:last-child {
+  margin-bottom: 0;
+}
+
+.historial-accordion-header {
+  background-color: rgba(255, 204, 0, 0.05);
+}
+
+.historial-accordion-header button {
+  background-color: transparent;
+  color: var(--color-texto);
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+}
+
+.historial-accordion-header button:not(.collapsed) {
+  background-color: rgba(255, 204, 0, 0.1);
+  color: var(--color-acento);
+}
+
+.historial-accordion-header button:focus {
+  box-shadow: none;
+  border-color: var(--color-acento);
+}
+
+.historial-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.historial-servicio-nombre {
+  font-size: 1.05rem;
+  color: var(--color-acento);
+  font-weight: 700;
+}
+
+.historial-fecha-badge {
+  background: rgba(255, 204, 0, 0.2);
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: var(--color-acento);
+  white-space: nowrap;
+}
+
+.historial-accordion-body {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 1.25rem;
+}
+
+.historial-detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.historial-detalle-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid rgba(255, 204, 0, 0.5);
+  border-radius: 4px;
+}
+
+.historial-detalle-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.historial-detalle-item i {
+  color: var(--color-acento);
+  font-size: 1.1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.historial-detalle-item strong {
+  color: var(--color-acento);
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.historial-detalle-item span {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .modal-edicion-vehiculo-item {
     flex-direction: column;
@@ -364,5 +512,19 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
+  }
+
+  .historial-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .historial-detalle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .historial-detalle-item.full-width {
+    grid-column: 1;
   }
 }

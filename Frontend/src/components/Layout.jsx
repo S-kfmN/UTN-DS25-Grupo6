@@ -1,6 +1,5 @@
 import NavbarComponent from './Navbar';
 import Footer from './Footer';
-import DevTools from './DevTools';
 
 export default function Layout({ children }) {
   return (
@@ -11,7 +10,6 @@ export default function Layout({ children }) {
           {children}
         </main>
         <Footer />
-        <DevTools />
       </div>
     </div>
   );

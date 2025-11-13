@@ -1,4 +1,4 @@
-/* ===== ESTILOS ESPECÍFICOS PARA RESERVAR ===== */
+/* Reservar */
 
 /* Contenedor principal de reservas */
 .reservar-container {
@@ -19,7 +19,8 @@
 .reservar-titulo h1 {
   font-size: 2.5rem;
   color: var(--color-acento);
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem; /* Ajustado para coincidir con Mis Vehículos */
+  font-weight: bold; /* Añadido para que sea negrita */
 }
 
 .reservar-titulo p {
@@ -36,7 +37,7 @@
   margin: 0 auto;
 }
 
-/* ===== COLUMNA CALENDARIO ===== */
+/* Calendario */
 .reservar-columna-calendario {
   background-color: var(--color-gris);
   padding: 2rem;
@@ -229,7 +230,7 @@
   background-color: #666;
 }
 
-/* ===== COLUMNA FORMULARIO ===== */
+/* Formulario */
 .reservar-columna-formulario {
   display: flex;
   flex-direction: column;

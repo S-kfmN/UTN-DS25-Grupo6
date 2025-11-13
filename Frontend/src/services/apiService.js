@@ -6,6 +6,10 @@ class ApiService {
     this.config = getApiConfig();
     this.baseURL = this.config.baseURL;
     this.timeout = this.config.timeout;
+
+    // Vincula metodos para mantener el contexto 'this'
+    this.deleteService = this.deleteService.bind(this);
+    this.cancelReservation = this.cancelReservation.bind(this);
   }
 
   // Método genérico para hacer requests
@@ -126,6 +130,8 @@ class ApiService {
   }
 
   async updateUserById(id, userData) {
+    console.log('id', id);
+    console.log('userData', userData);
     return this.request(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(userData)
@@ -178,6 +184,10 @@ class ApiService {
   }
 
   // Métodos para reservas
+  async getMyReservations() {
+    return this.request(API_ENDPOINTS.RESERVATIONS.MY);
+  }
+
   async getReservations(userId = null, forAdminAll = false) {
     let endpoint;
     if (forAdminAll) {
@@ -188,6 +198,10 @@ class ApiService {
       throw new Error('Debe proporcionar un userId o especificar forAdminAll para obtener reservas.');
     }
     return this.request(endpoint);
+  }
+
+  async getReservationsByUserId(userId) {
+    return this.request(API_ENDPOINTS.RESERVATIONS.BY_USER(userId));
   }
 
   async createReservation(reservationData) {

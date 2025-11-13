@@ -1,16 +1,14 @@
-/* ===== ESTILOS GLOBALES ===== */
-
-/* Variables CSS del diseño */
+/* Estilos globales */
 :root {
-  --color-fondo: #000;         /* fondo negro */
-  --color-texto: #fff;         /* letras blancas */
-  --color-acento: #ffcc00;     /* amarillo Renault */
+  --color-fondo: #000;
+  --color-texto: #fff;
+  --color-acento: #ffcc00;
   --color-gris: #333;
   --espaciado: 1rem;
   --fuente-principal: 'Arial', sans-serif;
 }
 
-/* Reset básico */
+/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -29,7 +27,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Enlaces globales */
+/* Enlaces */
 a {
   font-weight: 500;
   color: var(--color-acento);
@@ -41,7 +39,7 @@ a:hover {
   color: #e6b800;
 }
 
-/* Títulos globales */
+/* titulos */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -64,7 +62,7 @@ h4, h5, h6 {
   color: var(--color-texto);
 }
 
-/* Botones globales */
+/* Botones */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -94,14 +92,14 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Formularios globales */
+/* Formularios */
 input, select, textarea {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
 }
 
-/* Layout global */
+/* Layout */
 .layout-fondo {
   min-height: 100vh;
   width: 100%;
@@ -130,7 +128,7 @@ input, select, textarea {
   justify-content: flex-start;
 }
 
-/* Pie de página global */
+/* Footer */
 .pie-pagina {
   margin-top: auto;
   width: 100%;
@@ -151,7 +149,7 @@ input, select, textarea {
   text-decoration: underline;
 }
 
-/* Utilidades globales */
+/* Utilidades */
 .text-center {
   text-align: center;
 }
@@ -180,9 +178,7 @@ input, select, textarea {
   display: grid;
 }
 
-/* ERRORES DE VALIDACIONES */
-
-/* Texto de error debajo de los campos */
+/* Errores de validacion */
 .field-error {
   color: #d32f2f;
   font-size: 0.9rem;
@@ -190,14 +186,14 @@ input, select, textarea {
   display: block;
 }
 
-/* Bordes rojos para campos con error */
+/* Input con error */
 .input-error {
   border: 1px solid #d32f2f !important;
   outline: none;
   background-color: #fff5f5;
 }
 
-/* Mensaje de error general */
+/* Mensaje error */
 .error-message {
   background-color: #fdecea;
   color: #d32f2f;
@@ -208,7 +204,7 @@ input, select, textarea {
   font-weight: 500;
 }
 
-/* Responsive global */
+/* Responsive */
 @media (max-width: 768px) {
   h1 {
     font-size: 2.5em;

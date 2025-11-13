@@ -5,7 +5,7 @@ import '../assets/styles/registro.css';
 import CustomButton from '../components/CustomButton';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { registerSchema } from '../validations/registerSchema';
+import { userRegistrationSchema } from '../validations';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -17,7 +17,8 @@ export default function Registro() {
     formState: { errors, isSubmitting },
     setError
   } = useForm({
-    resolver: yupResolver(registerSchema)
+    resolver: yupResolver(userRegistrationSchema),
+    mode: 'onChange' // valida en el momento de escritura
   });
 
   const onSubmit = async (data) => {
@@ -44,21 +45,12 @@ export default function Registro() {
 
   return (
     <div className="registro-container">
-      {/* Header del formulario */}
       <div className="registro-header">
         <h1>Crear Cuenta</h1>
         <p>Únete a Lubricentro Renault</p>
       </div>
 
-      {/* Contenedor del formulario */}
       <div className="registro-form-container">
-        {errors.root && (
-          <Alert variant="danger" className="registro-alert danger">
-            <i className="bi bi-check-circle-fill me-2"></i>
-            {errors.root.message}
-          </Alert>
-        )}
-
         {errors.root && (
           <Alert variant="danger" className="registro-alert danger">
             <i className="bi bi-exclamation-triangle-fill me-2"></i>

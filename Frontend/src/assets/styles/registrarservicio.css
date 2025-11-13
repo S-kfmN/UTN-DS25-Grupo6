@@ -1,6 +1,6 @@
-/* ===== ESTILOS ESPECÍFICOS PARA REGISTRAR SERVICIO ===== */
+/* Registrar servicio */
 
-/* ===== ESTILOS PARA MODAL ===== */
+/* Modal */
 .registrarservicio-modal-header {
   background-color: var(--color-fondo);
   border-bottom: 2px solid var(--color-acento);
@@ -14,14 +14,14 @@
 }
 
 .registrarservicio-modal-body {
-  background-color: var(--color-fondo);
+  background-color: var(--color-gris);
   color: var(--color-texto);
   max-height: 70vh;
   overflow-y: auto;
 }
 
 .registrarservicio-modal-footer {
-  background-color: var(--color-fondo);
+  background-color: var(--color-gris);
   border-top: 1px solid var(--color-acento);
   padding: 1rem;
 }
@@ -183,6 +183,11 @@
 
 .registrarservicio-card-formulario-body {
   padding: 2rem;
+}
+
+.registrarservicio-card-formulario-body .form-control::placeholder {
+  color: #747373; 
+  opacity: 1;
 }
 
 /* Labels del formulario */

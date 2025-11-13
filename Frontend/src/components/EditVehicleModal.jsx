@@ -1,36 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { vehicleFormSchema, vehicleEditSchema } from '../validations';
 import '../assets/styles/modalEdicion.css';
+import CustomButton from './CustomButton';
 
 export default function EditVehicleModal({ show, vehiculo, onHide, onSave }) {
-  const [form, setForm] = useState({
-    license: '',
-    brand: '',
-    model: '',
-    year: '',
-    color: ''
+  const esEdicion = !!vehiculo;
+
+  // Formatea la patente con guión si tiene 6 caracteres
+  const formatearPatente = (patente) => {
+    if (!patente || patente.trim() === '') {
+      return '';
+    }
+    
+    let patenteLimpia = patente.replace(/\s/g, '').toUpperCase();
+    
+    if (patenteLimpia.length === 6 && !patenteLimpia.includes('-')) {
+      return patenteLimpia.slice(0, 3) + '-' + patenteLimpia.slice(3);
+    }
+    
+    if (patenteLimpia.includes('-')) {
+      return patenteLimpia;
+    }
+
+    return patenteLimpia;
+  };
+
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
+    resolver: yupResolver(esEdicion ? vehicleEditSchema : vehicleFormSchema),
+    mode: 'onChange',
+    defaultValues: {
+      license: '',
+      brand: '',
+      model: '',
+      year: '',
+      color: ''
+    }
   });
 
   useEffect(() => {
     if (vehiculo) {
-      setForm({
-        license: vehiculo.patente || '',
-        brand: vehiculo.marca || '',
-        model: vehiculo.modelo || '',
-        year: vehiculo.año || '',
+      reset({
+        license: vehiculo.license || vehiculo.patente || '',
+        brand: vehiculo.brand || vehiculo.marca || '',
+        model: vehiculo.model || vehiculo.modelo || '',
+        year: vehiculo.year || vehiculo.año || '',
         color: vehiculo.color || ''
       });
+    } else {
+      reset({
+        license: '',
+        brand: 'RENAULT',
+        model: '',
+        year: '',
+        color: ''
+      });
     }
-  }, [vehiculo]);
+  }, [vehiculo, reset]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(form);
+  const onSubmitForm = async (data) => {
+    await onSave(data);
+    onHide();
   };
 
   return (
@@ -38,69 +70,123 @@ export default function EditVehicleModal({ show, vehiculo, onHide, onSave }) {
       <Modal.Header closeButton className="modal-edicion-header">
         <Modal.Title className="modal-edicion-title">
           <i className="bi bi-car-front me-2"></i>
-          Modificar Vehículo
+          {esEdicion ? 'Modificar Vehículo' : 'Agregar Vehículo'}
         </Modal.Title>
       </Modal.Header>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit(onSubmitForm)}>
         <Modal.Body className="modal-edicion-body">
-          <Form.Group className="mb-3">
-            <Form.Label>Patente</Form.Label>
-            <Form.Control
-              name="license"
-              value={form.license}
-              onChange={handleChange}
-              required
-              maxLength={8}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Marca</Form.Label>
-            <Form.Control
-              name="brand"
-              value={form.brand}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Modelo</Form.Label>
-            <Form.Control
-              name="model"
-              value={form.model}
-              onChange={handleChange}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Año</Form.Label>
-            <Form.Control
-              name="year"
-              type="number"
-              value={form.year}
-              onChange={handleChange}
-              required
-              min={1900}
-              max={new Date().getFullYear() + 1}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Color</Form.Label>
-            <Form.Control
-              name="color"
-              value={form.color}
-              onChange={handleChange}
-            />
-          </Form.Group>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label className="modal-edicion-label"><strong>Patente *</strong></Form.Label>
+                <Form.Control
+                  {...register('license', {
+                    onChange: (e) => {
+                      const valorFormateado = formatearPatente(e.target.value);
+                      e.target.value = valorFormateado;
+                    }
+                  })}
+                  maxLength={8}
+                  className="misvehiculos-modal-control"
+                  placeholder="ABC-123"
+                  isInvalid={!!errors.license}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.license?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label className="modal-edicion-label"><strong>Marca *</strong></Form.Label>
+                <Form.Control
+                  {...register('brand')}
+                  className="misvehiculos-modal-control"
+                  placeholder="RENAULT"
+                  readOnly={!esEdicion}
+                  isInvalid={!!errors.brand}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.brand?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label className="modal-edicion-label"><strong>Modelo *</strong></Form.Label>
+                <Form.Control
+                  {...register('model')}
+                  className="misvehiculos-modal-control"
+                  placeholder="Clio"
+                  isInvalid={!!errors.model}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.model?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label className="modal-edicion-label"><strong>Año *</strong></Form.Label>
+                <Form.Control
+                  type="number"
+                  {...register('year', { valueAsNumber: true })}
+                  min={1900}
+                  max={new Date().getFullYear() + 1}
+                  className="misvehiculos-modal-control"
+                  placeholder="2024"
+                  isInvalid={!!errors.year}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.year?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label className="modal-edicion-label"><strong>Color</strong></Form.Label>
+                <Form.Control
+                  {...register('color')}
+                  className="misvehiculos-modal-control"
+                  placeholder="Blanco"
+                  isInvalid={!!errors.color}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.color?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
         </Modal.Body>
-        <Modal.Footer className="modal-edicion-footer">
-          <Button variant="secondary" onClick={onHide} className="modal-edicion-boton-cerrar">
+        <div className="modal-edicion-footer">
+          <Button className="modal-edicion-boton-cerrar" onClick={onHide}>
             Cancelar
           </Button>
-          <Button variant="warning" type="submit" className="modal-edicion-boton-guardar">
-            <i className="bi bi-check-circle me-2"></i>
-            Guardar Cambios
-          </Button>
-        </Modal.Footer>
+          <CustomButton 
+            className="custom-btn--sm"
+            type="submit"
+            disabled={isSubmitting}
+            style={{ fontSize: '0.95rem' }}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm modal-edicion-spinner" role="status"></span>
+                {esEdicion ? 'Guardando...' : 'Agregando...'}
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-circle me-2"></i>
+                {esEdicion ? 'Guardar Cambios' : 'Agregar Vehículo'}
+              </>
+            )}
+          </CustomButton>
+        </div>
       </Form>
     </Modal>
   );

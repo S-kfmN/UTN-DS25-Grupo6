@@ -32,3 +32,14 @@ export const changePasswordSchema = z.object({
     .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
     .regex(/[0-9]/, 'Debe contener al menos un número')
 });
+
+// Schema para verificación de email
+export const verifyEmailSchema = z.object({
+  token: z.string()
+    .min(64, 'Token de verificación inválido')
+    .max(64, 'Token de verificación inválido')
+    .regex(/^[a-f0-9]{64}$/, 'Formato de token inválido')
+});
+
+// Schema para reenvío de verificación (no requiere datos adicionales)
+export const resendVerificationSchema = z.object({});

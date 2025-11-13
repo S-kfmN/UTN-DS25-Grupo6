@@ -1,6 +1,4 @@
-/* ===== ESTILOS ESPECÍFICOS PARA MIS VEHÍCULOS ===== */
-
-/* Contenedor principal de mis vehículos */
+/* Mis vehiculos */
 .misvehiculos-container {
   padding: 2rem;
   max-width: 1200px;
@@ -10,7 +8,7 @@
   box-sizing: border-box;
 }
 
-/* Header de mis vehículos */
+/* Header */
 .misvehiculos-header {
   text-align: center;
   margin-bottom: 1rem;
@@ -29,7 +27,7 @@
   opacity: 0.8;
 }
 
-/* Botón para agregar vehículo */
+/* Boton agregar */
 .misvehiculos-boton-agregar {
   background-color: var(--color-acento);
   color: var(--color-fondo);
@@ -47,7 +45,7 @@
   box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
 }
 
-/* Mensaje de éxito */
+/* Alerta exito */
 .misvehiculos-alerta-exito {
   background-color: rgba(40, 167, 69, 0.1);
   border: 1px solid #28a745;
@@ -57,7 +55,7 @@
   border-radius: 5px;
 }
 
-/* Lista de vehículos */
+/* Lista */
 .misvehiculos-lista-vehiculos {
   margin-bottom: 2rem;
 }
@@ -73,7 +71,7 @@
   font-weight: bold;
 }
 
-/* Input de búsqueda */
+/* Busqueda */
 .misvehiculos-busqueda {
   width: 25%;
   margin: 0 auto 1.5rem auto;
@@ -97,7 +95,7 @@
   gap: 1rem;
 }
 
-/* Tarjetas de vehículo */
+/* Tarjetas */
 .misvehiculos-reserva-card {
   background-color: rgb(59, 59, 59);
   border-radius: 8px;
@@ -177,7 +175,7 @@
   color: var(--color-acento);
 }
 
-/* Acciones de vehículo */
+/* Acciones */
 .misvehiculos-reserva-acciones {
   position: absolute;
   bottom: 1rem;
@@ -275,7 +273,7 @@
   margin: 0;
 }
 
-/* Spinner de carga */
+/* Spinner */
 .misvehiculos-spinner-container {
   text-align: center;
   padding: 2rem;
@@ -290,15 +288,17 @@
   color: var(--color-texto);
 }
 
-/* Modal de vehículo */
+/* Modal */
 .misvehiculos-modal-header {
   background: linear-gradient(135deg, var(--color-acento) 0%, #d7cd09fa 76%);
   color: var(--color-fondo);
+  border-bottom: 1px solid var(--color-acento);
 }
 
 .misvehiculos-modal-body {
   background-color: var(--color-gris);
   color: var(--color-texto);
+  border-top: 1px solid var(--color-acento);
 }
 
 .misvehiculos-modal-label {
@@ -366,6 +366,27 @@
   color: var(--color-texto);
 }
 
+.misvehiculos-boton-cancelar:focus {
+  background-color: var(--color-gris);
+  border: 1px solid var(--color-acento);
+  color: var(--color-texto);
+  box-shadow: none;
+}
+
+.misvehiculos-boton-cancelar:active {
+  background-color: var(--color-acento);
+  color: #000;
+  transform: scale(0.98);
+}
+
+.misvehiculos-boton-cancelar:focus-visible {
+  background-color: var(--color-gris);
+  border: 1px solid var(--color-acento);
+  color: var(--color-texto);
+  box-shadow: none;
+}
+
+
 .misvehiculos-boton-guardar {
   background-color: var(--color-acento);
   color: var(--color-fondo);
@@ -379,15 +400,17 @@
   color: var(--color-fondo);
 }
 
-/* Modal de confirmación */
+/* Modal confirmacion */
 .misvehiculos-modal-confirm-header {
   background: linear-gradient(135deg, #1a1a1a 0%, var(--color-fondo) 50%, #2a2a2a 100%);
   color: var(--color-acento);
+  border-bottom: 1px solid var(--color-acento);
 }
 
 .misvehiculos-modal-confirm-body {
   background-color: var(--color-gris);
   color: var(--color-texto);
+  border-top: 1px solid var(--color-acento);
 }
 
 .misvehiculos-modal-confirm-footer {
@@ -408,7 +431,7 @@
   color: var(--color-texto);
 }
 
-/* Responsive para Mis Vehículos */
+/* Responsive */
 @media (max-width: 768px) {
   .misvehiculos-container {
     padding: 1rem;

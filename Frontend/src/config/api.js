@@ -1,11 +1,31 @@
 // Configuración de APIs para el proyecto
-// Variables de entorno
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Vite solo expone variables que empiezan con VITE_ y deben estar disponibles en tiempo de build
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  
+  // Debug: mostrar qué URL se está usando (solo en desarrollo)
+  if (import.meta.env.DEV) {
+    console.log('🔧 API Config - VITE_API_URL:', envUrl);
+    console.log('🔧 API Config - Todas las vars:', import.meta.env);
+  }
+  
+  if (envUrl) {
+    // Limpiar la URL (quitar barras finales) y agregar /api
+    const cleanUrl = envUrl.replace(/\/+$/, ''); // Quita una o más barras al final
+    return `${cleanUrl}/api`;
+  }
+  
+  // Fallback para desarrollo local
+  return 'http://localhost:3000/api';
+};
 
 const API_CONFIG = {
-  baseURL: API_URL,
-  timeout: 10000
+  baseURL: getBaseURL(),
+  timeout: 8000 // Timeout general
 };
+
+// Log en producción también para debug (se puede quitar después)
+console.log('🌐 API Base URL:', API_CONFIG.baseURL);
 
 
 // Endpoints de la API
@@ -16,7 +36,8 @@ export const API_ENDPOINTS = {
     REGISTER: '/auth/register',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
-    RECOVER_PASSWORD: '/auth/recover-password'
+    RECOVER_PASSWORD: '/auth/request-password-recovery',
+    RESET_PASSWORD: '/auth/reset-password'
   },
   
   // Usuarios
@@ -25,8 +46,7 @@ export const API_ENDPOINTS = {
     PROFILE: '/users/profile',
     UPDATE_PROFILE: '/users/profile',
     CHANGE_PASSWORD: '/users/change-password',
-    SEARCH: '/users/search',
-    LIST: '/users' // Nuevo endpoint para obtener todos los usuarios
+    SEARCH: '/users/search'
   },
   
   // Vehículos
@@ -35,17 +55,18 @@ export const API_ENDPOINTS = {
     CREATE: '/vehicles',
     UPDATE: (id) => `/vehicles/${id}`,
     DELETE: (id) => `/vehicles/${id}`,
-    BY_USER: (userId) => '/vehicles', // El backend obtiene vehículos del usuario autenticado
-    ALL_FOR_ADMIN: '/vehicles/all' // Nuevo endpoint para que el admin obtenga TODOS los vehículos
+    BY_USER: (userId) => '/vehicles', 
+    ALL_FOR_ADMIN: '/vehicles/all'
   },
   
   // Reservas
   RESERVATIONS: {
-    LIST: '/reservations', // Obtiene reservas del usuario autenticado o todas si es admin
+    LIST: '/reservations', 
+    MY: '/reservations/my', 
     CREATE: '/reservations',
     UPDATE: (id) => `/reservations/${id}`,
     DELETE: (id) => `/reservations/${id}`,
-    BY_USER: (userId) => `/reservations/user/${userId}`, // Endpoint para admin obtener reservas de un usuario específico
+    BY_USER: (userId) => `/reservations/user/${userId}`, 
     BY_DATE: (date) => `/reservations/date/${date}`,
     BY_MONTH: (year, month) => `/reservations/month/${year}/${month}`,
     CANCEL: (id) => `/reservations/${id}/cancel`

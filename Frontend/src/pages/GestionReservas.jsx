@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usarAuth } from '../context/AuthContext';
-import { Modal, Button, Table, Badge, Card, Form, Row, Col, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { useHistorial } from '../hooks/useHistorial';
+import { Badge, Card, Form, Row, Col, Button, Alert } from 'react-bootstrap';
+import { useApiQuery, useApiMutation } from '../hooks/useApi';
 import apiService from '../services/apiService';
+import EditReservaModal from '../components/EditReservaModal';
+import ReservaDetailsModal from '../components/ReservaDetailsModal';
 import '../assets/styles/gestionreservas.css';
 import GestionTable from '../components/GestionTable';
 
@@ -14,114 +15,104 @@ export default function GestionReservas() {
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
 
-  const { allReservations, allUsers, esAdmin, cargarTodasLasReservas, eliminarReserva } = usarAuth();
-  const navigate = useNavigate();
+  const { usuario } = usarAuth();
+  const esAdmin = usuario?.rol === 'ADMIN';
 
-  // Modal de detalle
+  // Estados para modales
   const [reservaDetalle, setReservaDetalle] = useState(null);
-  const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarModalDetalle, setMostrarModalDetalle] = useState(false);
+  const [reservaEditar, setReservaEditar] = useState(null);
+  const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
 
-  // Estado para controlar actualización local
-  const [actualizando, setActualizando] = useState(null);
-
-  // Función para cambiar el estado de una reserva
-  const handleEstadoChange = async (reservaId, nuevoEstado) => {
-    setActualizando(reservaId);
-    try {
-      await apiService.updateReservation(reservaId, { status: nuevoEstado });
-      // Recargar todas las reservas para reflejar el cambio
-      await cargarTodasLasReservas();
-    } catch (error) {
-      alert('Error al actualizar el estado');
-    } finally {
-      setActualizando(null);
+  const { data: allReservations = [], isLoading, isError, error } = useApiQuery(
+    ['reservas', 'admin'],
+    () => apiService.getReservations(null, true),
+    {
+      enabled: esAdmin,
+      select: (data) => data?.data?.reservations || []
     }
-  };
+  );
 
-  // Funcion para eliminar reserva
+  const modificarReservaMutation = useApiMutation(
+    (variables) => apiService.updateReservation(variables.id, variables.data),
+    ['reservas', 'admin']
+  );
+
+  const eliminarReservaMutation = useApiMutation(
+    (id) => apiService.deleteReservation(id),
+    ['reservas', 'admin']
+  );
+
   const handleEliminar = async (id) => {
     if (window.confirm('¿Seguro que deseas eliminar esta reserva?')) {
-      const res = await eliminarReserva(id);
-      if (res.exito) {
-        await cargarTodasLasReservas();
-      } else {
+      try {
+        await eliminarReservaMutation.mutateAsync(id);
+      } catch(err) {
         alert('Error al eliminar la reserva');
       }
     }
   };
 
-  // Estado para el modal de edicion
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [reservaEditando, setReservaEditando] = useState(null);
-  const [editData, setEditData] = useState({ fecha: '', hora: '', status: '' });
-
-  // Abrir modal y setear datos
-  const handleOpenEdit = (reserva) => {
-    setReservaEditando(reserva);
-    setEditData({
-      fecha: reserva.fecha,
-      hora: reserva.hora,
-      status: reserva.status
-    });
-    setShowEditModal(true);
+  // Modal de detalles
+  const abrirModalDetalle = (reserva) => {
+    setReservaDetalle(reserva);
+    setMostrarModalDetalle(true);
   };
 
-  // Guardar cambios
-  const handleGuardarEdicion = async () => {
+  // Modal de edición
+  const abrirModalEditar = (reserva) => {
+    setReservaEditar(reserva);
+    setMostrarModalEditar(true);
+  };
+
+  const manejarGuardadoEdicion = async (datos) => {
     try {
-      await apiService.updateReservation(reservaEditando.id, {
-        date: editData.fecha,
-        time: editData.hora,
-        status: editData.status
-      });
-      setShowEditModal(false);
-      setReservaEditando(null);
-      await cargarTodasLasReservas();
+      const datosParaBackend = {
+          date: datos.fecha,
+          time: datos.hora,
+          notes: datos.observaciones
+      };
+      await modificarReservaMutation.mutateAsync({ id: reservaEditar.id, data: datosParaBackend });
+      setMostrarModalEditar(false);
+      setReservaEditar(null);
     } catch (error) {
       alert('Error al modificar la reserva');
     }
   };
 
-  // Cargar todas las reservas al montar el componente (para admin)
-  useEffect(() => {
-    if (esAdmin()) {
-      cargarTodasLasReservas();
-    }
-  }, [esAdmin, cargarTodasLasReservas]);
-
-  // Filtrado simplificado - usar allReservations
   const reservasFiltradas = allReservations.filter(r => {
-    const coincideFecha = !filtroFecha || r.fecha === filtroFecha;
-    const coincidePeriodo = !filtroPeriodo || (filtroPeriodo === 'manana' ? (r.hora < '13:00') : (r.hora >= '13:00'));
-    const coincideEstado = filtroEstado === 'todos' || r.status === filtroEstado;
+    const nombreCompleto = r.user?.name || '';
+    const fecha = r.date;
+    const hora = r.time;
+    const estado = r.status;
+    const patente = r.vehicle?.license || '';
+
+    const coincideFecha = !filtroFecha || fecha === filtroFecha;
+    const coincidePeriodo = !filtroPeriodo || (filtroPeriodo === 'manana' ? (hora < '13:00') : (hora >= '13:00'));
+    const coincideEstado = filtroEstado === 'todos' || estado === filtroEstado;
     
-    // Búsqueda múltiple en un solo campo
     const coincideBusqueda = !filtroBusqueda || (
-      (r.patente && r.patente.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
-      (r.dni && r.dni.includes(filtroBusqueda)) ||
-      (r.user?.name && r.user.name.toLowerCase().includes(filtroBusqueda.toLowerCase())) || // nombre completo
-      (r.nombre && r.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
-      (r.apellido && r.apellido.toLowerCase().includes(filtroBusqueda.toLowerCase()))
+      (patente.toLowerCase().includes(filtroBusqueda.toLowerCase())) ||
+      (r.user?.dni && r.user.dni.includes(filtroBusqueda)) ||
+      (nombreCompleto.toLowerCase().includes(filtroBusqueda.toLowerCase()))
     );
     
     return coincideFecha && coincidePeriodo && coincideEstado && coincideBusqueda;
   });
 
-  // Obtener historial del vehículo para el modal
-  const { historial, loading: historialLoading, error: historialError } = useHistorial(reservaDetalle?.patente || '', mostrarModal && !!reservaDetalle);
-
-  // Obtener datos del cliente - usar allUsers
-  const cliente = reservaDetalle && allUsers.find(u => u.id === reservaDetalle.userId);
+  if (isLoading) {
+      return <div>Cargando reservas...</div>;
+  }
+  if (isError) {
+      return <Alert variant="danger">Error al cargar las reservas: {error.message}</Alert>;
+  }
 
   return (
     <div className="gestionreservas-container">
-      {/* Header */}
       <div className="gestionreservas-header">
         <h1>Gestión de Reservas</h1>
         <h3>Consulta y administra los turnos con filtros avanzados</h3>
       </div>
-
-      {/* Formulario de búsqueda */}
       <Card className="gestionreservas-card-busqueda">
         <Card.Body>
           <Form>
@@ -195,7 +186,6 @@ export default function GestionReservas() {
           </Form>
         </Card.Body>
       </Card>
-      {/* Resultados de búsqueda */}
       <div className="gestionreservas-busqueda-reservas">
         <div className="gestionreservas-resultados-header">
           <h3 className="gestionreservas-resultados-titulo">
@@ -211,11 +201,11 @@ export default function GestionReservas() {
 
         <GestionTable
           columns={[
-            { key: 'nombreCompleto', label: 'Nombre', sortable: true, getSortValue: (r) => `${(r.apellido || '').toLowerCase()} ${(r.nombre || '').toLowerCase()}`.trim(), render: (r) => `${r.nombre || ''} ${r.apellido || ''}`.trim() || '-' },
-            { key: 'fecha', label: 'Fecha', sortable: true, width: '130px' },
-            { key: 'hora', label: 'Hora', sortable: true, width: '110px' },
-            { key: 'servicio', label: 'Servicio', sortable: true },
-            { key: 'vehiculo', label: 'Vehículo', sortable: true, getSortValue: (r) => `${(r.patente || '').toLowerCase()} ${(r.modelo || '').toLowerCase()}`.trim(), render: (r) => `${r.patente || ''} - ${r.modelo || ''}` },
+            { key: 'nombreCompleto', label: 'Nombre', sortable: true, getSortValue: (r) => (r.user?.name || '').toLowerCase(), render: (r) => r.user?.name || '-' },
+            { key: 'fecha', label: 'Fecha', sortable: true, width: '130px', render: (r) => r.date },
+            { key: 'hora', label: 'Hora', sortable: true, width: '110px', render: (r) => r.time },
+            { key: 'servicio', label: 'Servicio', sortable: true, render: (r) => r.service?.name || '-' },
+            { key: 'vehiculo', label: 'Vehículo', sortable: true, getSortValue: (r) => (r.vehicle?.license || '').toLowerCase(), render: (r) => `${r.vehicle?.license || ''} - ${r.vehicle?.model || ''}` },
             { key: 'status', label: 'Estado', sortable: true, render: (r) => (
               <Badge bg={
                 r.status === 'CONFIRMED' ? 'success' :
@@ -239,29 +229,27 @@ export default function GestionReservas() {
               <Button 
                 variant="outline-primary" 
                 size="sm"
-                onClick={() => { setReservaDetalle(r); setMostrarModal(true); }}
+                onClick={() => abrirModalDetalle(r)}
                 title="Ver Detalle"
                 className="gestionreservas-boton-accion gestionreservas-boton-ver"
               >
                 <i className="bi bi-eye"></i>
               </Button>
-              {/* Botón Modificar */}
               <Button
                 variant="outline-warning"
                 size="sm"
-                onClick={() => handleOpenEdit(r)}
+                onClick={() => abrirModalEditar(r)}
                 title="Modificar reserva"
-                className="gestionreservas-boton-accion gestionreservas-boton-modificar ms-2"
+                className="gestionreservas-boton-accion gestionreservas-boton-editar"
               >
                 <i className="bi bi-pencil"></i>
               </Button>
-              {/* Botón Eliminar */}
               <Button
                 variant="outline-danger"
                 size="sm"
                 onClick={() => handleEliminar(r.id)}
                 title="Eliminar reserva"
-                className="gestionreservas-boton-accion gestionreservas-boton-eliminar ms-2"
+                className="gestionreservas-boton-accion gestionreservas-boton-eliminar"
               >
                 <i className="bi bi-trash"></i>
               </Button>
@@ -269,129 +257,17 @@ export default function GestionReservas() {
           )}
         />
       </div>
-      {/* Modal de detalle de reserva */}
-      <Modal show={mostrarModal} onHide={() => setMostrarModal(false)} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Detalle de Reserva</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="gestionreservas-modal-body">
-          {reservaDetalle && (
-            <>
-              <h5>Datos de la Reserva</h5>
-              <ul>
-                <li><b>Fecha:</b> <span style={{ color: '#111' }}>{reservaDetalle.fecha}</span></li>
-                <li><b>Hora:</b> <span style={{ color: '#111' }}>{reservaDetalle.hora}</span></li>
-                <li><b>Servicio:</b> <span style={{ color: '#111' }}>{reservaDetalle.servicio}</span></li>
-                <li><b>Vehículo:</b> <span style={{ color: '#111' }}>{reservaDetalle.patente} - {reservaDetalle.modelo}</span></li>
-                <li><b>Estado:</b> <Badge bg={reservaDetalle.status === 'CONFIRMED' ? 'success' : reservaDetalle.status === 'PENDING' ? 'warning' : 'danger'}>{reservaDetalle.status}</Badge></li>
-                <li><b>Observaciones:</b> <span style={{ color: '#111' }}>{reservaDetalle.observaciones || 'Sin observaciones'}</span></li>
-              </ul>
-              <h5 className="mt-3">Datos del Cliente</h5>
-              {cliente ? (
-                <ul>
-                  <li><b>Nombre:</b> <span style={{ color: '#111' }}> {cliente.nombre} {cliente.apellido}</span></li>
-                  <li><b>Email:</b> <span style={{ color: '#111' }}>{cliente.email}</span></li>
-
-                  <li><b>Teléfono:</b> <span style={{ color: '#111' }}>{cliente.telefono}</span></li>
-                </ul>
-              ) : (
-                <p className="gestionreservas-modal-body .text-muted">No se encontró el cliente vinculado.</p>
-              )}
-              <h5 className="mt-3">Historial del Vehículo</h5>
-              {reservaDetalle.patente ? (
-                <Button size="sm" variant="outline-primary" className="gestionreservas-boton-historial" onClick={() => {
-                  setMostrarModal(false);
-                  navigate('/historial-vehiculo', { state: { patente: reservaDetalle.patente } });
-                }}>
-                  Ver historial completo del vehículo
-                </Button>
-              ) : null}
-              {historial.loading ? (
-                <div className="gestionreservas-spinner-container">
-                  <span className="gestionreservas-spinner-text">Cargando historial...</span>
-                </div>
-              ) : historial.error ? (
-                <div className="gestionreservas-alert-danger">Error al cargar historial: {historial.error}</div>
-              ) : historial.historial && historial.historial.length > 0 ? (
-                <Table size="sm" bordered hover className="gestionreservas-tabla-historial">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Servicio</th>
-                      <th>Resultado</th>
-                      <th>Mecánico</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historial.historial.map((serv, idx) => (
-                      <tr key={serv.id || idx}>
-                        <td>{serv.fecha}</td>
-                        <td>{serv.servicio}</td>
-                        <td>{serv.resultado}</td>
-                        <td>{serv.mecanico || 'N/A'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <div className="gestionreservas-modal-body .text-muted">No hay historial registrado para este vehículo.</div>
-              )}
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setMostrarModal(false)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Modal de edición */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Modificar Reserva</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Fecha</Form.Label>
-              <Form.Control
-                type="date"
-                value={editData.fecha}
-                onChange={e => setEditData({ ...editData, fecha: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Hora</Form.Label>
-              <Form.Control
-                type="time"
-                value={editData.hora}
-                onChange={e => setEditData({ ...editData, hora: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Estado</Form.Label>
-              <Form.Select
-                value={editData.status}
-                onChange={e => setEditData({ ...editData, status: e.target.value })}
-              >
-                <option value="PENDING">Pendiente</option>
-                <option value="CONFIRMED">Confirmada</option>
-                <option value="COMPLETED">Completada</option>
-                <option value="CANCELLED">Cancelada</option>
-              </Form.Select>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleGuardarEdicion}>
-            Guardar Cambios
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <ReservaDetailsModal
+        show={mostrarModalDetalle}
+        reserva={reservaDetalle}
+        onHide={() => setMostrarModalDetalle(false)}
+      />
+      <EditReservaModal
+        show={mostrarModalEditar}
+        reserva={reservaEditar}
+        onHide={() => setMostrarModalEditar(false)}
+        onSave={manejarGuardadoEdicion}
+      />
     </div>
   );
 }

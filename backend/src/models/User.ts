@@ -6,21 +6,8 @@ const prisma = new PrismaClient();
 
 // Implementación inicial con un array en memoria, pendiente de conexión a base de datos.
 class UserModel {
-  // private users: User[] = [];        // Array en memoria para almacenar usuarios
-  // private nextId = 1;               // Contador para generar IDs únicos
-
   // CREATE - Crear usuario
   async create(userData: RegisterRequest): Promise<User> {
-    // const newUser: User = {
-    //   id: this.nextId++,
-    //   ...userData,
-    //   role: 'user', // Por defecto todos son usuarios
-    //   createdAt: new Date().toISOString(),
-    //   updatedAt: new Date().toISOString()
-    // };
-    
-    // this.users.push(newUser);
-    // return newUser;
     const newUser = await prisma.user.create({
       data: {
         name: userData.name,
@@ -33,8 +20,8 @@ class UserModel {
     return newUser;
   }
 
-  // READ - Obtener usuario por ID
-  async findById(id: number): Promise<User | null> {
+  // READ - Obtener usuario por ID (sin password por seguridad)
+  async findById(id: number): Promise<Omit<User, 'password'> | null> {
     return await prisma.user.findUnique({
       where: { id: id },
       select: {
@@ -42,11 +29,45 @@ class UserModel {
         name: true,
         email: true,
         phone: true,
-        password: true,
         role: true,
         isActive: true,
+        isVerified: true,
+        verificationToken: true,
+        verificationExpires: true,
+        passwordResetToken: true,
+        passwordResetExpires: true,
         createdAt: true,
         updatedAt: true,
+      },
+    });
+  }
+
+  // READ - Obtener usuario con sus vehículos (para perfil completo)
+  async findByIdWithVehicles(id: number) {
+    return await prisma.user.findUnique({
+      where: { id: id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        vehicles: {
+          where: { status: 'ACTIVE' },
+          select: {
+            id: true,
+            license: true,
+            brand: true,
+            model: true,
+            year: true,
+            color: true,
+            status: true,
+          }
+        },
       },
     });
   }
@@ -63,14 +84,19 @@ class UserModel {
         password: true,
         role: true,
         isActive: true,
+        isVerified: true,
+        verificationToken: true,
+        verificationExpires: true,
+        passwordResetToken: true,
+        passwordResetExpires: true,
         createdAt: true,
         updatedAt: true,
       },
     });
   }
 
-  // UPDATE - Actualizar usuario
-  async update(id: number, updateData: Partial<User>): Promise<User | null> {
+  // UPDATE - Actualizar usuario (sin password por seguridad)
+  async update(id: number, updateData: Partial<User>): Promise<Omit<User, 'password'> | null> {
     try {
       if (updateData.email) {
         const existingUser = await prisma.user.findUnique({
@@ -101,27 +127,26 @@ class UserModel {
           name: true,
           email: true,
           phone: true,
-          password: true,
           role: true,
           isActive: true,
+          isVerified: true,
+          verificationToken: true,
+          verificationExpires: true,
+          passwordResetToken: true,
+          passwordResetExpires: true,
           createdAt: true,
           updatedAt: true,
         },
       });
       return updatedUser;
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Error al actualizar usuario:", error);
       return null;
     }
   }
 
   // DELETE - Eliminar usuario
   async delete(id: number): Promise<boolean> {
-    // const userIndex = this.users.findIndex(user => user.id === id);
-    // if (userIndex === -1) return false;
-
-    // this.users.splice(userIndex, 1);
-    // return true;
     try {
       await prisma.user.delete({
         where: { id: id },
@@ -129,22 +154,26 @@ class UserModel {
       return true;
     } catch (error) {
       // Si el usuario no existe, Prisma lanzará un error (P2025)
-      console.error("Error deleting user:", error);
+      console.error("Error al eliminar usuario:", error);
       return false;
     }
   }
 
-  // READ - Obtener todos los usuarios (para admin)
-  async findAll(): Promise<User[]> {
+  // READ - Obtener todos los usuarios (para admin, sin password por seguridad)
+  async findAll(): Promise<Omit<User, 'password'>[]> {
     return await prisma.user.findMany({
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
-        password: true,
         role: true,
         isActive: true,
+        isVerified: true,
+        verificationToken: true,
+        verificationExpires: true,
+        passwordResetToken: true,
+        passwordResetExpires: true,
         createdAt: true,
         updatedAt: true,
       },

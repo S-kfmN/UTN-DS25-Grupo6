@@ -1,92 +1,65 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Form, Button, Card, Badge, Alert, Row, Col, Modal } from 'react-bootstrap';
 import GestionTable from '../components/GestionTable';
 import { dividirNombreCompleto } from '../utils/dateUtils';
 import { usarAuth } from '../context/AuthContext';
 import UserDetailsModal from '../components/UserDetailsModal';
 import EditUserModal from '../components/EditUserModal';
+import { useApiQuery, useApiMutation } from '../hooks/useApi';
 import apiService from '../services/apiService';
 import '../assets/styles/buscarusuarios.css';
 
 export default function GestionarUsuarios() {
-  const { esAdmin, allUsers, allReservations, refrescarUsuario, cargarTodosLosUsuarios } = usarAuth();
+  const { usuario } = usarAuth();
+  const esAdmin = usuario?.rol === 'ADMIN';
   const [terminoBusqueda, setTerminoBusqueda] = useState('');
-  const [usuariosFiltrados, setUsuariosFiltrados] = useState(allUsers);
   const [mostrarDetalles, setMostrarDetalles] = useState(false);
   const [mostrarEditar, setMostrarEditar] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
-  const [alerta, setAlerta] = useState(null);
   const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
   const [mostrarConfirmEliminar, setMostrarConfirmEliminar] = useState(false);
-
-  // Cargar todos los usuarios al montar el componente
-  useEffect(() => {
-    cargarTodosLosUsuarios();
-  }, [cargarTodosLosUsuarios]); // Dependencia del contexto para evitar re-renders innecesarios
-
-  // Verificar si el usuario es admin
-  if (!esAdmin()) {
-    return (
-      <div className="buscarusuarios-container">
-        <div className="buscarusuarios-header">
-          <h1>Acceso Denegado</h1>
-          <p>No tienes permisos para acceder a esta pagina</p>
-        </div>
-        <Alert variant="danger" className="buscarusuarios-alert-danger">
-          <i className="bi bi-exclamation-triangle me-2"></i>
-          Solo los administradores pueden acceder a esta pagina.
-        </Alert>
-      </div>
-    );
-  }
-
-  // Funcion para manejar la busqueda
-  const manejarBusqueda = (e) => {
-    e.preventDefault();
-    const terminoLower = terminoBusqueda.toLowerCase();
-    const resultado = allUsers.filter(usuario =>
-      (usuario.name?.toLowerCase().includes(terminoLower)) ||
-      (usuario.email?.toLowerCase().includes(terminoLower)) ||
-      (usuario.phone?.toLowerCase().includes(terminoLower))
-    );
-    setUsuariosFiltrados(resultado);
-  };
-
-  // Actualizar usuarios filtrados cuando cambien los usuarios
-  useEffect(() => {
-    if (terminoBusqueda) {
-      const terminoLower = terminoBusqueda.toLowerCase();
-      const resultado = allUsers.filter(usuario =>
-        (usuario.name?.toLowerCase().includes(terminoLower)) ||
-        (usuario.email?.toLowerCase().includes(terminoLower)) ||
-        (usuario.phone?.toLowerCase().includes(terminoLower))
-      );
-      setUsuariosFiltrados(resultado);
-    } else {
-      setUsuariosFiltrados(allUsers);
+  
+  const { data: allUsers = [], isLoading, isError, error } = useApiQuery(
+    ['usuarios', 'admin'],
+    () => apiService.getAllUsers(),
+    {
+      enabled: esAdmin,
+      select: (data) => data.data || []
     }
-  }, [allUsers, terminoBusqueda]); // buscarUsuarios ya no es una dependencia
+  );
 
-  // Funcion para limpiar busqueda
-  const limpiarBusqueda = () => {
-    setTerminoBusqueda('');
-    setUsuariosFiltrados(allUsers);
-  };
+  const updateUserMutation = useApiMutation(
+    (variables) => apiService.updateUserById(variables.id, variables.data),
+    ['usuarios', 'admin']
+  );
 
-  // Funcion para formatear fecha
+  const deleteUserMutation = useApiMutation(
+    (id) => apiService.deleteUserById(id),
+    ['usuarios', 'admin']
+  );
+
+  const usuariosFiltrados = terminoBusqueda
+    ? allUsers.filter(u => {
+        const terminoLower = terminoBusqueda.toLowerCase();
+        return (
+          (u.name?.toLowerCase().includes(terminoLower)) ||
+          (u.email?.toLowerCase().includes(terminoLower)) ||
+          (u.phone?.toLowerCase().includes(terminoLower))
+        );
+      })
+    : allUsers;
+
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleDateString('es-ES');
   };
 
   // Funciones para manejar modales
   const abrirDetalles = (usuario) => {
-
     setUsuarioSeleccionado(usuario);
     setMostrarDetalles(true);
   };
 
   const abrirEditar = (usuario) => {
-
     setUsuarioSeleccionado(usuario);
     setMostrarEditar(true);
   };
@@ -99,16 +72,10 @@ export default function GestionarUsuarios() {
 
   const manejarGuardarUsuario = async (datosActualizados) => {
     try {
-      // usuarioSeleccionado es el usuario que se está editando
-      const resultado = await apiService.updateUserById(usuarioSeleccionado.id, datosActualizados);
-      if (resultado && !resultado.error) {
-        
-        refrescarUsuario();
-      } else {
-        alert('Error al actualizar usuario: ' + (resultado.error || 'Error desconocido'));
-      }
+      await updateUserMutation.mutateAsync({ id: usuarioSeleccionado.id, data: datosActualizados });
+      cerrarModales();
     } catch (error) {
-      alert('Error al actualizar usuario: ' + error.message);
+      console.error('Error al actualizar usuario:', error);
     }
   };
 
@@ -120,29 +87,27 @@ export default function GestionarUsuarios() {
   const confirmarEliminarUsuario = async () => {
     if (!usuarioAEliminar) return;
     try {
-      await apiService.deleteUserById(usuarioAEliminar.id);
-      await cargarTodosLosUsuarios();
-      setAlerta({ tipo: 'success', mensaje: 'Usuario eliminado correctamente' });
+      await deleteUserMutation.mutateAsync(usuarioAEliminar.id);
     } catch (error) {
-      setAlerta({ tipo: 'error', mensaje: 'Error al eliminar usuario' });
+      console.error('Error al eliminar usuario:', error);
     } finally {
       setMostrarConfirmEliminar(false);
       setUsuarioAEliminar(null);
     }
   };
 
+  if (isLoading) return <div className="buscarusuarios-container"><p>Cargando usuarios...</p></div>;
+  if (isError) return <div className="buscarusuarios-container"><Alert variant="danger">Error al cargar usuarios: {error.message}</Alert></div>;
+
   return (
     <div className="buscarusuarios-container">
-      {/* Header */}
       <div className="buscarusuarios-header">
         <h1>Gestionar Usuarios</h1>
         <h3>Busca y gestiona usuarios registrados en el sistema</h3>
       </div>
-
-      {/* Formulario de busqueda */}
       <Card className="buscarusuarios-card-busqueda">
         <Card.Body>
-          <Form onSubmit={manejarBusqueda}>
+          <Form>
             <Row>
               <Col md={8}>
                 <Form.Group className="mb-3">
@@ -163,8 +128,6 @@ export default function GestionarUsuarios() {
           </Form>
         </Card.Body>
       </Card>
-
-      {/* Resultados de busqueda */}
       <div className="buscarusuarios-busqueda-usuarios">
         <div className="buscarusuarios-resultados-header">
           <h3 className="buscarusuarios-resultados-titulo">
@@ -180,6 +143,13 @@ export default function GestionarUsuarios() {
 
         <GestionTable
           columns={[
+            { 
+              key: 'userId',
+              label: 'ID',
+              sortable: true,
+              getSortValue: (u) => u.id,
+              render: (u) => u.id || '-'
+            },
             {
               key: 'name',
               label: 'Nombre',
@@ -247,13 +217,11 @@ export default function GestionarUsuarios() {
           )}
         />
       </div>
-
-      {/* Modales */}
       <UserDetailsModal
         show={mostrarDetalles}
         onHide={cerrarModales}
         usuario={usuarioSeleccionado}
-        reservas={allReservations}
+        reservas={[]} 
       />
       
       <EditUserModal

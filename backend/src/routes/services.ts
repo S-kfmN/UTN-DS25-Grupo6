@@ -15,61 +15,227 @@ import { authenticate, authorize } from '../middlewares/auth.middleware';
 // Crear el router para las rutas de servicios
 const router = Router();
 
-console.log('🚀 Router de servicios registrado');
-
-// NOTA: Por ahora no aplicamos middleware de autenticación
-// porque queremos que los clientes puedan ver los servicios disponibles
-// En el futuro se puede agregar autenticación para crear/editar/eliminar
-
-// ========================================
-// RUTAS PÚBLICAS (sin autenticación)
-// ========================================
-
-// GET /api/services - Obtener todos los servicios
-// Query params opcionales:
-//   ?active=true - Solo servicios activos
-//   ?active=false - Solo servicios inactivos
-//   Sin parámetro - Todos los servicios
+/**
+ * @swagger
+ * /api/services:
+ *   get:
+ *     summary: Obtiene todos los servicios
+ *     tags: [Services]
+ *     parameters:
+ *       - in: query
+ *         name: active
+ *         schema:
+ *           type: boolean
+ *         description: Filtra por servicios activos o inactivos
+ *     responses:
+ *       200:
+ *         description: Lista de servicios
+ */
 router.get('/', getAllServices);
 
-// GET /api/services/stats - Obtener estadísticas de servicios
-// Retorna: total, activos, inactivos
+/**
+ * @swagger
+ * /api/services/stats:
+ *   get:
+ *     summary: Obtiene estadísticas de los servicios
+ *     tags: [Services]
+ *     responses:
+ *       200:
+ *         description: Estadísticas de servicios
+ */
 router.get('/stats', getServiceStats);
 
-// GET /api/services/search - Buscar servicios por nombre
-// Query params: ?q=termino_busqueda
-// Ejemplo: /api/services/search?q=aceite
+/**
+ * @swagger
+ * /api/services/search:
+ *   get:
+ *     summary: Busca servicios por nombre
+ *     tags: [Services]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda
+ *     responses:
+ *       200:
+ *         description: Lista de servicios encontrados
+ */
 router.get('/search', searchServices);
 
-// GET /api/services/category/:category - Obtener servicios por categoría
-// Categorías válidas: mantenimiento, reparacion, diagnostico, limpieza, otros
-// Ejemplo: /api/services/category/mantenimiento
+/**
+ * @swagger
+ * /api/services/category/{category}:
+ *   get:
+ *     summary: Obtiene servicios por categoría
+ *     tags: [Services]
+ *     parameters:
+ *       - in: path
+ *         name: category
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Categoría del servicio
+ *     responses:
+ *       200:
+ *         description: Lista de servicios en la categoría
+ */
 router.get('/category/:category', getServicesByCategory);
 
-// GET /api/services/:id - Obtener servicio específico por ID
-// Ejemplo: /api/services/1
+/**
+ * @swagger
+ * /api/services/{id}:
+ *   get:
+ *     summary: Obtiene un servicio por ID
+ *     tags: [Services]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Datos del servicio
+ *       404:
+ *         description: Servicio no encontrado
+ */
 router.get('/:id', getServiceById);
 
-// ========================================
-// RUTAS PROTEGIDAS (requieren autenticación)
-// ========================================
-
-// POST /api/services - Crear nuevo servicio (solo para roles Admin)
-// Body requerido: name, description, price, duration, category
-// Body opcional: isActive
+/**
+ * @swagger
+ * /api/services:
+ *   post:
+ *     summary: Crea un nuevo servicio (solo Admin)
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               duration:
+ *                 type: integer
+ *               category:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Servicio creado
+ *       400:
+ *         description: Error en la solicitud
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Prohibido
+ */
 router.post('/', authenticate, authorize('ADMIN'), createService);
 
-// PUT /api/services/:id - Actualizar servicio existente (solo para roles Admin)
-// Body opcional: name, description, price, duration, category, isActive
-// Ejemplo: /api/services/1
+/**
+ * @swagger
+ * /api/services/{id}:
+ *   put:
+ *     summary: Actualiza un servicio (solo Admin)
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               duration:
+ *                 type: integer
+ *               category:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Servicio actualizado
+ *       400:
+ *         description: Error en la solicitud
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Prohibido
+ *       404:
+ *         description: Servicio no encontrado
+ */
 router.put('/:id', authenticate, authorize('ADMIN'), updateService);
 
-// DELETE /api/services/:id - Eliminar servicio (cambiar a inactivo) (solo para roles Admin)
-// Ejemplo: /api/services/1
+/**
+ * @swagger
+ * /api/services/{id}:
+ *   delete:
+ *     summary: Desactiva un servicio (solo Admin)
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Servicio desactivado
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Prohibido
+ *       404:
+ *         description: Servicio no encontrado
+ */
 router.delete('/:id', authenticate, authorize('ADMIN'), deleteService);
 
-// DELETE /api/services/:id/hard - Eliminación física (solo para roles Admin)
-// Ejemplo: /api/services/1/hard
+/**
+ * @swagger
+ * /api/services/{id}/hard:
+ *   delete:
+ *     summary: Elimina un servicio permanentemente (solo Admin)
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Servicio eliminado
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Prohibido
+ *       404:
+ *         description: Servicio no encontrado
+ */
 router.delete('/:id/hard', authenticate, authorize('ADMIN'), hardDeleteService);
 
 // ========================================
