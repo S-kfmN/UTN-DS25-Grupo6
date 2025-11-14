@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # UTN-DS25-Grupo6 — Sistema de Gestión de Turnos
 
 Plataforma web desarrollada para el Lubricentro Renault con el objetivo de digitalizar la reserva de turnos, gestionar vehículos y mantener el historial de servicios.
