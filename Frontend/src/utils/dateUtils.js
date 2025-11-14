@@ -16,18 +16,6 @@ export const obtenerFechaActual = () => {
 };
 
 /**
- * Obtener fecha específica en formato YYYY-MM-DD (zona horaria local)
- * @param {Date} fecha - Objeto Date
- * @returns {string} Fecha en formato YYYY-MM-DD
- */
-export const formatearFechaLocal = (fecha) => {
-  const año = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
-  return `${año}-${mes}-${dia}`;
-};
-
-/**
  * Crear fecha a partir de año, mes y día (zona horaria local)
  * @param {number} año - Año
  * @param {number} mes - Mes (1-12)
@@ -38,24 +26,6 @@ export const crearFecha = (año, mes, dia) => {
   const mesFormateado = String(mes).padStart(2, '0');
   const diaFormateado = String(dia).padStart(2, '0');
   return `${año}-${mesFormateado}-${diaFormateado}`;
-};
-
-/**
- * Obtener las próximas N fechas desde hoy
- * @param {number} cantidad - Cantidad de fechas a generar
- * @returns {string[]} Array de fechas en formato YYYY-MM-DD
- */
-export const obtenerProximasFechas = (cantidad = 7) => {
-  const fechas = [];
-  const hoy = new Date();
-  
-  for (let i = 0; i < cantidad; i++) {
-    const fecha = new Date(hoy);
-    fecha.setDate(hoy.getDate() + i);
-    fechas.push(formatearFechaLocal(fecha));
-  }
-  
-  return fechas;
 };
 
 /**

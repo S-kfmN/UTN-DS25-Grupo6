@@ -1,11 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -49,6 +46,11 @@ model User {
   password     String     // Se asume que se almacenará la contraseña hasheada
   role         UserRole   @default(USER) // Cambiado a UserRole
   isActive     Boolean    @default(true) // Añadido campo isActive
+  isVerified   Boolean    @default(false) // Verificación de email
+  verificationToken   String?   // Token único para verificación
+  verificationExpires DateTime? // Expiración del token
+  passwordResetToken   String?   // Token para recuperación de contraseña
+  passwordResetExpires DateTime? // Expiración del token de recuperación
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   vehicles     Vehicle[]  // Un usuario puede tener múltiples vehículos

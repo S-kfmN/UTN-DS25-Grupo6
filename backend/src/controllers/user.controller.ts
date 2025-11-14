@@ -14,7 +14,7 @@ export const getProfile = async (req: Request, res: Response) => {
       });
     }
     
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findByIdWithVehicles(userId);
     if (!user) {
       return res.status(404).json({
         success: false,

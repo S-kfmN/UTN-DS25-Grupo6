@@ -4,11 +4,24 @@ import { usarAuth } from '../context/AuthContext';
 import '../assets/styles/navbar.css';
 
 export default function NavbarComponent({ showBrand = true, style: inlineStyle = {} }) {
-  const { usuario, cerrarSesion, estaAutenticado, esAdmin } = usarAuth();
+  const { usuario, cerrarSesion, estaAutenticado, cargando } = usarAuth();
   const navigate = useNavigate();
 
-  const isLoggedIn = estaAutenticado();
-  const isAdmin = esAdmin();
+  const isLoggedIn = estaAutenticado;
+  const isAdmin = usuario?.rol === 'ADMIN';
+
+  if (cargando) {
+    return (
+      <Navbar expand="lg" className="py-3 app-navbar" style={inlineStyle}>
+        <Container fluid>
+          <Navbar.Brand as={Link} to="/" className="app-navbar__brand">
+            <img src="/renault-logo.png" alt="Lubricentro Renault logo" className="app-navbar__logo" />
+            {showBrand && <span className="app-navbar__company-name">Lubricentro Renault</span>}
+          </Navbar.Brand>
+        </Container>
+      </Navbar>
+    );
+  }
 
   return (
     <Navbar expand="lg" className="py-3 app-navbar" role="navigation" aria-label="Main navigation" style={inlineStyle}>

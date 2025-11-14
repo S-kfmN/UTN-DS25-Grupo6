@@ -1,14 +1,7 @@
 import { Request, Response } from 'express';
 import ServiceModel from '../models/Service';
 import { CreateServiceRequest, UpdateServiceRequest } from '../types/service';
-import { ServiceCategory } from '@prisma/client'; // Importar el enum de Prisma
-
-// Controlador para el CRUD de Servicios
-// Maneja la lógica de negocio y validaciones para servicios
-
-// ========================================
-// OPERACIONES CRUD BÁSICAS
-// ========================================
+import { ServiceCategory } from '@prisma/client';
 
 // CREATE - Crear un nuevo servicio
 export const createService = async (req: Request, res: Response) => {

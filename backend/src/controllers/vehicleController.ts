@@ -1,20 +1,20 @@
 import { Request, Response } from 'express';
 import VehicleModel from '../models/Vehicle';
 import { CreateVehicleRequest, UpdateVehicleRequest, Vehicle } from '../types/vehicle';
-import { VehicleStatus } from '../types/vehicle'; // Added import for VehicleStatus
+import { VehicleStatus } from '../types/vehicle'; 
 
 // CREATE - Crear vehículo
 export const createVehicle = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id; // Del middleware de autenticación
-    
+
     if (!userId) {
       return res.status(401).json({
         success: false,
         message: 'Usuario no autenticado'
       });
     }
-    
+
     const vehicleData: CreateVehicleRequest = req.body;
 
     // Validaciones básicas
@@ -54,14 +54,13 @@ export const createVehicle = async (req: Request, res: Response) => {
     // Crear vehículo
     const newVehicle = await VehicleModel.create(vehicleData, userId);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: newVehicle
     });
-
   } catch (error) {
-    console.error('❌ Error en createVehicle:', error);
-    res.status(500).json({
+    console.error('Error en createVehicle:', error);
+    return res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
       error: (error as Error).message
@@ -91,19 +90,14 @@ export const getUserVehicles = async (req: Request, res: Response) => {
     // La lógica para que los administradores vean TODOS los vehículos se maneja en cargarTodosLosVehiculos
     // en el frontend, que llama a la API sin un userId específico.
     if (userId) {
-      console.log('👤 vehicleController: Obteniendo vehículos para userId:', userId);
       vehicles = await VehicleModel.findByUserId(userId, statusFilter);
     } else if (userRole === 'ADMIN') {
       // Si NO se proporciona userId y es admin, entonces se pide ALLVehicles
-      console.log('👑 vehicleController: ADMIN detectado, obteniendo todos los vehículos...');
       vehicles = await VehicleModel.findAll();
     } else {
       // Caso por defecto para usuarios normales sin userId (esto no debería ocurrir con el middleware)
-      console.log('⚠️ vehicleController: Caso no esperado: No userId y no ADMIN. Devolviendo vacío.');
       vehicles = [];
     }
-
-    console.log('🚗 getUserVehicles - vehicles found:', vehicles.length);
 
     res.json({
       success: true,
@@ -111,7 +105,7 @@ export const getUserVehicles = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en getUserVehicles:', error);
+    console.error('Error en getUserVehicles:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -184,15 +178,13 @@ export const getAllVehicles = async (req: Request, res: Response) => {
 
     const vehicles = await VehicleModel.findAll();
     
-    console.log('👑 vehicleController: ADMIN - Obteniendo TODOS los vehículos. Encontrados:', vehicles.length);
-
     res.json({
       success: true,
       data: vehicles
     });
 
   } catch (error) {
-    console.error('❌ Error en getAllVehicles:', error);
+    console.error('Error en getAllVehicles:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -204,7 +196,7 @@ export const getAllVehicles = async (req: Request, res: Response) => {
 export const updateVehicle = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const userRole = req.user?.role; // <-- AGREGADO
+    const userRole = req.user?.role; 
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -213,8 +205,6 @@ export const updateVehicle = async (req: Request, res: Response) => {
     }
     const vehicleId = parseInt(req.params.id);
     const updateData: UpdateVehicleRequest = req.body;
-
-    console.log('BODY UPDATE RESERVA:', req.body); // <-- agrega esto
 
     // Verificar que el vehículo existe
     const vehicle = await VehicleModel.findById(vehicleId);
@@ -263,7 +253,7 @@ export const updateVehicle = async (req: Request, res: Response) => {
 export const deleteVehicle = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const userRole = req.user?.role; // <-- AGREGADO
+    const userRole = req.user?.role;
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -275,6 +265,7 @@ export const deleteVehicle = async (req: Request, res: Response) => {
 
     // Verificar que el vehículo existe
     const vehicle = await VehicleModel.findById(vehicleId);
+
     if (!vehicle) {
       return res.status(404).json({
         success: false,

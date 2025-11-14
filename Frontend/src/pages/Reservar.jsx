@@ -3,29 +3,23 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Form, Button, Alert, Row, Col } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { crearFecha, formatearFechaParaMostrar, esFechaPasada, dividirNombreCompleto } from '../utils/dateUtils';
-import apiService from '../services/apiService'; // Importar apiService
-import { reservationUserDataSchema } from '../validations/reservationSchema';
+import { useApiQuery, useApiMutation } from '../hooks/useApi';
+import apiService from '../services/apiService';
+import { reservationFormSchema } from '../validations/schemas/reservationSchema';
 import '../assets/styles/reservar.css';
 import CustomButton from '../components/CustomButton';
 import SeleccionHorario from '../components/SeleccionHorario';
 
+const STABLE_EMPTY_ARRAY = []; // Mantenemos esta estrategia aquí porque es segura y ya está aplicada.
+
 export default function Reservar() {
-  const { 
-    usuario, 
-    crearReserva,  
-    refrescarUsuario, 
-    cargarVehiculosUsuario, 
-    servicios // Importar servicios desde el contexto
-  } = usarAuth();
+  const { usuario } = usarAuth();
+  const { showSuccess, showError } = useToast();
 
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
-  const [vehiculosActivos, setVehiculosActivos] = useState([]);
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null);
-  const [reservasDelDia, setReservasDelDia] = useState([]); // Nuevo estado para reservas del día
-  const [reservasDelMes, setReservasDelMes] = useState([]); // Estado para reservas de todo el mes
-  const [cargandoReservasMes, setCargandoReservasMes] = useState(false); // Estado de carga
-  
   const [mesActual, setMesActual] = useState(() => {
     const fecha = new Date();
     return {
@@ -34,6 +28,65 @@ export default function Reservar() {
     };
   });
   
+  const { data: vehiculosActivosData = [], isLoading: isLoadingVehiculos } = useApiQuery(
+    ['vehiculos', usuario?.id, 'active'],
+    () => apiService.getVehicles(usuario.id, 'ACTIVE'),
+    {
+      enabled: !!usuario?.id,
+      select: (data) => data?.data?.filter(v => v.status === 'ACTIVE' || !v.status) || STABLE_EMPTY_ARRAY,
+      onSuccess: (data) => {
+        if (data.length > 0 && !vehiculoSeleccionado) {
+          setVehiculoSeleccionado(data[0]);
+        }
+      }
+    }
+  );
+  const vehiculosActivos = vehiculosActivosData;
+
+  const { data: servicios = [] } = useApiQuery(
+    ['servicios'],
+    () => apiService.getServices(),
+    {
+      select: (data) => data.data.services || []
+    }
+  );
+  
+  const mesKey = `${mesActual.año}-${mesActual.mes + 1}`;
+  const { data: reservasDelMes = [], isLoading: cargandoReservasMes } = useApiQuery(
+    ['reservasMes', mesKey],
+    () => apiService.getReservationsByMonth(mesActual.año, mesActual.mes + 1),
+    {
+      select: (data) => {
+        const todasLasReservas = data.data?.reservations || data.data || [];
+        const reservasAgrupadas = {};
+        todasLasReservas.forEach(reserva => {
+          if (!reservasAgrupadas[reserva.date]) {
+            reservasAgrupadas[reserva.date] = [];
+          }
+          reservasAgrupadas[reserva.date].push(reserva);
+        });
+        return Object.keys(reservasAgrupadas).map(fecha => ({
+          fecha: fecha,
+          reservas: reservasAgrupadas[fecha]
+        }));
+      }
+    }
+  );
+
+  const { data: reservasDelDia = [] } = useApiQuery(
+    ['reservasDia', fechaSeleccionada],
+    () => apiService.getReservationsByDate(fechaSeleccionada),
+    {
+        enabled: !!fechaSeleccionada,
+        select: (data) => data.data || []
+    }
+  );
+
+  const crearReservaMutation = useApiMutation(
+    (data) => apiService.createReservation(data),
+    ['reservas', 'reservasMes']
+  );
+
   const { 
     register,
     handleSubmit,
@@ -44,7 +97,7 @@ export default function Reservar() {
     watch,
     formState: { errors }
   } = useForm({
-    resolver: yupResolver(reservationUserDataSchema),
+    resolver: yupResolver(reservationFormSchema),
     defaultValues: {
       nombre: '',
       apellido: '',
@@ -62,94 +115,8 @@ export default function Reservar() {
   });
   const formValues = watch();
   
-  const [estaEnviando, setEstaEnviando] = useState(false);
-  const [mostrarExito, setMostrarExito] = useState(false);
+  const primerVehiculoId = vehiculosActivos[0]?.id;
   
-
-  useEffect(() => {
-    const cargarDatos = async () => {
-      if (usuario?.id) {
-        // Cargar vehículos desde el backend
-        const loadedVehiculos = await cargarVehiculosUsuario(usuario.id, 'active'); // Solicitar solo vehículos activos
-        console.log('✅ Reservar.jsx - Vehículos cargados:', loadedVehiculos); // Debug: ver vehículos cargados
-        
-        // Obtener vehículos activos después de cargar
-        const vehiculos = loadedVehiculos.filter(v => 
-          v.estado === 'ACTIVE' || !v.estado // Incluir vehículos activos y sin estado definido
-        );
-        console.log('✅ Reservar.jsx - Vehículos activos (filtrados):', vehiculos); // Debug: ver vehículos activos
-        setVehiculosActivos(vehiculos);
-
-        if (vehiculos.length > 0) {
-          setVehiculoSeleccionado(vehiculos[0]);
-          setValue('patente', vehiculos[0].patente || '');
-          setValue('marca', vehiculos[0].marca || 'RENAULT');
-          setValue('modelo', vehiculos[0].modelo || '');
-          setValue('año', vehiculos[0].año || '');
-        }
-      }
-    };
-
-    cargarDatos();
-  }, [usuario?.id, cargarVehiculosUsuario]);
-
-  // Efecto para cargar las reservas de todo el mes
-  useEffect(() => {
-    const cargarReservasDelMes = async () => {
-      setCargandoReservasMes(true);
-      try {
-        // endpoint optimizado para obtener todas las reservas del mes
-        const reservation = await apiService.getReservationsByMonth(mesActual.año, mesActual.mes + 1);
-        const todasLasReservas = reservation.data?.reservations || reservation.data || [];
-        
-        // Agrupar las reservas por fecha
-        const reservasAgrupadas = {};
-        todasLasReservas.forEach(reserva => {
-          if (!reservasAgrupadas[reserva.date]) {
-            reservasAgrupadas[reserva.date] = [];
-          }
-          reservasAgrupadas[reserva.date].push(reserva);
-        });
-        
-        // Convertir a array con la estructura esperada
-        const reservasDelMes = Object.keys(reservasAgrupadas).map(fecha => ({
-          fecha: fecha,
-          reservas: reservasAgrupadas[fecha]
-        }));
-        
-        setReservasDelMes(reservasDelMes);
-        console.log('✅ Reservas del mes cargadas:', reservasDelMes);
-      } catch (error) {
-        console.error('Error al cargar reservas del mes:', error);
-        setReservasDelMes([]);
-      } finally {
-        setCargandoReservasMes(false);
-      }
-    };
-    
-    cargarReservasDelMes();
-  }, [mesActual]); // Se ejecuta cuando cambia el mes
-
-  // Efecto para cargar las reservas de la fecha seleccionada
-  useEffect(() => {
-    const cargarReservasDelDia = async () => {
-      if (fechaSeleccionada) {
-        try {
-          const reservation = await apiService.getReservationsByDate(fechaSeleccionada);
-          setReservasDelDia(reservation.data || []);
-          console.log('Reserva:', reservation.data);
-        } catch (error) {
-          console.error('Error al cargar reservas del día:', error);
-          setReservasDelDia([]);
-        }
-      } else {
-        setReservasDelDia([]);
-      }
-    };
-    cargarReservasDelDia();
-  }, [fechaSeleccionada]); // Dependencia: se ejecuta cuando cambia la fecha seleccionada
-
-  // Dividir nombre completo en nombre y apellido
   useEffect(() => {
     if (usuario) {
       const { nombre, apellido } = dividirNombreCompleto(usuario.name || '');
@@ -158,8 +125,27 @@ export default function Reservar() {
       setValue('telefono', usuario.phone || '');
       setValue('email', usuario.email || '');
     }
-  }, [usuario]);
+  }, [usuario, setValue]);
 
+  useEffect(() => {
+    if (vehiculoSeleccionado) {
+      setValue('patente', vehiculoSeleccionado.license || '');
+      setValue('marca', vehiculoSeleccionado.brand || 'RENAULT');
+      setValue('modelo', vehiculoSeleccionado.model || '');
+      setValue('año', vehiculoSeleccionado.year || '');
+    }
+  }, [vehiculoSeleccionado, primerVehiculoId, setValue]);
+
+  useEffect(() => {
+    if (vehiculosActivos.length === 1 && !vehiculoSeleccionado) {
+      const unicoVehiculo = vehiculosActivos[0];
+      setVehiculoSeleccionado(unicoVehiculo);
+      setValue('patente', unicoVehiculo.license || '', { shouldValidate: true });
+      setValue('marca', unicoVehiculo.brand || 'RENAULT');
+      setValue('modelo', unicoVehiculo.model || '');
+      setValue('año', unicoVehiculo.year || '');
+    }
+  }, [vehiculosActivos, vehiculoSeleccionado, setValue]);
 
   const generarDiasDelMes = (año, mes) => {
     const primerDia = new Date(año, mes, 1);
@@ -243,18 +229,14 @@ export default function Reservar() {
   };
 
 
-  // Los campos del formulario se manejan con react-hook-form usando register.
-  // Para valores programáticos (fecha/hora/vehículo) usamos setValue.
-
-
   const manejarCambioVehiculo = (vehiculoId) => {
     const vehiculo = vehiculosActivos.find(v => v.id === parseInt(vehiculoId));
     if (vehiculo) {
       setVehiculoSeleccionado(vehiculo);
-      setValue('patente', vehiculo.patente || '', { shouldValidate: true });
-      setValue('marca', vehiculo.marca || 'RENAULT');
-      setValue('modelo', vehiculo.modelo || '');
-      setValue('año', vehiculo.año || '');
+      setValue('patente', vehiculo.license || '', { shouldValidate: true });
+      setValue('marca', vehiculo.brand || 'RENAULT');
+      setValue('modelo', vehiculo.model || '');
+      setValue('año', vehiculo.year || '');
       clearErrors(['patente', 'modelo', 'año']);
     }
   };
@@ -263,49 +245,58 @@ export default function Reservar() {
   const onSubmit = async (formData) => {
     if (reservasDelDia.some(reserva => reserva.time === formData.hora && reserva.date === formData.fecha)) {
       setError('hora', { type: 'manual', message: 'Este horario ya está ocupado' });
+      showError('Este horario ya está ocupado. Por favor, selecciona otro horario disponible.', 'Horario no disponible');
       return;
     }
 
-    setEstaEnviando(true);
+    const servicioEncontrado = servicios.find(s => s.name === formData.servicio);
+    const vehiculoEncontrado = vehiculosActivos.find(v => v.license === formData.patente);
+
+    if (!servicioEncontrado || !vehiculoEncontrado) {
+        showError('Servicio o vehículo no válido.', 'Error de validación');
+        return;
+    }
+    
+    const reservaParaBackend = {
+        userId: usuario.id,
+        vehicleId: vehiculoEncontrado.id,
+        serviceId: servicioEncontrado.id,
+        date: formData.fecha,
+        time: formData.hora,
+        notes: formData.observaciones
+    };
 
     try {
-      const datosCompletos = {
-        ...formData,
-        vehiculo: {
-          patente: formData.patente,
-          marca: formData.marca,
-          modelo: formData.modelo,
-          año: formData.año
-        }
-      };
+      await crearReservaMutation.mutateAsync(reservaParaBackend);
+      
+      showSuccess(
+        `¡Reserva creada exitosamente para el ${formatearFechaParaMostrar(formData.fecha)} a las ${formData.hora}! Recibirás confirmación por email.`,
+        'Reserva Confirmada'
+      );
+      
+      const { nombre, apellido } = dividirNombreCompleto(usuario?.name || '');
+      reset({
+        nombre: nombre || '',
+        apellido: apellido || '',
+        telefono: usuario?.phone || '',
+        email: usuario?.email || '',
+        patente: vehiculoSeleccionado?.license || '',
+        marca: 'RENAULT',
+        modelo: vehiculoSeleccionado?.model || '',
+        año: vehiculoSeleccionado?.year || '',
+        servicio: '',
+        fecha: '',
+        hora: '',
+        observaciones: ''
+      });
+      setFechaSeleccionada(null);
 
-      const resultado = await crearReserva(datosCompletos);
-
-      if (resultado.exito) {
-        setMostrarExito(true);
-        refrescarUsuario();
-        const { nombre, apellido } = dividirNombreCompleto(usuario?.name || '');
-        reset({
-          nombre: nombre || '',
-          apellido: apellido || '',
-          telefono: usuario?.phone || '',
-          email: usuario?.email || '',
-          patente: vehiculoSeleccionado?.patente || '',
-          marca: 'RENAULT',
-          modelo: vehiculoSeleccionado?.modelo || '',
-          año: vehiculoSeleccionado?.año || '',
-          servicio: '',
-          fecha: '',
-          hora: '',
-          observaciones: ''
-        });
-        setFechaSeleccionada(null);
-        setTimeout(() => setMostrarExito(false), 5000);
-      }
     } catch (error) {
       console.error('Error al crear reserva:', error);
-    } finally {
-      setEstaEnviando(false);
+      showError(
+        error.message || 'No se pudo crear la reserva. Por favor, intenta nuevamente.',
+        'Error al crear reserva'
+      );
     }
   };
 
@@ -336,20 +327,14 @@ export default function Reservar() {
 
   return (
     <div className="reservar-container">
-      {/* ===== TÍTULO DE LA PÁGINA ===== */}
       <div className="reservar-titulo">
         <h1>Reservar Turno</h1>
         <p>Selecciona una fecha en el calendario y completa tu reserva</p>
       </div>
 
-      {/* ===== CONTENEDOR PRINCIPAL CON DOS COLUMNAS ===== */}
       <div className="reservar-contenedor-principal">
-        
-        {/* ===== COLUMNA IZQUIERDA - CALENDARIO ===== */}
         <div className="reservar-columna-calendario">
           <h2>Calendario de Turnos</h2>
-          
-          {/* ===== ENCABEZADO DEL CALENDARIO CON NAVEGACIÓN ===== */}
           <div className="reservar-encabezado-calendario">
             <Button 
               onClick={mesAnterior}
@@ -373,8 +358,6 @@ export default function Reservar() {
               <i className="bi bi-chevron-right"></i>
             </Button>
           </div>
-          
-          {/* ===== DÍAS DE LA SEMANA ===== */}
           <div className="reservar-dias-semana">
             {nombresDias.map(dia => (
               <div key={dia} className="reservar-dia-semana">
@@ -382,8 +365,6 @@ export default function Reservar() {
               </div>
             ))}
           </div>
-          
-          {/* ===== CUADRICULA DEL CALENDARIO ===== */}
           <div className="reservar-cuadricula-calendario">
             {cargandoReservasMes && (
               <div className="reservar-cargando-mes">
@@ -412,8 +393,6 @@ export default function Reservar() {
               </div>
             ))}
           </div>
-          
-          {/* ===== LEYENDA DEL CALENDARIO ===== */}
           <div className="reservar-leyenda-calendario">
             <div className="reservar-leyenda-item">
               <div className="reservar-leyenda-color dia-normal"></div>
@@ -428,8 +407,6 @@ export default function Reservar() {
               <span>Seleccionado</span>
             </div>
           </div>
-
-          {/* ===== SELECTOR DE HORARIOS ===== */}
           {fechaSeleccionada && (
             <SeleccionHorario
               selectedTime={watch('hora')}
@@ -440,13 +417,8 @@ export default function Reservar() {
             />
           )}
         </div>
-        
-        {/* ===== COLUMNA DERECHA - FORMULARIO ===== */}
         <div className="reservar-columna-formulario">
-          <h2>Datos de la Reserva</h2>
-          
           <Form onSubmit={handleSubmit(onSubmit)}>
-            {/* Información del Cliente */}
             <div className="reservar-seccion-formulario">
               <h3>Información Personal</h3>
               
@@ -522,8 +494,6 @@ export default function Reservar() {
                 </Col>
               </Row>
             </div>
-
-            {/* Información del Vehículo */}
             <div className="reservar-seccion-formulario">
               <h3>Información del Vehículo</h3>
               
@@ -541,7 +511,7 @@ export default function Reservar() {
                   >
                     {vehiculosActivos.map(vehiculo => (
                       <option key={vehiculo.id} value={vehiculo.id}>
-                        {vehiculo.patente} - {vehiculo.marca} {vehiculo.modelo} ({vehiculo.año})
+                        {vehiculo.license} - {vehiculo.brand} {vehiculo.model} ({vehiculo.year})
                       </option>
                     ))}
                   </Form.Select>
@@ -614,8 +584,6 @@ export default function Reservar() {
                 </Col>
               </Row>
             </div>
-
-            {/* Información del Servicio */}
             <div className="reservar-seccion-formulario">
               <h3>Detalles del Servicio</h3>
               
@@ -695,23 +663,13 @@ export default function Reservar() {
                 />
               </Form.Group>
             </div>
-
-            {/* Mensaje de éxito */}
-            {mostrarExito && (
-              <Alert variant="success" className="reservar-alert success">
-                <i className="bi bi-check-circle-fill me-2"></i>
-                ¡Reserva creada exitosamente! Recibirás confirmación por email.
-              </Alert>
-            )}
-
-            {/* Botón de envío */}
             <div className="d-grid gap-2">
               <CustomButton 
                 type="submit" 
-                disabled={estaEnviando || vehiculosActivos.length === 0}
+                disabled={crearReservaMutation.isLoading || vehiculosActivos.length === 0}
                 className="reservar-submit-button"
               >
-                {estaEnviando ? (
+                {crearReservaMutation.isLoading ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                     Creando reserva...

@@ -8,26 +8,29 @@ import Reservas from "./pages/Reservas";
 import Contacto from './pages/Contacto';
 import Registro from './pages/Registro';
 import Login from './pages/Login';
-import RecuperarContraseña from './pages/RecuperarContraseña';
+import RecoverPassword from './pages/RecoverPassword';
+import ForgotPassword from './pages/ForgotPassword';
 import MisVehiculos from './pages/MisVehiculos';
 import MiPerfil from './pages/MiPerfil';
 import MisReservas from './pages/MisReservas';
 import AdminPanel from './pages/AdminPanel';
 import GestionarUsuarios from './pages/GestionarUsuarios';
 import HistorialVehiculo from "./pages/HistorialVehiculo";
-import RegistrarServicio from './pages/RegistrarServicio';
 import CrearServicio from './pages/CrearServicio';
 import { AuthProvider } from './context/AuthContext';
-import { PrivateRoute } from './components/PrivateRoute'; // Importar PrivateRoute
+import { ToastProvider } from './context/ToastContext';
+import { PrivateRoute } from './components/PrivateRoute';
+import ToastContainerComponent from './components/ToastContainer';
 import GestionReservas from './pages/GestionReservas';
 import GestionVehiculos from './pages/GestionVehiculos';
 
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
+      <ToastProvider>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
             {/* Rutas públicas */}
             <Route path="/" element={<HomePage />} />
             <Route path="/productos" element={<Productos />} />
@@ -35,7 +38,10 @@ export default function App() {
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/registro" element={<Registro />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/recuperar-contraseña" element={<RecuperarContraseña />} />
+            <Route path="/olvide-mi-contrasena" element={<ForgotPassword />} />
+            <Route path="/recuperar-contrasena" element={<RecoverPassword />} />
+            <Route path="/reset-password/:token" element={<RecoverPassword />} />
+            <Route path="/change-password" element={<RecoverPassword />} />
 
             {/* Rutas privadas para usuarios autenticados */}
             <Route
@@ -121,14 +127,6 @@ export default function App() {
               }
             />
             <Route
-              path="/registrar-servicio"
-              element={
-                <PrivateRoute requiredRole="ADMIN">
-                  <RegistrarServicio />
-                </PrivateRoute>
-              }
-            />
-            <Route
               path="/historial-vehiculo"
               element={
                 <PrivateRoute requiredRole="ADMIN">
@@ -138,7 +136,9 @@ export default function App() {
             />
           </Routes>
         </Layout>
+        <ToastContainerComponent />
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

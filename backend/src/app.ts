@@ -13,6 +13,7 @@ import { reservationRoutes } from './routes/reservations';
 import { serviceRoutes } from './routes/services';
 import { serviceHistoryRoutes } from './routes/serviceHistory';
 import adminRoutes from './routes/admin';
+import { swaggerDocs } from './config/swagger';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -26,9 +27,35 @@ const app = express();
 // Puerto donde correrá el servidor
 const PORT = process.env.PORT || 3000;
 
+// Lista de orígenes permitidos (whitelist)
+const whitelist = [
+  'http://localhost:5173', // Desarrollo de Frontend (Vite)
+  'http://localhost',      // Frontend de Producción (Docker con Nginx en puerto 80)
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,
+  process.env.VITE_API_BASE_URL
+].filter(Boolean); // Elimina valores undefined/null
+
 // Configuración de CORS
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Permite peticiones sin origen (como las de Postman o apps móviles)
+    if (!origin) return callback(null, true);
+    
+    // Permite dominios de Vercel (cualquier subdominio de vercel.app)
+    if (origin.includes('.vercel.app') || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    if (whitelist.indexOf(origin) !== -1) {
+      // Si el origen está en la lista blanca, permitir la petición
+      callback(null, true);
+    } else {
+      // Si no, rechazarla
+      console.warn(`⚠️  CORS bloqueado para origen: ${origin}`);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -39,6 +66,9 @@ app.use(helmet());        // Seguridad básica (headers de seguridad)
 app.use(cors(corsOptions)); // Permite peticiones desde el frontend con configuración específica
 app.use(morgan('dev'));   // Logs de peticiones HTTP (para debugging)
 app.use(express.json());  // Permite recibir JSON en el body de las peticiones
+
+// Servir documentación de Swagger
+swaggerDocs(app, Number(PORT));
 
 // Middleware para hacer Prisma disponible en todas las rutas
 app.use((req, res, next) => {
@@ -51,18 +81,35 @@ app.use('/api/auth', authRoutes);           // /api/auth/register, /api/auth/log
 app.use('/api/users', userRoutes);          // /api/users/profile, /api/users/change-password
 app.use('/api/vehicles', vehicleRoutes);    // /api/vehicles (CRUD de vehículos)
 app.use('/api/reservations', reservationRoutes); // CRUD de reservas
-console.log('✅ Ruta /api/reservations registrada');
+console.log(' Ruta /api/reservations registrada');
 app.use('/api/services', serviceRoutes);    // CRUD de servicios
-console.log('✅ Ruta /api/services registrada');
+console.log(' Ruta /api/services registrada');
 app.use('/api/services', serviceHistoryRoutes); // Historial de servicios
-console.log('✅ Ruta /api/services/history registrada');
+console.log(' Ruta /api/services/history registrada');
 app.use('/api/admin', adminRoutes);         // Panel de administración
-console.log('✅ Ruta /api/admin registrada');
+console.log(' Ruta /api/admin registrada');
 
 // RUTA DE PRUEBA - Para verificar que el servidor funciona
 app.get('/', (req, res) => {
   res.json({
     message: 'API del Lubricentro Renault funcionando!',
+    endpoints: {
+      auth: '/api/auth',
+      users: '/api/users',
+      vehicles: '/api/vehicles',
+      reservations: '/api/reservations',
+      services: '/api/services',
+      serviceHistory: '/api/services/history',
+      admin: '/api/admin'
+    }
+  });
+});
+
+// Ruta /api para evitar 404
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'API del Lubricentro Renault',
+    version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
@@ -87,24 +134,24 @@ app.use('*', (req, res) => {
 async function testDatabaseConnection() {
   try {
     await prisma.$connect();
-    console.log('✅ Conexión a la base de datos establecida correctamente');
+    console.log(' Conexión a la base de datos establecida correctamente');
   } catch (error) {
-    console.error('❌ Error al conectar con la base de datos:', error);
+    console.error(' Error al conectar con la base de datos:', error);
     process.exit(1);
   }
 }
 
 // INICIAR EL SERVIDOR
 const server = app.listen(PORT, async () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📱 API disponible en: http://localhost:${PORT}`);
-  console.log(`🔐 Endpoints de autenticación: http://localhost:${PORT}/api/auth`);
-  console.log(`👤 Endpoints de usuarios: http://localhost:${PORT}/api/users`);
-  console.log(`🚗 Endpoints de vehículos: http://localhost:${PORT}/api/vehicles`);
-  console.log(`📅 Endpoints de reservas: http://localhost:${PORT}/api/reservations`);
-  console.log(`🛠️ Endpoints de servicios: http://localhost:${PORT}/api/services`);
-  console.log(`📋 Historial de servicios: http://localhost:${PORT}/api/services/history`);
-  console.log(`🏢 Panel de administración: http://localhost:${PORT}/api/admin`);
+  console.log(` Servidor corriendo en puerto ${PORT}`);
+  console.log(` API disponible en: http://localhost:${PORT}`);
+  console.log(` Endpoints de autenticación: http://localhost:${PORT}/api/auth`);
+  console.log(` Endpoints de usuarios: http://localhost:${PORT}/api/users`);
+  console.log(` Endpoints de vehículos: http://localhost:${PORT}/api/vehicles`);
+  console.log(` Endpoints de reservas: http://localhost:${PORT}/api/reservations`);
+  console.log(` Endpoints de servicios: http://localhost:${PORT}/api/services`);
+  console.log(` Historial de servicios: http://localhost:${PORT}/api/services/history`);
+  console.log(` Panel de administración: http://localhost:${PORT}/api/admin`);
   
   // Probar conexión a la base de datos
   await testDatabaseConnection();
@@ -112,28 +159,28 @@ const server = app.listen(PORT, async () => {
 
 // Manejo graceful de cierre
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Cerrando servidor...');
+  console.log(' Cerrando servidor...');
   await prisma.$disconnect();
   server.close(() => {
-    console.log('✅ Servidor cerrado correctamente');
+    console.log(' Servidor cerrado correctamente');
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Cerrando servidor...');
+  console.log(' Cerrando servidor...');
   await disconnectPrisma();
   server.close(() => {
-    console.log('✅ Servidor cerrado correctamente');
+    console.log(' Servidor cerrado correctamente');
     process.exit(0);
   });
 });
 
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Cerrando servidor...');
+  console.log(' Cerrando servidor...');
   await disconnectPrisma();
   server.close(() => {
-    console.log('✅ Servidor cerrado correctamente');
+    console.log(' Servidor cerrado correctamente');
     process.exit(0);
   });
 });

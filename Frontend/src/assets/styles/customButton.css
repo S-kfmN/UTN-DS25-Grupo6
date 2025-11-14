@@ -1,4 +1,4 @@
-/* ===== COMPONENTE BOTÓN PERSONALIZADO ===== */
+/* Boton personalizado */
 
 .custom-btn {
   border: none;
@@ -91,7 +91,7 @@
   width: 100%;
 }
 
-/* Tamaños modulares cortos */
+/* Tamaños modulares */
 .custom-btn--xs {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
@@ -112,7 +112,7 @@
   font-size: 1.3rem;
 }
 
-/* Anchos específicos */
+/* Anchos */
 .custom-btn--w-auto {
   width: auto;
 }
@@ -121,7 +121,7 @@
   width: fit-content;
 }
 
-/* Alturas específicas */
+/* Alturas */
 .custom-btn--h-xs {
   padding-top: 0.2rem;
   padding-bottom: 0.2rem;

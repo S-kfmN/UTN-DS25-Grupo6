@@ -1,43 +1,74 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, Badge, Alert, Collapse, Modal } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
-import { formatearFechaParaMostrar } from '../utils/dateUtils';
-import { formatearFechaHoraParaMostrar, combinarNombreCompleto } from '../utils/dateUtils';
+import { formatearFechaHoraParaMostrar, combinarNombreCompleto, dividirNombreCompleto } from '../utils/dateUtils';
+import { useApiQuery, useApiMutation } from '../hooks/useApi';
+import apiService from '../services/apiService';
+import LoadingSpinner from '../components/LoadingSpinner';
 import '../assets/styles/misreservas.css';
 import EditReservaModal from "../components/EditReservaModal";
 
 export default function MisReservas() {
-  // QUITA setReservaEditar DEL CONTEXTO
-  const { usuario, obtenerReservasUsuario, cancelarReserva, reservas, modificarReserva, servicios } = usarAuth();
+  const { usuario } = usarAuth();
 
-  // AGREGA EL ESTADO LOCAL
   const [reservaEditar, setReservaEditar] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
   const [modalCancelar, setModalCancelar] = useState({ show: false, reserva: null, error: '' });
+  const [reservasExpandidas, setReservasExpandidas] = useState(new Set());
 
-  const reservasUsuario = reservas; // Asignar directamente las reservas del contexto
-  console.log('🔍 MisReservas: reservasUsuario del contexto (completo):', reservasUsuario);
-
-  useEffect(() => {
-    if (usuario?.id) {
-      obtenerReservasUsuario(usuario.id); // Esto asegura que siempre se pase el userId
+  const { data: reservasResponse, isLoading, isError, error } = useApiQuery(
+    ['my-reservations'],
+    () => apiService.getMyReservations(),
+    {
+      enabled: !!usuario?.id,
+      select: (data) => {
+        const loadedReservas = data.data.reservations || [];
+        const statusToEstado = (status) => {
+          switch ((status || '').toUpperCase()) {
+            case 'PENDING': return 'pendiente';
+            case 'CONFIRMED': return 'confirmado';
+            case 'CANCELLED': return 'cancelado';
+            case 'COMPLETED': return 'completado';
+            default: return status?.toLowerCase() || '';
+          }
+        };
+        return loadedReservas.map(reserva => {
+          const { nombre, apellido} = dividirNombreCompleto(reserva.user?.name);
+          return { 
+            ...reserva,
+            fecha: reserva.date,
+            hora: reserva.time,
+            estado: statusToEstado(reserva.status),
+            servicio: reserva.service?.name,
+            patente: reserva.vehicle?.license,
+            modelo: reserva.vehicle?.model,
+            observaciones: reserva.notes,
+            nombre,
+            apellido
+          };
+        });
+      }
     }
-  }, [usuario, obtenerReservasUsuario]);
+  );
 
-  // Filtrar reservas según el estado seleccionado
+  const reservasUsuario = reservasResponse || [];
+
+  const cancelarReservaMutation = useApiMutation(
+    (id) => apiService.cancelReservation(id),
+    ['reservas', usuario?.id]
+  );
+  
+  const modificarReservaMutation = useApiMutation(
+    (variables) => apiService.updateReservation(variables.id, variables.data),
+    ['reservas', usuario?.id]
+  );
+
+
   const reservasFiltradas = filtroEstado === 'todos'
     ? reservasUsuario
     : reservasUsuario.filter(reserva => reserva.estado === filtroEstado);
 
-  // Verificar que reservas sea un array
-  const reservasSeguras = Array.isArray(reservasFiltradas) ? reservasFiltradas : [];
-
-  // Separar reservas activas y canceladas
-  const reservasActivas = reservasUsuario.filter(r => r.estado !== 'cancelado');
-  const reservasCanceladas = reservasUsuario.filter(r => r.estado === 'cancelado');
-
-  // Función para obtener el color del estado
+  // Obtiene el color del badge según el estado
   const obtenerColorEstado = (estado) => {
     switch (estado) {
       case 'confirmado': return 'success';
@@ -48,7 +79,7 @@ export default function MisReservas() {
     }
   };
 
-  // Función para obtener el texto del estado
+  // Obtiene el texto traducido del estado
   const obtenerTextoEstado = (estado) => {
     switch (estado) {
       case 'confirmado': return 'Confirmado';
@@ -59,9 +90,17 @@ export default function MisReservas() {
     }
   };
 
-  // Nueva función para validar y abrir modal
+  const toggleReserva = (reservaId) => {
+    const nuevasExpandidas = new Set(reservasExpandidas);
+    if (nuevasExpandidas.has(reservaId)) {
+      nuevasExpandidas.delete(reservaId);
+    } else {
+      nuevasExpandidas.add(reservaId);
+    }
+    setReservasExpandidas(nuevasExpandidas);
+  };
+
   const intentarCancelarReserva = (reserva) => {
-    // Calcular fecha y hora del turno
     const fechaHoraTurno = new Date(`${reserva.fecha}T${reserva.hora}`);
     const ahora = new Date();
     const diffHoras = (fechaHoraTurno - ahora) / (1000 * 60 * 60);
@@ -72,237 +111,210 @@ export default function MisReservas() {
     }
   };
 
-  // Modificar manejarCancelarReserva para usar el modal
   const manejarCancelarReserva = async () => {
     if (!modalCancelar.reserva) return;
-    const resultado = await cancelarReserva(modalCancelar.reserva.id);
-    if (resultado.exito) {
-      const reservas = obtenerReservasUsuario();
-      setReservasUsuario(reservas);
+    try {
+      await cancelarReservaMutation.mutateAsync(modalCancelar.reserva.id);
+      setReservasExpandidas(new Set());
+      setModalCancelar({ show: false, reserva: null, error: '' });
+    } catch (err) {
+      console.error("Error al cancelar la reserva:", err);
+      setModalCancelar({ show: true, reserva: modalCancelar.reserva, error: 'No se pudo cancelar la reserva.' });
     }
-    setModalCancelar({ show: false, reserva: null, error: '' });
   };
 
-  // Estadísticas
   const estadisticas = {
     total: reservasUsuario.length,
-    confirmadas: reservasUsuario.filter(r => {
-      console.log('🔍 MisReservas: Estado de reserva para filtro confirmado:', r.estado);
-      return r.estado === 'confirmado';
-    }).length,
-    pendientes: reservasUsuario.filter(r => {
-      console.log('🔍 MisReservas: Estado de reserva para filtro pendiente:', r.estado);
-      return r.estado === 'pendiente';
-    }).length,
-    canceladas: reservasUsuario.filter(r => {
-      console.log('🔍 MisReservas: Estado de reserva para filtro cancelado:', r.estado);
-      return r.estado === 'cancelado';
-    }).length
+    confirmadas: reservasUsuario.filter(r => r.estado === 'confirmado').length,
+    pendientes: reservasUsuario.filter(r => r.estado === 'pendiente').length,
+    canceladas: reservasUsuario.filter(r => r.estado === 'cancelado').length,
+    completadas: reservasUsuario.filter(r => r.estado === 'completado').length
   };
 
-  const handleEliminarReserva = async (reservaId) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) return;
-    const resultado = await cancelarReserva(reservaId);
-    if (resultado.exito) {
-      await obtenerReservasUsuario(usuario.id);
-      alert('Reserva eliminada correctamente.');
-    } else {
-      alert('Error al eliminar la reserva: ' + (resultado.error || 'Error desconocido'));
-    }
-  };
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
-  if (!reservas.length) {
+  if (isError) {
+    return <Alert variant="danger">Error al cargar las reservas: {error.message}</Alert>;
+  }
+
+  if (reservasUsuario.length === 0) {
     return <Alert variant="info">No tienes reservas registradas.</Alert>;
   }
 
   return (
     <div className="misreservas-container">
-      {/* Header */}
       <div className="misreservas-header">
         <h1>Mis Reservas</h1>
         <p>Gestiona tus turnos programados</p>
       </div>
-
-      {/* Estadísticas rápidas */}
-      <div className="misreservas-estadisticas-rapidas">
-        <div className="misreservas-stat-card">
-          <h3>Total Reservas</h3>
-          <p className="misreservas-stat-numero">{estadisticas.total}</p>
-        </div>
-        <div className="misreservas-stat-card">
-          <h3>Confirmadas</h3>
-          <p className="misreservas-stat-numero confirmado">{estadisticas.confirmadas}</p>
-        </div>
-        <div className="misreservas-stat-card">
-          <h3>Pendientes</h3>
-          <p className="misreservas-stat-numero pendiente">{estadisticas.pendientes}</p>
-        </div>
-        <div className="misreservas-stat-card">
-          <h3>Canceladas</h3>
-          <p className="misreservas-stat-numero cancelado">{estadisticas.canceladas}</p>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      <div className="misreservas-filtros">
-        <div className="misreservas-filtro-grupo">
-          <label>Filtrar por estado:</label>
-          <select 
-            value={filtroEstado} 
-            onChange={(e) => setFiltroEstado(e.target.value)}
-            className="misreservas-form-select"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="cancelado">Cancelado</option>
-            <option value="completado">Completado</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Lista de reservas activas */}
-      <div className="misreservas-lista-reservas">
-        {reservasFiltradas.length > 0 ? (
-          <div className="misreservas-grupo-fecha">
-            <h2 className="misreservas-fecha-titulo">Mis Turnos Programados</h2>
-            <div className="misreservas-reservas-del-dia">
-              {reservasFiltradas
-                .filter(reserva => reserva && reserva.id && reserva.estado !== 'cancelado')
-                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-                .map(reserva => (
-                  <div key={reserva.id} className="misreservas-reserva-card">
-                    <div className="misreservas-reserva-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div className="misreservas-reserva-hora" style={{ fontWeight: 'bold' }}>
-                        {formatearFechaHoraParaMostrar(reserva.date, reserva.time)}
-                      </div>
-                    </div>
-                    <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`} style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
-                      {obtenerTextoEstado(reserva.estado)}
-                    </span>
-                    <div className="misreservas-reserva-info">
-                      <div className="misreservas-cliente-info">
-                        <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
-                        <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                        <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
-                      </div>
-                      {reserva.observaciones && (
-                        <div className="misreservas-observaciones">
-                          <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="misreservas-reserva-acciones">
-                      {reserva.estado === 'pendiente' && (
-                        <Button 
-                          variant="outline-danger" 
-                          size="sm" 
-                          onClick={() => intentarCancelarReserva(reserva)}
-                          className="misreservas-boton-cancelar"
-                        >
-                          <i className="bi bi-x-circle me-1"></i>
-                          Cancelar Reserva
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleEliminarReserva(reserva.id)}
-                        title="Eliminar reserva"
-                      >
-                        <i className="bi bi-trash"></i> Eliminar
-                      </Button>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => setReservaEditar(reserva)}
-                        className="misreservas-boton-editar"
-                      >
-                        <i className="bi bi-pencil"></i> Modificar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+      {isLoading ? <LoadingSpinner /> : (
+        <>
+          <div className="misreservas-estadisticas-rapidas">
+            <div className="misreservas-stat-card">
+              <h3>Total Reservas</h3>
+              <p className="misreservas-stat-numero">{estadisticas.total}</p>
+            </div>
+            <div className="misreservas-stat-card">
+              <h3>Confirmadas</h3>
+              <p className="misreservas-stat-numero confirmado">{estadisticas.confirmadas}</p>
+            </div>
+            <div className="misreservas-stat-card">
+              <h3>Pendientes</h3>
+              <p className="misreservas-stat-numero pendiente">{estadisticas.pendientes}</p>
+            </div>
+            <div className="misreservas-stat-card">
+              <h3>Canceladas</h3>
+              <p className="misreservas-stat-numero cancelado">{estadisticas.canceladas}</p>
+            </div>
+            <div className="misreservas-stat-card">
+              <h3>Completadas</h3>
+              <p className="misreservas-stat-numero completado">{estadisticas.completadas}</p>
             </div>
           </div>
-        ) : (
-          <div className="misreservas-sin-reservas">
-            <p>No tienes reservas activas.</p>
+          <div className="misreservas-filtros">
+            <div className="misreservas-filtro-grupo">
+              <label>Filtrar por estado:</label>
+              <select 
+                value={filtroEstado} 
+                onChange={(e) => setFiltroEstado(e.target.value)}
+                className="misreservas-form-select"
+              >
+                <option value="todos">Todos los estados</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="completado">Completado</option>
+              </select>
+            </div>
           </div>
-        )}
-      </div>
-      {/* Sección colapsable de turnos cancelados */}
-      {reservasCanceladas.length > 0 && (
-        <div className="mt-4">
-          <Button
-            variant="outline-warning"
-            onClick={() => setMostrarCanceladas(v => !v)}
-            aria-controls="turnos-cancelados"
-            aria-expanded={mostrarCanceladas}
-            className="misreservas-boton-toggle-canceladas mb-2"
-          >
-            {mostrarCanceladas ? 'Ocultar' : 'Mostrar'} Turnos Cancelados ({reservasCanceladas.length})
-          </Button>
-          <Collapse in={mostrarCanceladas}>
-            <div id="turnos-cancelados">
+          <div className="misreservas-lista-reservas">
+            {reservasFiltradas.length > 0 ? (
               <div className="misreservas-grupo-fecha">
-                <h2 className="misreservas-fecha-titulo">Turnos Cancelados</h2>
+                <h2 className="misreservas-fecha-titulo" style={{ textAlign: 'center' }}>Mis Reservas</h2>
                 <div className="misreservas-reservas-del-dia">
-                  {reservasCanceladas
+                  {reservasFiltradas
                     .filter(reserva => reserva && reserva.id)
-                    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+                    .sort((a, b) => {
+                      if (a.estado === 'cancelado' && b.estado === 'cancelado') {
+                        return new Date(b.fecha) - new Date(a.fecha);
+                      }
+                      if (a.estado !== 'cancelado' && b.estado !== 'cancelado') {
+                        return new Date(a.fecha) - new Date(b.fecha);
+                      }
+                      return a.estado === 'cancelado' ? 1 : -1;
+                    })
                     .map(reserva => (
-                      <div key={reserva.id} className="misreservas-reserva-card" style={{ opacity: 0.7 }}>
-                        <div className="misreservas-reserva-header">
+                      <div key={reserva.id} className="misreservas-reserva-card">
+                        <div 
+                          className="misreservas-reserva-header" 
+                          onClick={() => toggleReserva(reserva.id)}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <div className="misreservas-reserva-hora">
-                            <strong>{formatearFechaHoraParaMostrar(reserva.date, reserva.time)}</strong>
+                            {formatearFechaHoraParaMostrar(reserva.date, reserva.time)}
                           </div>
-                          <div className="misreservas-reserva-estado">
-                            <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>{obtenerTextoEstado(reserva.estado)}</span>
+                          <div className="misreservas-reserva-header-right">
+                            <span className={`badge bg-${obtenerColorEstado(reserva.estado)}`}>
+                              {obtenerTextoEstado(reserva.estado)}
+                            </span>
+                            <i className={`bi ${reservasExpandidas.has(reserva.id) ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                           </div>
                         </div>
-                        <div className="misreservas-reserva-info">
-                          <div className="misreservas-cliente-info">
-                            <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
-                            <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
+                        
+                        <Collapse in={reservasExpandidas.has(reserva.id)}>
+                          <div className="misreservas-reserva-content">
+                            <div className="misreservas-reserva-info">
+                              <div className="misreservas-cliente-info">
+                                <h4>{reserva.servicio || 'Servicio no especificado'}</h4>
+                                <p><strong>Vehículo:</strong> {reserva.patente || 'N/A'} - {reserva.modelo || 'N/A'}</p>
+                                <p><strong>Cliente:</strong> {combinarNombreCompleto(reserva.nombre, reserva.apellido) || 'N/A'}</p>
+                              </div>
+                              {reserva.observaciones && (
+                                <div className="misreservas-observaciones">
+                                  <p><strong>Tus observaciones:</strong> {reserva.observaciones}</p>
+                                </div>
+                              )}
+                              {reserva.serviceHistory && reserva.serviceHistory.length > 0 && reserva.serviceHistory[0].observaciones && (
+                                <div className="misreservas-observaciones-mecanico">
+                                  <p><strong>Observaciones del mecánico:</strong> {reserva.serviceHistory[0].observaciones}</p>
+                                  <p>
+                                    <em>Por: {reserva.serviceHistory[0].mecanico} - {new Date(reserva.serviceHistory[0].fechaServicio).toLocaleDateString('es-ES')}</em>
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            <div className="misreservas-reserva-acciones">
+                              {reserva.estado !== 'cancelado' && reserva.estado !== 'completado' && (
+                                <Button
+                                  variant="outline-primary"
+                                  size="sm"
+                                  onClick={() => setReservaEditar(reserva)}
+                                  className="misreservas-boton-editar"
+                                >
+                                  <i className="bi bi-pencil"></i> Modificar
+                                </Button>
+                              )}
+                              {(reserva.estado === 'pendiente' || reserva.estado === 'confirmado') && (
+                                <Button 
+                                  variant="outline-danger" 
+                                  size="sm" 
+                                  onClick={() => intentarCancelarReserva(reserva)}
+                                  className="misreservas-boton-cancelar"
+                                >
+                                  <i className="bi bi-x-circle me-1"></i>
+                                  Cancelar Reserva
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          {reserva.observaciones && (
-                            <div className="misreservas-observaciones">
-                              <p><strong>Observaciones:</strong> {reserva.observaciones}</p>
-                            </div>
-                          )}
-                          {reserva.fechaCancelacion && (
-                            <div className="misreservas-texto-cancelacion">
-                              <i className="bi bi-clock-history me-1"></i>
-                              Cancelado el {formatearFechaParaMostrar(reserva.fechaCancelacion)} a las {new Date(reserva.fechaCancelacion).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          )}
-                        </div>
+                        </Collapse>
                       </div>
                     ))}
                 </div>
               </div>
-            </div>
-          </Collapse>
-        </div>
+            ) : (
+              <div className="misreservas-sin-reservas">
+                <p>No tienes reservas registradas para el filtro seleccionado.</p>
+              </div>
+            )}
+          </div>
+          <div className="misreservas-info-adicional">
+            <h6>
+              <i className="bi bi-info-circle me-2"></i>
+              Información Importante:
+            </h6>
+            <ul>
+              <li>Las reservas se pueden cancelar hasta 24 horas antes del turno</li>
+              <li>Recibirás confirmación por email cuando tu turno sea confirmado</li>
+              <li>Llega 10 minutos antes de tu hora programada</li>
+              <li>Trae la documentación del vehículo si es necesario</li>
+            </ul>
+          </div>
+        </>
       )}
-
-      {/* Información adicional */}
-      <div className="misreservas-info-adicional">
-        <h6>
-          <i className="bi bi-info-circle me-2"></i>
-          Información Importante:
-        </h6>
-        <ul>
-          <li>Las reservas se pueden cancelar hasta 24 horas antes del turno</li>
-          <li>Recibirás confirmación por email cuando tu turno sea confirmado</li>
-          <li>Llega 10 minutos antes de tu hora programada</li>
-          <li>Trae la documentación del vehículo si es necesario</li>
-        </ul>
-      </div>
-
-      {/* Modal de confirmación de cancelación */}
+      <EditReservaModal
+        show={!!reservaEditar}
+        reserva={reservaEditar}
+        onHide={() => setReservaEditar(null)}
+        onSave={async (nuevosDatos) => {
+          try {
+            await modificarReservaMutation.mutateAsync({
+              id: reservaEditar.id,
+              data: {
+                date: nuevosDatos.fecha,
+                time: nuevosDatos.hora,
+                notes: nuevosDatos.observaciones,
+              }
+            });
+            setReservaEditar(null);
+            setReservasExpandidas(new Set());
+          } catch(err) {
+            console.error("Error al modificar la reserva", err);
+          }
+        }}
+      />
       <Modal show={modalCancelar.show} onHide={() => setModalCancelar({ show: false, reserva: null, error: '' })} centered>
         <Modal.Header closeButton>
           <Modal.Title>Cancelar Reserva</Modal.Title>
@@ -335,25 +347,6 @@ export default function MisReservas() {
           )}
         </Modal.Footer>
       </Modal>
-
-      {/* Modal para editar reserva */}
-      <EditReservaModal
-        show={!!reservaEditar}
-        reserva={reservaEditar}
-        onHide={() => setReservaEditar(null)}
-        onSave={async (nuevosDatos) => {
-          // Buscar el servicio por nombre
-          const servicioSeleccionado = servicios.find(s => s.name === nuevosDatos.servicio);
-          await modificarReserva(reservaEditar.id, {
-            date: nuevosDatos.fecha,
-            time: nuevosDatos.hora,
-            notes: nuevosDatos.observaciones,
-            serviceId: servicioSeleccionado?.id // <-- enviar el id del servicio
-          });
-          setReservaEditar(null);
-          await obtenerReservasUsuario(usuario.id);
-        }}
-      />
     </div>
   );
 }

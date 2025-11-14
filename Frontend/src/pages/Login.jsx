@@ -5,7 +5,7 @@ import CustomButton from '../components/CustomButton';
 import '../assets/styles/login.css';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { loginSchema } from '../validations/loginSchema';
+import { userLoginSchema } from '../validations/schemas/userSchema';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,7 +17,8 @@ export default function Login() {
     formState: { errors, isSubmitting },
     setError
   } = useForm({
-    resolver: yupResolver(loginSchema)
+    resolver: yupResolver(userLoginSchema),
+    mode: 'onChange' // valida en el momento de escritura
   });
 
   const onSubmit = async (data) => {
@@ -43,13 +44,13 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      {/* Header del formulario */}
+      {/* Header  */}
       <div className="login-header">
         <h1>Iniciar Sesión</h1>
         <p>Accede a tu cuenta de Lubricentro Renault</p>
       </div>
 
-      {/* Contenedor del formulario */}
+      {/* Contenedor */}
       <div className="login-form-container">
         {errors.root && (
           <Alert variant="danger" className="login-alert danger">
@@ -110,7 +111,7 @@ export default function Login() {
 
           <div className="login-text-center login-mb-3">
             <Link 
-              to="/recuperar-contraseña" 
+              to="/olvide-mi-contrasena" 
               className="login-link"
             >
               ¿Olvidaste tu contraseña?

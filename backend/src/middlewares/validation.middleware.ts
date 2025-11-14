@@ -10,19 +10,18 @@ export function validate(schema: ZodSchema, property: 'body' | 'params' | 'query
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const errorMessages = error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message,
+        const errorMessages = error.issues.map((err) => ({
+          field: err.path.map(String).join('.'),
+          message: err.message
         }));
 
         return res.status(400).json({
           success: false,
           error: 'Datos de entrada inválidos',
-          details: errorMessages,
+          details: errorMessages
         });
       }
-
-      // Si el error no es de Zod, pasa al siguiente middleware
+      
       next(error);
     }
   };

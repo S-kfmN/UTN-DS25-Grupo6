@@ -9,16 +9,13 @@ const SeleccionHorario = ({
   disabled = false,
   className = ''
 }) => {
-  // Horarios predefinidos (puedes modificar según tus necesidades)
+  // Horarios predefinidos disponibles
   const defaultTimeSlots = [
     '08:00', '09:00', '10:00', '11:00', '12:00', 
     '14:00', '15:00', '16:00', '17:00', '18:00',
   ];
 
-  // Si no se proporcionan horarios disponibles, usar los predefinidos
   const timeSlots = availableSlots.length > 0 ? availableSlots : defaultTimeSlots;
-
-  // Set para búsqueda eficiente (asume que occupiedSlots ya está en el mismo formato HH:MM)
   const occupiedSet = new Set(occupiedSlots || []);
 
   const handleTimeClick = (time) => {

@@ -1,12 +1,14 @@
-// Nuevo componente: src/pages/CrearServicio.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, Button, Form, Row, Col, Table, Badge, Alert, Spinner, Modal } from 'react-bootstrap';
 import { usarAuth } from '../context/AuthContext';
+import { useApiQuery, useApiMutation } from '../hooks/useApi';
 import apiService from '../services/apiService';
 import '../assets/styles/gestionreservas.css';
 
 export default function CrearServicio() {
-  const { esAdmin, cargarServicios } = usarAuth();
+  const { usuario } = usarAuth();
+  const esAdmin = usuario?.rol === 'ADMIN';
+
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -14,45 +16,38 @@ export default function CrearServicio() {
     price: '',
     duration: ''
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [servicios, setServicios] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Nuevo: estados para eliminar servicio
   const [servicioAEliminar, setServicioAEliminar] = useState(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
-  // Cargar servicios existentes al montar
-  useEffect(() => {
-    const fetchServicios = async () => {
-      setLoading(true);
-      try {
-        const lista = await cargarServicios();
-        setServicios(lista);
-      } catch (err) {
-        setError('Error al cargar servicios');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchServicios();
-  }, [success, cargarServicios]); // recarga al crear uno nuevo
+  const { data: servicios = [], isLoading: loading } = useApiQuery(
+    ['servicios'],
+    () => apiService.getServices(),
+    {
+      enabled: esAdmin,
+      select: (data) => data?.data?.services || []
+    }
+  );
 
-  if (!esAdmin()) {
-    return (
-      <div className="gestionreservas-container">
-        <div className="gestionreservas-header">
-          <h1>Acceso Denegado</h1>
-          <p>No tienes permisos para acceder a esta página</p>
-        </div>
-        <Alert variant="danger" className="mt-4">
-          <i className="bi bi-exclamation-triangle me-2"></i>
-          Solo los administradores pueden crear servicios.
-        </Alert>
-      </div>
-    );
-  }
+  const createServiceMutation = useApiMutation(
+    (variables) => apiService.createService(variables),
+    ['servicios'],
+    {
+      onSuccess: () => {
+        setForm({ name: '', description: '', category: '', price: '', duration: '' });
+      }
+    }
+  );
+
+  const deleteServiceMutation = useApiMutation(
+    apiService.deleteService,
+    ['servicios'],
+    {
+      onSuccess: () => {
+        setMostrarConfirmacion(false);
+        setServicioAEliminar(null);
+      }
+    }
+  );
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -61,45 +56,25 @@ export default function CrearServicio() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     try {
       const serviceData = {
         ...form,
         price: parseFloat(form.price),
         duration: parseInt(form.duration)
       };
-      await apiService.createService(serviceData);
-      setSuccess('Servicio creado exitosamente');
-      setForm({ name: '', description: '', category: '', price: '', duration: '' });
+      await createServiceMutation.mutateAsync(serviceData);
     } catch (err) {
-      setError('Error al crear servicio: ' + (err?.response?.data?.message || err.message || 'Error desconocido'));
+      console.error('Error al crear servicio:', err);
     }
   };
 
-  // Eliminar servicio
   const handleEliminarServicio = async () => {
     if (!servicioAEliminar) return;
-    setError('');
-    setSuccess('');
-    try {
-      await apiService.deleteService(servicioAEliminar.id);
-      setSuccess('Servicio eliminado correctamente');
-      setMostrarConfirmacion(false);
-      setServicioAEliminar(null);
-      // Recargar servicios
-      const lista = await cargarServicios();
-      setServicios(lista);
-    } catch (err) {
-      setError('Error al eliminar servicio: ' + (err?.response?.data?.message || err.message || 'Error desconocido'));
-      setMostrarConfirmacion(false);
-      setServicioAEliminar(null);
-    }
+    await deleteServiceMutation.mutateAsync(servicioAEliminar.id);
   };
 
   return (
     <div className="gestionreservas-container">
-      {/* Header */}
       <div className="gestionreservas-header">
         <h1>
           <i className="bi bi-tools me-2"></i>
@@ -107,12 +82,10 @@ export default function CrearServicio() {
         </h1>
         <h3 style={{ color: 'var(--color-texto)' }}>Consulta y administra los servicios disponibles</h3>
       </div>
-
-      {/* Mensajes */}
-      {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
-      {success && <Alert variant="success" className="mb-3">{success}</Alert>}
-
-      {/* Tabla de servicios existentes */}
+      {createServiceMutation.isError && <Alert variant="danger" className="mb-3">{createServiceMutation.error.message}</Alert>}
+      {createServiceMutation.isSuccess && <Alert variant="success" className="mb-3">Servicio creado exitosamente</Alert>}
+      {deleteServiceMutation.isError && <Alert variant="danger" className="mb-3">{deleteServiceMutation.error.message}</Alert>}
+      {deleteServiceMutation.isSuccess && <Alert variant="success" className="mb-3">Servicio eliminado correctamente</Alert>}
       <div className="gestionreservas-busqueda-reservas">
         <div className="gestionreservas-resultados-header">
           <h3 className="gestionreservas-resultados-titulo" style={{ color: 'var(--color-acento)' }}>
@@ -183,8 +156,6 @@ export default function CrearServicio() {
           </Card.Body>
         </Card>
       </div>
-
-      {/* Modal de confirmación de eliminación */}
       <Modal show={mostrarConfirmacion} onHide={() => setMostrarConfirmacion(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Eliminación</Modal.Title>
@@ -196,13 +167,11 @@ export default function CrearServicio() {
           <Button variant="secondary" onClick={() => setMostrarConfirmacion(false)}>
             Cancelar
           </Button>
-          <Button variant="danger" onClick={handleEliminarServicio}>
-            Eliminar
+          <Button variant="danger" onClick={handleEliminarServicio} disabled={deleteServiceMutation.isLoading}>
+            {deleteServiceMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </Modal.Footer>
       </Modal>
-
-      {/* Formulario de alta */}
       <Card className="gestionreservas-card-busqueda" style={{
         background: 'rgba(30,30,30,0.95)',
         border: '2px solid var(--color-acento)',
@@ -317,15 +286,8 @@ export default function CrearServicio() {
               </Col>
             </Row>
             <div className="d-grid gap-2">
-              <Button type="submit" variant="success" size="lg" style={{
-                background: 'var(--color-acento)',
-                color: 'var(--color-fondo)',
-                border: 'none',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}>
-                <i className="bi bi-save me-2"></i>
-                Crear Servicio
+              <Button type="submit" variant="success" size="lg" disabled={createServiceMutation.isLoading}>
+                {createServiceMutation.isLoading ? 'Creando...' : 'Crear Servicio'}
               </Button>
             </div>
           </Form>

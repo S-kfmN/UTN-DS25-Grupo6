@@ -3,6 +3,9 @@ import ReservationModel from '../models/Reservation';
 import VehicleModel from '../models/Vehicle';
 import { CreateReservationRequest, UpdateReservationRequest } from '../types/reservation';
 import { ReservationStatus } from '@prisma/client'; // Importar el enum de Prisma
+import { PrismaClient } from '@prisma/client'; // Importar PrismaClient para la nueva función
+
+const prisma = new PrismaClient(); // Instanciar PrismaClient
 
 // CREATE - Crear reserva
 export const createReservation = async (req: Request, res: Response) => {
@@ -55,15 +58,12 @@ export const createReservation = async (req: Request, res: Response) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Debug logs
-    console.log(' Validación de fecha:');
-    console.log(' Fecha recibida:', reservationData.date);
-    console.log(' Fecha de reserva (local):', reservationDate.toISOString());
-    console.log(' Fecha de hoy (local):', today.toISOString());
-    console.log(' Es fecha pasada?', reservationDate < today);
-    
-    // Comparar solo las fechas (sin hora)
-    if (reservationDate < today) {
+    // Convertir reservationDate y today a UTC para una comparación consistente
+    const reservationDateUTC = new Date(Date.UTC(year, month - 1, day));
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+
+    // Validación ajustada para fechas pasadas
+    if (reservationDateUTC.getTime() <= todayUTC.getTime()) {
       return res.status(400).json({
         success: false,
         message: 'No se pueden hacer reservas en fechas pasadas'
@@ -118,11 +118,9 @@ export const getUserReservations = async (req: Request, res: Response) => {
     // Si es un administrador y se está pidiendo una lista por userId (no /reservations/all)
     let reservations;
     if (userRole === 'ADMIN' && userIdFromParams) {
-      console.log('👑 reservationController: ADMIN - Obteniendo reservas para userId de params:', userIdFromParams);
       reservations = await ReservationModel.findByUserId(userIdFromParams);
     } else {
       // Para usuarios normales o admin pidiendo sus propias reservas (cuando no hay /all)
-      console.log('👤 reservationController: Obteniendo reservas para userId autenticado:', authenticatedUserId);
       reservations = await ReservationModel.findByUserId(authenticatedUserId);
     }
 
@@ -132,7 +130,7 @@ export const getUserReservations = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en getUserReservations:', error);
+    console.error(' Error en getUserReservations:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -154,15 +152,13 @@ export const getAllReservations = async (req: Request, res: Response) => {
 
     const reservations = await ReservationModel.findAll();
 
-    console.log('👑 reservationController: ADMIN - Obteniendo TODAS las reservas. Encontradas:', reservations.length);
-
     res.json({
       success: true,
       data: { reservations }
     });
 
   } catch (error) {
-    console.error('❌ Error en getAllReservations:', error);
+    console.error(' Error en getAllReservations:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
@@ -185,8 +181,8 @@ export const getReservation = async (req: Request, res: Response) => {
       });
     }
 
-    // Verificar que la reserva pertenezca al usuario
-    if (reservation.userId !== userId) {
+    // Verificar que la reserva pertenezca al usuario o que el usuario sea ADMIN
+    if (reservation.userId !== userId && req.user!.role !== 'ADMIN') {
       return res.status(403).json({
         success: false,
         message: 'No tienes permisos para ver esta reserva'
@@ -225,6 +221,7 @@ export const updateReservation = async (req: Request, res: Response) => {
       });
     }
 
+    // Verificar que la reserva pertenezca al usuario o que el usuario sea ADMIN
     if (existingReservation.userId !== userId && req.user!.role !== 'ADMIN') {
       return res.status(403).json({
         success: false,
@@ -354,7 +351,7 @@ export const getReservationsByDate = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Error en getReservationsByDate:', error); // Añadido para imprimir el error completo
+    console.error(' Error en getReservationsByDate:', error); // Añadido para imprimir el error completo
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -375,7 +372,7 @@ export const getReservationsByMonth = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Error en getReservationsByMonth:', error);
+    console.error(' Error en getReservationsByMonth:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor',
@@ -421,6 +418,50 @@ export const deleteReservation = async (req: Request, res: Response) => {
       success: false,
       message: 'Error interno del servidor'
     });
+  }
+};
+
+// Función para obtener las reservas del usuario autenticado
+export const getMyReservations = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'No autorizado' });
+  }
+
+  try {
+    const reservations = await prisma.reservation.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        user: { select: { name: true, email: true } },
+        vehicle: { select: { license: true, model: true } },
+        service: { select: { name: true } },
+        serviceHistory: { 
+          select: { 
+            observaciones: true, 
+            resultado: true, 
+            fechaServicio: true, 
+            mecanico: true 
+          } 
+        },
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
+    res.status(200).json({
+      message: 'Tus reservas obtenidas exitosamente',
+      data: { reservations },
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error al obtener tus reservas', error: error.message });
+    } else {
+      res.status(500).json({ message: 'Ocurrió un error desconocido' });
+    }
   }
 };
 

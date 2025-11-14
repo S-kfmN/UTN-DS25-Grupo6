@@ -1,177 +1,114 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Modal, Form, Button, Alert, Row, Col, Card, Badge } from 'react-bootstrap';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { serviceHistorySchema } from '../validations';
 import { usarAuth } from '../context/AuthContext';
-import { useServicios } from '../hooks/useServicios';
+import { useToast } from '../context/ToastContext';
+import { useApiQuery, useApiMutation } from '../hooks/useApi';
 import apiService from '../services/apiService';
 import '../assets/styles/registrarservicio.css';
 
-export default function RegistrarServicioModal({ 
-  show, 
-  onHide, 
-  reserva, 
-  onSuccess 
+export default function RegistrarServicioModal({
+  show,
+  onHide,
+  reserva,
+  onSuccess
 }) {
-  const { usuario, esAdmin, refrescarUsuario } = usarAuth();
-  
-  // Hooks personalizados
-  const { servicios, loading: loadingServicios, obtenerServicioPorId } = useServicios();
-  
-  // Estados del formulario
-  const [datosServicio, setDatosServicio] = useState({
-    servicio: reserva?.servicio || '',
-    resultado: 'Completado',
-    observaciones: '',
-    repuestos: '',
-    kilometraje: '',
-    mecanico: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : ''
+  const { usuario } = usarAuth();
+  const { showSuccess, showError } = useToast();
+  const esAdmin = usuario?.rol === 'ADMIN';
+
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm({
+    resolver: yupResolver(serviceHistorySchema),
+    defaultValues: {
+      servicio: '',
+      resultado: 'Completado',
+      observaciones: '',
+      repuestos: '',
+      kilometraje: '',
+      mecanico: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : ''
+    }
   });
-  
-  const [errores, setErrores] = useState({});
-  const [estaGuardando, setEstaGuardando] = useState(false);
-  const [mostrarExito, setMostrarExito] = useState(false);
-  const [error, setError] = useState(null);
 
-  // useEffect para cargar datos iniciales
+  const { data: servicios = [], isLoading: loadingServicios } = useApiQuery(
+    ['servicios'],
+    () => apiService.getServices(),
+    {
+      select: (data) => data?.data?.services || []
+    }
+  );
+
+  const createHistoryMutation = useApiMutation(
+    (data) => apiService.createServiceHistory(data),
+    ['historialUsuario', reserva?.userId]
+  );
+
+  const updateReservationMutation = useApiMutation(
+    (variables) => apiService.updateReservationStatus(variables.id, variables.status),
+    ['reservas', 'admin', reserva?.userId, `reservasPorFecha`]
+  );
+
   useEffect(() => {
-    if (reserva && reserva.servicio) {
-      setDatosServicio(prev => ({
-        ...prev,
-        servicio: reserva.servicio
-      }));
+    if (reserva && servicios.length > 0) {
+      const servicioInicial = servicios.find(s => s.name === reserva.servicio);
+      reset({
+        servicio: servicioInicial ? String(servicioInicial.id) : '',
+        resultado: 'Completado',
+        observaciones: '',
+        repuestos: '',
+        kilometraje: reserva.vehiculo?.kilometraje || '',
+        mecanico: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : ''
+      });
+    } else if (show) {
+      reset({
+        servicio: '',
+        resultado: 'Completado',
+        observaciones: '',
+        repuestos: '',
+        kilometraje: '',
+        mecanico: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : ''
+      });
     }
-  }, [reserva]);
+  }, [reserva, servicios, reset, show, usuario]);
 
-  // Función para manejar cambios en el formulario
-  const manejarCambio = (campo, valor) => {
-    setDatosServicio(prev => ({
-      ...prev,
-      [campo]: valor
-    }));
-    
-    // Limpiar error del campo cuando el usuario escriba
-    if (errores[campo]) {
-      setErrores(previo => ({
-        ...previo,
-        [campo]: ''
-      }));
-    }
-  };
-
-  // Función para validar el formulario
-  const validarFormulario = () => {
-    const nuevosErrores = {};
-
-    if (!datosServicio.servicio) {
-      nuevosErrores.servicio = 'El servicio es requerido';
-    }
-
-    if (!datosServicio.resultado.trim()) {
-      nuevosErrores.resultado = 'El resultado es requerido';
-    }
-
-    if (!datosServicio.observaciones.trim()) {
-      nuevosErrores.observaciones = 'Las observaciones son requeridas';
-    }
-
-    if (!datosServicio.mecanico.trim()) {
-      nuevosErrores.mecanico = 'El mecánico es requerido';
-    }
-
-    if (!datosServicio.kilometraje) {
-      nuevosErrores.kilometraje = 'El kilometraje es requerido';
-    } else if (datosServicio.kilometraje < 0) {
-      nuevosErrores.kilometraje = 'El kilometraje debe ser válido';
-    }
-
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
-  };
-
-  // Función para registrar servicio en el historial
-  const registrarServicioEnHistorial = async (datosCompletos) => {
+  const onSubmit = async (data) => {
     try {
-      const response = await apiService.createServiceHistory(datosCompletos);
-      return response;
-    } catch (error) {
-      console.error('Error al registrar servicio en historial:', error);
-      throw error;
-    }
-  };
+      const servicioSeleccionado = servicios.find(s => s.id === parseInt(data.servicio));
+      if (!servicioSeleccionado) {
+        showError('El servicio seleccionado no es válido.');
+        return;
+      }
 
-  // Función para guardar el servicio
-  const manejarGuardar = async (e) => {
-    e.preventDefault();
-    if (!validarFormulario()) return;
-    setEstaGuardando(true);
-    try {
-      // Crear información detallada del servicio para agregar a las notas
-      const servicioInfo = {
-        servicioRealizado: obtenerNombreServicio(datosServicio.servicio),
-        resultado: datosServicio.resultado,
-        observaciones: datosServicio.observaciones,
-        repuestos: datosServicio.repuestos,
-        kilometraje: datosServicio.kilometraje,
-        mecanico: datosServicio.mecanico,
-        fechaServicio: new Date().toISOString(),
-        registradoPor: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : 'Sistema'
-      };
-
-      // Datos completos para el historial
       const datosCompletos = {
         userId: reserva?.userId || usuario?.id,
         vehicleId: reserva?.vehicleId,
-        serviceId: parseInt(datosServicio.servicio),
+        serviceId: servicioSeleccionado.id,
         reservationId: reserva?.id || null,
-        resultado: datosServicio.resultado,
-        observaciones: datosServicio.observaciones,
-        repuestos: datosServicio.repuestos,
-        kilometraje: parseInt(datosServicio.kilometraje),
-        mecanico: datosServicio.mecanico,
+        resultado: data.resultado,
+        observaciones: data.observaciones,
+        repuestos: data.repuestos,
+        kilometraje: parseInt(data.kilometraje),
+        mecanico: data.mecanico,
         registradoPor: usuario?.role || 'MECHANIC'
       };
 
-      const resultado = await registrarServicioEnHistorial(datosCompletos);
-      if (resultado.success) {
-        setMostrarExito(true);
-        setDatosServicio({
-          servicio: reserva?.servicio || '',
-          resultado: 'Completado',
-          observaciones: '',
-          repuestos: '',
-          kilometraje: '',
-          mecanico: usuario?.nombre ? `${usuario.nombre} ${usuario.apellido}` : ''
-        });
-        
-        // Cambiar estado de la reserva a 'completado' si existe
-        if (reserva && reserva.id) {
-          try {
-            await apiService.updateReservationStatus(reserva.id, 'COMPLETED');
-          } catch (error) {
-            console.error('Error al actualizar estado de reserva:', error);
-          }
-        }
-        
-        // Llamar callback de éxito
-        if (onSuccess) {
-          onSuccess(resultado.data);
-        }
-        
-        setTimeout(() => {
-          setMostrarExito(false);
-          onHide(); // Cerrar modal después del éxito
-        }, 2000);
-      } else {
-        setError('No se pudo registrar el servicio en el historial. Intenta más tarde.');
+      await createHistoryMutation.mutateAsync(datosCompletos);
+
+      if (reserva && reserva.id) {
+        await updateReservationMutation.mutateAsync({ id: reserva.id, status: 'COMPLETED' });
       }
+
+      showSuccess('¡Servicio registrado exitosamente en el historial!');
+      if (onSuccess) onSuccess();
+      onHide();
+
     } catch (error) {
-      setError('Error al guardar servicio: ' + error.message);
-    } finally {
-      setEstaGuardando(false);
+      showError('Error al guardar servicio: ' + (error.message || 'Error desconocido'));
     }
   };
 
-  // Verificar si el usuario es admin/mecánico
-  if (!esAdmin()) {
+  if (!esAdmin) {
     return (
       <Modal show={show} onHide={onHide} size="lg" centered>
         <Modal.Header closeButton>
@@ -180,7 +117,7 @@ export default function RegistrarServicioModal({
         <Modal.Body>
           <Alert variant="danger">
             <i className="bi bi-exclamation-triangle me-2"></i>
-            Solo los mecánicos pueden registrar servicios.
+            Solo los administradores o mecánicos pueden registrar servicios.
           </Alert>
         </Modal.Body>
         <Modal.Footer>
@@ -192,15 +129,6 @@ export default function RegistrarServicioModal({
     );
   }
 
-  // Función para obtener el nombre del servicio
-  const obtenerNombreServicio = (servicioId) => {
-    const servicio = obtenerServicioPorId(parseInt(servicioId));
-    return servicio ? (servicio.name || servicio.nombre) : datosServicio.servicio;
-  };
-
-  // Obtener información del servicio seleccionado
-  const servicioSeleccionado = obtenerServicioPorId(parseInt(datosServicio.servicio));
-
   return (
     <Modal show={show} onHide={onHide} size="xl" centered>
       <Modal.Header closeButton className="registrarservicio-modal-header">
@@ -209,9 +137,8 @@ export default function RegistrarServicioModal({
           Registrar Servicio Realizado
         </Modal.Title>
       </Modal.Header>
-      
+
       <Modal.Body className="registrarservicio-modal-body">
-        {/* Información de la reserva */}
         {reserva && (
           <Card className="registrarservicio-card-reserva mb-4">
             <Card.Header className="registrarservicio-card-reserva-header">
@@ -221,46 +148,34 @@ export default function RegistrarServicioModal({
             <Card.Body className="registrarservicio-card-reserva-body">
               <Row>
                 <Col md={6}>
-                  <p><strong>Cliente:</strong> {reserva.nombre} {reserva.apellido}</p>
-                  <p><strong>Vehículo:</strong> {reserva.patente} - {reserva.marca} {reserva.modelo}</p>
+                  <p><strong>Cliente:</strong> {reserva.nombre}</p>
+                  <p><strong>Vehículo:</strong> {reserva.patente} - {reserva.modelo}</p>
                   <p><strong>Fecha:</strong> {reserva.fecha}</p>
                 </Col>
                 <Col md={6}>
                   <p><strong>Hora:</strong> {reserva.hora}</p>
                   <p><strong>Servicio:</strong> {reserva.servicio}</p>
-                  <p><strong>Estado:</strong> 
+                  <p><strong>Estado:</strong>
                     <Badge className="registrarservicio-badge-completado">Completado</Badge>
                   </p>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={12}>
+                  <p><strong>Observaciones del cliente:</strong> {reserva.observaciones || '-'}</p>
                 </Col>
               </Row>
             </Card.Body>
           </Card>
         )}
 
-        {/* Mensaje de éxito */}
-        {mostrarExito && (
-          <Alert variant="success" className="registrarservicio-alert-exito mb-4">
-            <i className="bi bi-check-circle-fill me-2"></i>
-            ¡Servicio registrado exitosamente en el historial!
-          </Alert>
-        )}
-
-        {/* Mensaje de error */}
-        {error && (
-          <Alert variant="danger" className="mb-4">
-            <i className="bi bi-exclamation-triangle me-2"></i>
-            {error}
-          </Alert>
-        )}
-
-        {/* Formulario de registro */}
         <Card className="registrarservicio-card-formulario">
           <Card.Header className="registrarservicio-card-formulario-header">
             <i className="bi bi-tools me-2"></i>
             Datos del Servicio Realizado
           </Card.Header>
           <Card.Body className="registrarservicio-card-formulario-body">
-            <Form onSubmit={manejarGuardar}>
+            <Form onSubmit={handleSubmit(onSubmit)}>
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
@@ -268,9 +183,8 @@ export default function RegistrarServicioModal({
                       Servicio Realizado *
                     </Form.Label>
                     <Form.Select
-                      value={datosServicio.servicio}
-                      onChange={(e) => manejarCambio('servicio', e.target.value)}
-                      isInvalid={!!errores.servicio}
+                      {...register('servicio')}
+                      isInvalid={!!errors.servicio}
                       style={{
                         backgroundColor: 'var(--color-gris)',
                         border: '1px solid var(--color-acento)',
@@ -278,27 +192,26 @@ export default function RegistrarServicioModal({
                       }}
                     >
                       <option value="">Seleccionar servicio</option>
-                      {Array.isArray(servicios) && servicios.map(servicio => (
-                        <option key={servicio.id} value={servicio.id}>
-                          {servicio.name || servicio.nombre}
+                      {servicios.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
                         </option>
                       ))}
                     </Form.Select>
                     <Form.Control.Feedback type="invalid">
-                      {errores.servicio}
+                      {errors.servicio?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-                
+
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
                       Resultado *
                     </Form.Label>
                     <Form.Select
-                      value={datosServicio.resultado}
-                      onChange={(e) => manejarCambio('resultado', e.target.value)}
-                      isInvalid={!!errores.resultado}
+                      {...register('resultado')}
+                      isInvalid={!!errors.resultado}
                       style={{
                         backgroundColor: 'var(--color-gris)',
                         border: '1px solid var(--color-acento)',
@@ -311,7 +224,7 @@ export default function RegistrarServicioModal({
                       <option value="Requiere Repuestos">Requiere Repuestos</option>
                     </Form.Select>
                     <Form.Control.Feedback type="invalid">
-                      {errores.resultado}
+                      {errors.resultado?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -325,9 +238,8 @@ export default function RegistrarServicioModal({
                     </Form.Label>
                     <Form.Control
                       type="text"
-                      value={datosServicio.mecanico}
-                      onChange={(e) => manejarCambio('mecanico', e.target.value)}
-                      isInvalid={!!errores.mecanico}
+                      {...register('mecanico')}
+                      isInvalid={!!errors.mecanico}
                       placeholder="Nombre del mecánico"
                       style={{
                         backgroundColor: 'var(--color-gris)',
@@ -336,11 +248,11 @@ export default function RegistrarServicioModal({
                       }}
                     />
                     <Form.Control.Feedback type="invalid">
-                      {errores.mecanico}
+                      {errors.mecanico?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-                
+
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
@@ -348,9 +260,8 @@ export default function RegistrarServicioModal({
                     </Form.Label>
                     <Form.Control
                       type="number"
-                      value={datosServicio.kilometraje}
-                      onChange={(e) => manejarCambio('kilometraje', e.target.value)}
-                      isInvalid={!!errores.kilometraje}
+                      {...register('kilometraje')}
+                      isInvalid={!!errors.kilometraje}
                       placeholder="Ej: 45000"
                       style={{
                         backgroundColor: 'var(--color-gris)',
@@ -359,23 +270,24 @@ export default function RegistrarServicioModal({
                       }}
                     />
                     <Form.Control.Feedback type="invalid">
-                      {errores.kilometraje}
+                      {errors.kilometraje?.message}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
-              </Row>
+            </Row>
 
+          <Row>
+            <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
-                  Observaciones *
+                  Observaciones del Mecánico *
                 </Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={3}
-                  value={datosServicio.observaciones}
-                  onChange={(e) => manejarCambio('observaciones', e.target.value)}
-                  isInvalid={!!errores.observaciones}
-                  placeholder="Describe el trabajo realizado, problemas encontrados, recomendaciones..."
+                  {...register('observaciones')}
+                  isInvalid={!!errors.observaciones}
+                  placeholder="Describe el trabajo realizado, problemas encontrados, recomendaciones para el cliente..."
                   style={{
                     backgroundColor: 'var(--color-gris)',
                     border: '1px solid var(--color-acento)',
@@ -383,10 +295,12 @@ export default function RegistrarServicioModal({
                   }}
                 />
                 <Form.Control.Feedback type="invalid">
-                  {errores.observaciones}
+                  {errors.observaciones?.message}
                 </Form.Control.Feedback>
               </Form.Group>
+            </Col>
 
+            <Col md={6}>
               <Form.Group className="mb-4">
                 <Form.Label style={{ color: 'var(--color-acento)', fontWeight: 'bold' }}>
                   Repuestos Utilizados
@@ -394,8 +308,7 @@ export default function RegistrarServicioModal({
                 <Form.Control
                   as="textarea"
                   rows={2}
-                  value={datosServicio.repuestos}
-                  onChange={(e) => manejarCambio('repuestos', e.target.value)}
+                  {...register('repuestos')}
                   placeholder="Lista de repuestos utilizados (opcional)"
                   style={{
                     backgroundColor: 'var(--color-gris)',
@@ -403,33 +316,21 @@ export default function RegistrarServicioModal({
                     color: 'var(--color-texto)'
                   }}
                 />
-              </Form.Group>
-
-              {/* Información del servicio seleccionado */}
-              {servicioSeleccionado && (
-                <Alert variant="info" className="mb-4" style={{
-                  backgroundColor: 'rgba(13, 202, 240, 0.1)',
-                  border: '1px solid #0dcaf0',
-                  color: '#0dcaf0'
-                }}>
-                  <h6><i className="bi bi-info-circle me-2"></i>Información del Servicio</h6>
-                  <p><strong>Descripción:</strong> {servicioSeleccionado.description || servicioSeleccionado.descripcion}</p>
-                  <p><strong>Duración estimada:</strong> {servicioSeleccionado.duration || servicioSeleccionado.duracion} minutos</p>
-                  <p><strong>Categoría:</strong> {servicioSeleccionado.category || servicioSeleccionado.categoria}</p>
-                </Alert>
-              )}
+                </Form.Group>
+              </Col>
+          </Row>
             </Form>
           </Card.Body>
         </Card>
       </Modal.Body>
-      
+
       <Modal.Footer className="registrarservicio-modal-footer">
         <Button variant="secondary" onClick={onHide}>
           Cancelar
         </Button>
-        <Button 
-          onClick={manejarGuardar}
-          disabled={estaGuardando || loadingServicios}
+        <Button
+          onClick={handleSubmit(onSubmit)}
+          disabled={isSubmitting || loadingServicios}
           style={{
             backgroundColor: 'var(--color-acento)',
             color: 'var(--color-fondo)',
@@ -439,7 +340,7 @@ export default function RegistrarServicioModal({
             borderRadius: '5px'
           }}
         >
-          {estaGuardando ? (
+          {isSubmitting ? (
             <>
               <span className="spinner-border spinner-border-sm me-2" role="status"></span>
               Guardando...

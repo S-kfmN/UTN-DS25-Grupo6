@@ -103,7 +103,7 @@ class ServiceModel {
       console.log(`✅ Servicio actualizado: ${updatedService.name} (ID: ${id})`);
       return updatedService as Service;
     } catch (error) {
-      console.error("Error updating service:", error);
+      console.error("Error al actualizar servicio:", error);
       return null;
     }
   }
@@ -121,7 +121,7 @@ class ServiceModel {
       console.log(`✅ Servicio desactivado (soft delete): (ID: ${id})`);
       return true;
     } catch (error) {
-      console.error("Error soft deleting service:", error);
+      console.error("Error al eliminar lógicamente el servicio:", error);
       return false;
     }
   }
@@ -135,7 +135,7 @@ class ServiceModel {
       console.log(`🗑️ Servicio eliminado permanentemente (ID: ${id})`);
       return true;
     } catch (error) {
-      console.error("Error hard deleting service:", error);
+      console.error("Error al eliminar permanentemente el servicio:", error);
       return false;
     }
   }
@@ -228,7 +228,7 @@ class ServiceModel {
   //     }
   //   });
 
-  //   console.log(`📋 ${exampleServices.length} servicios de ejemplo creados`);
+  //   console.log(` ${exampleServices.length} servicios de ejemplo creados`);
   // }
 }
 

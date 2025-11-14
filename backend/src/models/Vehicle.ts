@@ -3,8 +3,6 @@ import { PrismaClient, VehicleStatus } from '@prisma/client';
 import prisma from '../config/prisma'; // Usar la instancia compartida
 
 class VehicleModel {
-  // private vehicles: Vehicle[] = [];
-  // private nextId = 1;
 
   // Función helper para normalizar patentes
   private normalizarPatente(patente: string): string {
@@ -48,7 +46,6 @@ class VehicleModel {
 
   // READ - Obtener vehículos de un usuario específico
   async findByUserId(userId: number, status?: VehicleStatus): Promise<Vehicle[]> {
-    console.log('🔍 VehicleModel.findByUserId - buscando vehículos para userId:', userId, 'con status:', status); // Añadido para depuración
     const whereClause: any = { userId: userId };
     if (status) {
       whereClause.status = status;
@@ -57,13 +54,11 @@ class VehicleModel {
     const vehicles = await prisma.vehicle.findMany({
       where: whereClause,
     });
-    console.log('🚗 VehicleModel.findByUserId - vehículos encontrados:', vehicles.length, vehicles); // Añadido para depuración
     return vehicles;
   }
 
   // READ - Obtener vehículo por ID
   async findById(id: number): Promise<Vehicle | null> {
-    // return this.vehicles.find(vehicle => vehicle.id === id) || null;
     return await prisma.vehicle.findUnique({
       where: { id: id },
     });
@@ -71,7 +66,6 @@ class VehicleModel {
 
   // READ - Obtener vehículo por patente
   async findByLicense(license: string): Promise<Vehicle | null> {
-    // return this.vehicles.find(vehicle => vehicle.license === license) || null;
     return await prisma.vehicle.findUnique({
       where: { license: license },
     });
@@ -79,7 +73,6 @@ class VehicleModel {
 
   // UPDATE - Actualizar vehículo
   async update(id: number, updateData: any): Promise<any> {
-    console.log('updateData recibido:', updateData);
     const dataToUpdate: any = {};
     for (const key of Object.keys(updateData)) {
       let value = updateData[key];
@@ -96,8 +89,6 @@ class VehicleModel {
     }
     dataToUpdate.updatedAt = new Date();
 
-    console.log('🚗 VehicleModel.update - datos a actualizar:', dataToUpdate);
-
     return prisma.vehicle.update({
       where: { id },
       data: dataToUpdate,
@@ -106,25 +97,19 @@ class VehicleModel {
 
   // DELETE - Eliminar vehículo
   async delete(id: number): Promise<boolean> {
-    // const vehicleIndex = this.vehicles.findIndex(vehicle => vehicle.id === id);
-    // if (vehicleIndex === -1) return false;
-
-    // this.vehicles.splice(vehicleIndex, 1);
-    // return true;
     try {
       await prisma.vehicle.delete({
         where: { id: id },
       });
       return true;
     } catch (error) {
-      console.error("Error deleting vehicle:", error);
+      console.error("Error al eliminar vehículo:", error);
       return false;
     }
   }
 
   // READ - Obtener todos los vehículos (para admin)
   async findAll(): Promise<Vehicle[]> {
-    // return [...this.vehicles];
     return await prisma.vehicle.findMany({
       include: {
         user: {
@@ -136,8 +121,6 @@ class VehicleModel {
 
   // Verificar si un vehículo pertenece a un usuario
   async belongsToUser(vehicleId: number, userId: number): Promise<boolean> {
-    // const vehicle = await this.findById(vehicleId);
-    // return vehicle ? vehicle.userId === userId : false;
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
